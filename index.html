@@ -121,6 +121,7 @@
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
         
+        /* 閱讀勾選框樣式 */
         .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; }
         .check-input { width: 18px; height: 18px; border: 2px solid #7F9F9F; border-radius: 50%; appearance: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .check-input:checked { background-color: #7F9F9F; }
@@ -204,8 +205,12 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
-            <div id="date-time-container" class="space-y-4 text-left mb-4">
-                 <div class="field-group">
+            <div id="schedule-fields-static" class="space-y-4 text-left">
+                <div class="field-group">
+                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
+                    <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
+                </div>
+                <div class="field-group">
                     <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
                     <div class="datetime-row">
                         <input type="date" id="inputDate" class="custom-input flex-1">
@@ -215,13 +220,6 @@
                             <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div id="schedule-fields-static" class="space-y-4 text-left">
-                <div class="field-group">
-                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
-                    <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
@@ -271,7 +269,7 @@
             </div>
 
             <div class="pt-6 flex justify-between items-center gap-4">
-                <button onclick="handleDelete()" id="deleteBtn" class="px-8 py-2 text-morandi-dark-gray rounded-full font-cursive text-sm transition-all border border-morandi-soft-red hover:bg-morandi-soft-red">Delete</button>
+                <button onclick="handleDelete()" id="deleteBtn" class="hidden px-8 py-2 text-morandi-dark-gray rounded-full font-cursive text-sm transition-all border border-morandi-soft-red hover:bg-morandi-soft-red">Delete</button>
                 <button onclick="handleSave()" id="saveBtn" class="flex-1 py-2 text-white rounded-full font-cursive text-sm shadow-sm active:scale-95 transition-all text-center" style="background-color:#8DAAB9;">Keep it</button>
             </div>
         </div>
@@ -409,6 +407,7 @@ function renderBookRow(container, book) {
     const row = document.createElement('div');
     row.className = 'book-row';
     row.dataset.id = book.id;
+    // 點擊該行進入修改頁面
     row.onclick = (e) => {
         if (!['INPUT', 'SELECT'].includes(e.target.tagName)) {
             openUnifiedModal({ ...book, isReading: true });
@@ -459,6 +458,9 @@ function updateField(el, field) {
     }
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
+    const meta = calcMeta(book);
+    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
+    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
 }
 
 function addBookRow() { 
@@ -490,12 +492,12 @@ function openUnifiedModal(data = null) {
     const delBtn = document.getElementById('deleteBtn');
     
     if (data) {
-        editingId = String(data.id);
+        editingId = data.id || data.id.toString();
         delBtn.classList.remove('hidden');
         if (data.isReading) {
             switchType('reading');
-            const start = data.start ? new Date(data.start) : new Date();
-            document.getElementById('inputDate').value = start.toISOString().split('T')[0];
+            // 閱讀資料回填邏輯，維持相同格式
+            document.getElementById('inputDate').value = today();
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = data.originalTitle || data.title;
@@ -509,7 +511,7 @@ function openUnifiedModal(data = null) {
         editingId = null;
         delBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
-        document.getElementById('inputDate').value = today();
+        document.getElementById('inputDate').valueAsDate = new Date();
         initTimeDropdowns(); 
         setCategory('Private');
         switchType('schedule');
@@ -523,34 +525,15 @@ function closeUnifiedModal() {
 
 function handleDelete() {
     if (!editingId) return;
-    
-    // 從行程資料庫中移除
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const originalStorageLen = storage.length;
     storage = storage.filter(e => String(e.id) !== String(editingId));
-    if (storage.length !== originalStorageLen) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    }
-
-    // 同步從閱讀紀錄書目庫中移除 (如果是刪除整本書)
-    let books = loadBooks();
-    const originalBooksLen = books.length;
-    books = books.filter(b => String(b.id) !== String(editingId));
-    if (books.length !== originalBooksLen) {
-        saveBooks(books);
-        renderBooks();
-    }
-
-    // 更新行事曆視圖
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     calendar.getEventById(editingId)?.remove();
-    calendar.removeAllEvents();
-    calendar.addEventSource(storage);
-    
     closeUnifiedModal();
 }
 
 function handleSave() {
-    const dateInput = document.getElementById('inputDate').value;
+    const date = document.getElementById('inputDate').value;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
     let title, bgColor, priority = 1, isReading = false, originalTitle = '';
@@ -562,21 +545,21 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        const books = loadBooks();
-        const b = editingId ? books.find(x => String(x.id) === String(editingId)) : books.filter(x => !x.done)[0];
-        if (!b) return;
+        const active = loadBooks().filter(b => !b.done);
+        if (active.length === 0) return;
+        const b = active[0];
+        // 顯示該日閱讀頁數紀錄
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
         isReading = true;
-        originalTitle = b.title;
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const ev = { 
         id: editingId || Date.now().toString(),
         title, 
-        start: `${dateInput}T${hour}:${min}:00`,
+        start: `${date}T${hour}:${min}:00`,
         extendedProps: { 
             bgColor, priority, isReading, 
             category: currentCategory, 
