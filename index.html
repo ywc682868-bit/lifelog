@@ -144,6 +144,11 @@
         
         @keyframes spin { to { transform: rotate(360deg); } }
         .ai-spin { display: none; width: 12px; height: 12px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+        /* 新增區塊樣式 */
+        .section-container { display: none; }
+        .section-container.active { display: block; }
+        .card-flat { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #EEEEEE; }
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
@@ -182,8 +187,56 @@
                     <span id="quote-author" class="text-[9px] md:text-[10px] font-cursive text-morandi-dark-gray italic font-bold"></span>
                 </div>
             </div>
-            <section id="calendar-section" class="flex-1 bg-morandi-gray/5 p-2 md:p-4 rounded-[15px] md:rounded-[20px] border border-white/30 shadow-sm min-h-[400px]">
+
+            <section id="calendar-section" class="section-container active flex-1 bg-morandi-gray/5 p-2 md:p-4 rounded-[15px] md:rounded-[20px] border border-white/30 shadow-sm min-h-[400px]">
                 <div id="calendar"></div>
+            </section>
+
+            <section id="tigps-section" class="section-container flex-1 overflow-y-auto">
+                <div class="card-flat">
+                    <h3 class="font-cursive text-xl mb-4 text-morandi-green-dark">Current Projects</h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-morandi-green-light rounded-xl flex justify-between items-center">
+                            <span>TIGPS Research Phase 1</span>
+                            <span class="text-xs bg-white px-2 py-1 rounded-md">80%</span>
+                        </div>
+                        <div class="p-3 bg-morandi-soft-orange rounded-xl flex justify-between items-center">
+                            <span>Lab Equipment Setup</span>
+                            <span class="text-xs bg-white px-2 py-1 rounded-md">30%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="phd-section" class="section-container flex-1 overflow-y-auto">
+                <div class="card-flat">
+                    <h3 class="font-cursive text-xl mb-4 text-morandi-blue-dark">Thesis Progress</h3>
+                    <div class="border-l-4 border-morandi-blue-dark pl-4 space-y-4">
+                        <div>
+                            <p class="font-bold">Literature Review</p>
+                            <p class="text-xs text-gray-500">Updated: 2026-04-10</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">Methodology Chapter</p>
+                            <p class="text-xs text-gray-500">Status: In progress</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="finance-section" class="section-container flex-1 overflow-y-auto">
+                <div class="card-flat">
+                    <h3 class="font-cursive text-xl mb-4 text-morandi-dark-gray">Monthly Expenses</h3>
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-gray-400 border-bottom">
+                            <tr><th class="pb-2">Date</th><th class="pb-2">Item</th><th class="pb-2">Amount</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr><td class="py-2">04/15</td><td>Software Subscription</td><td>$450</td></tr>
+                            <tr><td class="py-2">04/14</td><td>Reference Books</td><td>$1,200</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </div>
     </main>
@@ -279,7 +332,8 @@
 <script>
 const quotes = [
     { en: "The only way to do great work is to love what you do.", zh: "成就偉業的唯一途徑是熱愛自己的工作。", author: "Steve Jobs" },
-    { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" }
+    { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" },
+    { en: "Success is not final, failure is not fatal: it is the courage to continue that counts.", zh: "成功不是終點，失敗也不是終結：重要的是繼續前行的勇氣。", author: "Winston Churchill" }
 ];
 
 const TAIWAN_SPECIAL_DAYS = [
@@ -311,6 +365,7 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
+    if(!h) return;
     [h, m, eh, em].forEach(el => el.innerHTML = '');
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
@@ -406,7 +461,6 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
     const row = document.createElement('div');
-    // 強化選取邏輯
     row.className = `book-row ${String(editingId) === String(book.id) ? 'editing' : ''}`;
     row.dataset.id = book.id;
     row.onclick = (e) => {
@@ -481,9 +535,7 @@ function switchType(type) {
     document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
-    if(type === 'reading') {
-        renderBooks();
-    }
+    if(type === 'reading') renderBooks();
 }
 
 function setCategory(cat) {
@@ -495,7 +547,6 @@ function setCategory(cat) {
     const selectedBtn = document.getElementById(`cat-${cat}`);
     if(selectedBtn) selectedBtn.classList.add('selected');
     
-    // 依照要求：旅行是 Start Date & Time
     const dateLabel = document.getElementById('dateLabel');
     if(cat === 'Travel') {
         dateLabel.innerText = "Start Date & Time";
@@ -504,7 +555,6 @@ function setCategory(cat) {
         dateLabel.innerText = "Date & Time";
         document.getElementById('travel-end-container').style.display = 'none';
     }
-    
     document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
 }
 
@@ -542,28 +592,20 @@ function closeUnifiedModal() {
     editingId = null;
 }
 
-// 修正後的刪除邏輯
 function handleDelete() {
     if (!editingId) return;
-    
-    // 1. 從行事曆儲存空間刪除
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     
-    // 2. 從閱讀紀錄儲存空間刪除
     let books = loadBooks();
     books = books.filter(b => String(b.id) !== String(editingId));
     saveBooks(books);
     
-    // 3. 從行事曆視圖移除並重新載入
     const ev = calendar.getEventById(editingId);
     if (ev) ev.remove();
-    
-    // 4. 重整顯示與介面
     calendar.refetchEvents();
     if (currentType === 'reading') renderBooks();
-    
     closeUnifiedModal();
 }
 
@@ -581,7 +623,7 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        targetDate = today(); // Log Date 固定為今天
+        targetDate = today();
         const books = loadBooks();
         const b = books.find(book => String(book.id) === String(editingId)) || books.filter(book => !book.done)[0];
         if (!b) return;
@@ -615,15 +657,29 @@ function handleSave() {
 }
 
 function showSection(id) { 
-    if (id === 'calendar') setTimeout(() => calendar.render(), 50); 
+    const sections = ['calendar', 'tigps', 'phd', 'finance'];
+    sections.forEach(s => {
+        const el = document.getElementById(`${s}-section`);
+        if(el) {
+            el.classList.toggle('active', s === id);
+        }
+    });
+    if (id === 'calendar' && calendar) setTimeout(() => calendar.render(), 50); 
 }
 
 async function runAIAnalysis() {
+    const spin = document.getElementById('ai-spin');
+    const icon = document.getElementById('ai-icon');
     const resultEl = document.getElementById('ai-result');
-    resultEl.innerText = "正在分析閱讀狀況...";
+    spin.style.display = 'block';
+    icon.style.display = 'none';
     resultEl.classList.add('show');
+    resultEl.innerText = "Analyzing reading habits...";
+    
     setTimeout(() => {
-        resultEl.innerText = "您的閱讀進度穩定。建議每天維持目標閱讀量。";
+        spin.style.display = 'none';
+        icon.style.display = 'block';
+        resultEl.innerText = "Analysis Complete: Your reading pace is consistent. Consider increasing deep-work sessions for the upcoming PhD thesis phase.";
     }, 1500);
 }
 </script>
