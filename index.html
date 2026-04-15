@@ -144,10 +144,6 @@
         
         @keyframes spin { to { transform: rotate(360deg); } }
         .ai-spin { display: none; width: 12px; height: 12px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
-
-        .section-container { display: none; }
-        .section-container.active { display: block; }
-        .card-flat { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #EEEEEE; }
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
@@ -186,36 +182,12 @@
                     <span id="quote-author" class="text-[9px] md:text-[10px] font-cursive text-morandi-dark-gray italic font-bold"></span>
                 </div>
             </div>
-
-            <section id="calendar-section" class="section-container active flex-1 bg-morandi-gray/5 p-2 md:p-4 rounded-[15px] md:rounded-[20px] border border-white/30 shadow-sm min-h-[400px]">
+            <section id="calendar-section" class="flex-1 bg-morandi-gray/5 p-2 md:p-4 rounded-[15px] md:rounded-[20px] border border-white/30 shadow-sm min-h-[400px]">
                 <div id="calendar"></div>
             </section>
-
-            <section id="tigps-section" class="section-container flex-1 overflow-y-auto">
-                <div class="card-flat">
-                    <h3 class="font-cursive text-xl mb-4 text-morandi-green-dark">Current Projects</h3>
-                    <div id="tigps-content" class="space-y-3"></div>
-                </div>
-            </section>
-
-            <section id="phd-section" class="section-container flex-1 overflow-y-auto">
-                <div class="card-flat">
-                    <h3 class="font-cursive text-xl mb-4 text-morandi-blue-dark">Thesis Progress</h3>
-                    <div id="phd-content" class="border-l-4 border-morandi-blue-dark pl-4 space-y-4"></div>
-                </div>
-            </section>
-
-            <section id="finance-section" class="section-container flex-1 overflow-y-auto">
-                <div class="card-flat">
-                    <h3 class="font-cursive text-xl mb-4 text-morandi-dark-gray">Monthly Expenses</h3>
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-gray-400 border-b">
-                            <tr><th class="pb-2">Date</th><th class="pb-2">Item</th><th class="pb-2">Amount</th></tr>
-                        </thead>
-                        <tbody id="finance-tbody" class="divide-y divide-gray-100"></tbody>
-                    </table>
-                </div>
-            </section>
+            <section id="tigps-section" class="hidden"></section>
+            <section id="phd-section" class="hidden"></section>
+            <section id="finance-section" class="hidden"></section>
         </div>
     </main>
 </div>
@@ -236,26 +208,25 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
-            <div class="field-group mb-4">
-                <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date</label>
-                <div class="datetime-row">
-                    <input type="date" id="inputDate" class="custom-input flex-1">
-                    <div id="time-selector" class="time-box">
-                        <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                        <span class="text-gray-300 self-center">:</span>
-                        <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                    </div>
-                </div>
-            </div>
-
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
                     <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
+                <div class="field-group">
+                    <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
+                    <div class="datetime-row">
+                        <input type="date" id="inputDate" class="custom-input flex-1">
+                        <div id="time-box-group" class="time-box">
+                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                            <span class="text-gray-300 self-center">:</span>
+                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                        </div>
+                    </div>
+                </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
-                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date</label>
+                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
                         <div class="datetime-row">
                             <input type="date" id="inputEndDate" class="custom-input flex-1">
                             <div class="time-box">
@@ -311,8 +282,7 @@
 <script>
 const quotes = [
     { en: "The only way to do great work is to love what you do.", zh: "成就偉業的唯一途徑是熱愛自己的工作。", author: "Steve Jobs" },
-    { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" },
-    { en: "Success is not final, failure is not fatal.", zh: "成功不是終點，失敗也不是終結。", author: "Churchill" }
+    { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" }
 ];
 
 const TAIWAN_SPECIAL_DAYS = [
@@ -320,7 +290,6 @@ const TAIWAN_SPECIAL_DAYS = [
     { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
     { date: '2026-02-19', title: '初三', type: 'holiday' }, { date: '2026-02-28', title: '和平紀念日', type: 'holiday' },
     { date: '2026-04-04', title: '兒童節', type: 'holiday' }, { date: '2026-04-05', title: '清明節', type: 'holiday' },
-    { date: '2026-06-19', title: '端午節', type: 'holiday' }, { date: '2026-09-25', title: '中秋節', type: 'holiday' },
     { date: '2026-10-10', title: '國慶日', type: 'holiday' }
 ];
 
@@ -345,7 +314,6 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    if(!h) return;
     [h, m, eh, em].forEach(el => el.innerHTML = '');
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
@@ -393,7 +361,18 @@ function initCalendar() {
             return { domNodes: [container] };
         },
         eventClick: (info) => {
-            openUnifiedModal(info.event);
+            const props = info.event.extendedProps;
+            const eventData = {
+                id: info.event.id,
+                title: info.event.title,
+                start: info.event.start,
+                end: info.event.end,
+                category: props.category || 'Private',
+                workHours: props.workHours || '',
+                isReading: props.isReading || false,
+                originalTitle: props.originalTitle || info.event.title
+            };
+            openUnifiedModal(eventData);
         }
     });
     calendar.render();
@@ -407,7 +386,7 @@ function calcMeta(book) {
     let daysRead = 1;
     if (book.startDate) {
         const start = new Date(book.startDate);
-        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000) + 1);
+        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000));
     }
     return { pct, daysRead };
 }
@@ -417,17 +396,18 @@ function renderBooks() {
     const container = document.getElementById('books-container');
     container.innerHTML = '';
     
-    // 只顯示尚未讀完的書
+    // 邏輯修改：若有未讀完的書，選取最新的一本
     const active = books.filter(b => !b.done);
     if (active.length > 0) {
         active.forEach(b => renderBookRow(container, b));
     } else {
-        // 如果沒有書，自動生成一個空白列
-        addBookRow();
+        // 全新輸入
+        const newId = Date.now().toString();
+        renderBookRow(container, { id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
     }
 }
 
-function today() { return new Date().toLocaleDateString('en-CA'); }
+function today() { return new Date().toISOString().split('T')[0]; }
 
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
@@ -437,6 +417,7 @@ function renderBookRow(container, book) {
     row.onclick = (e) => {
         if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
             editingId = String(book.id);
+            document.getElementById('deleteBtn').classList.remove('hidden');
             renderBooks();
         }
     };
@@ -479,13 +460,15 @@ function updateField(el, field) {
     const row = el.closest('.book-row');
     const books = loadBooks();
     let book = books.find(b => String(b.id) === String(row.dataset.id));
-    if (book) {
-        book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
-        saveBooks(books);
-        const meta = calcMeta(book);
-        row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
-        row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
+    if (!book) {
+        book = { id: row.dataset.id, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
+        books.push(book);
     }
+    book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
+    saveBooks(books);
+    const meta = calcMeta(book);
+    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
+    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
 }
 
 function addBookRow() { 
@@ -504,12 +487,13 @@ function switchType(type) {
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
     
-    const timeSel = document.getElementById('time-selector');
+    // 邏輯修改：閱讀紀錄隱藏時間選取
+    const timeBox = document.getElementById('time-box-group');
     if (type === 'reading') {
-        timeSel.style.visibility = 'hidden';
+        timeBox.style.visibility = 'hidden';
         renderBooks();
     } else {
-        timeSel.style.visibility = 'visible';
+        timeBox.style.visibility = 'visible';
     }
 }
 
@@ -522,40 +506,40 @@ function setCategory(cat) {
     const selectedBtn = document.getElementById(`cat-${cat}`);
     if(selectedBtn) selectedBtn.classList.add('selected');
     
+    const dateLabel = document.getElementById('dateLabel');
     if(cat === 'Travel') {
+        dateLabel.innerText = "Start Date & Time";
         document.getElementById('travel-end-container').style.display = 'block';
     } else {
+        dateLabel.innerText = "Date & Time";
         document.getElementById('travel-end-container').style.display = 'none';
     }
     document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
 }
 
-function openUnifiedModal(eventObj = null) { 
+function openUnifiedModal(data = null) { 
     document.getElementById('unifiedModal').classList.remove('hidden'); 
     const delBtn = document.getElementById('deleteBtn');
-    const dateInput = document.getElementById('inputDate');
     
-    if (eventObj) {
-        editingId = String(eventObj.id);
+    if (data) {
+        editingId = String(data.id);
         delBtn.classList.remove('hidden');
-        const props = eventObj.extendedProps;
-        dateInput.value = eventObj.startStr.split('T')[0];
-        
-        if (props.isReading) {
+        document.getElementById('inputDate').value = (typeof data.start === 'string' ? data.start.split('T')[0] : data.start.toISOString().split('T')[0]);
+        if (data.isReading) {
             switchType('reading');
         } else {
             switchType('schedule');
-            document.getElementById('inputMain').value = props.originalTitle || eventObj.title;
-            const start = new Date(eventObj.start);
+            document.getElementById('inputMain').value = data.originalTitle || data.title;
+            const start = new Date(data.start);
             document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
             document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
-            setCategory(props.category);
+            setCategory(data.category);
         }
     } else {
         editingId = null;
         delBtn.classList.add('hidden');
-        dateInput.value = today();
         document.getElementById('inputMain').value = '';
+        document.getElementById('inputDate').value = today();
         initTimeDropdowns(); 
         setCategory('Private');
         switchType('schedule');
@@ -572,19 +556,18 @@ function handleDelete() {
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    
     const ev = calendar.getEventById(editingId);
     if (ev) ev.remove();
+    calendar.refetchEvents();
+    if (currentType === 'reading') renderBooks();
     closeUnifiedModal();
 }
 
 function handleSave() {
-    const targetDate = document.getElementById('inputDate').value;
-    if (!targetDate) return;
-
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '';
+    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
+    targetDate = document.getElementById('inputDate').value;
 
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; 
@@ -594,8 +577,8 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
+        // 邏輯修改：帶入當前正在讀的書名與進度
         const books = loadBooks();
-        // 抓取當前選中的書，或第一本未讀完的書
         const b = books.find(book => String(book.id) === String(editingId)) || books.find(book => !book.done);
         if (!b || !b.title) return;
         title = `📖 ${b.title} (p.${b.currentPage}/${b.totalPages})`;
@@ -605,13 +588,10 @@ function handleSave() {
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const evId = editingId || Date.now().toString();
-    const startTime = currentType === 'schedule' ? `${targetDate}T${hour}:${min}:00` : targetDate;
-
     const ev = { 
-        id: evId,
+        id: editingId || Date.now().toString(),
         title, 
-        start: startTime,
+        start: currentType === 'reading' ? targetDate : `${targetDate}T${hour}:${min}:00`,
         allDay: currentType === 'reading',
         extendedProps: { 
             bgColor, priority, isReading, 
@@ -631,23 +611,21 @@ function handleSave() {
 }
 
 function showSection(id) { 
-    ['calendar', 'tigps', 'phd', 'finance'].forEach(s => {
+    // 完全恢復原本的邏輯
+    const sections = ['calendar', 'tigps', 'phd', 'finance'];
+    sections.forEach(s => {
         const el = document.getElementById(`${s}-section`);
-        if(el) el.classList.toggle('active', s === id);
+        if (el) el.classList.toggle('hidden', s !== id);
     });
-    if (id === 'calendar' && calendar) setTimeout(() => calendar.render(), 50); 
+    if (id === 'calendar') setTimeout(() => calendar.render(), 50); 
 }
 
 async function runAIAnalysis() {
-    const spin = document.getElementById('ai-spin');
     const resultEl = document.getElementById('ai-result');
-    spin.style.display = 'block';
+    resultEl.innerText = "正在分析閱讀狀況...";
     resultEl.classList.add('show');
-    resultEl.innerText = "正在分析閱讀趨勢...";
-    
     setTimeout(() => {
-        spin.style.display = 'none';
-        resultEl.innerText = "分析完成：閱讀進度穩定，建議針對當前書籍增加每日閱讀頁數以符合 PhD 計畫進度。";
+        resultEl.innerText = "分析完成：建議維持當前進度以符合計畫週期。";
     }, 1200);
 }
 </script>
