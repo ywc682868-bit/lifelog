@@ -66,7 +66,10 @@
         .fc-day-sat, .fc-day-sun { background-color: rgba(232,209,209,0.08) !important; }
         th.fc-day-sat a, th.fc-day-sun a { color: #D19A9A !important; }
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 15px !important; }
-        .fc-event { border: none !important; background: transparent !important; }
+        
+        /* 修正點：確保長方形條在跨日時具備連續性 */
+        .fc-event { border: none !important; background: transparent !important; margin-bottom: 1px !important; }
+        .fc-h-event { border-radius: 4px !important; }
 
         .modal-fixed-card { background-color: #FFFFFF !important; border-radius: 40px !important; width: 100%; max-width: 460px; height: 680px !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .tab-inner-row { display: flex; padding-left: 32px; margin-top: 20px; height: 32px; align-items: flex-end; flex-shrink: 0; }
@@ -187,7 +190,7 @@
                     <label id="dateLabel" class="text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
                     <div class="flex items-center gap-2">
                         <input type="date" id="inputDate" class="custom-input flex-[2]">
-                        <div class="flex flex-1 items-center gap-1 bg-gray-50 rounded-xl px-2 h-[42px] mt-1">
+                        <div id="startTimeBox" class="flex flex-1 items-center gap-1 bg-gray-50 rounded-xl px-2 h-[42px] mt-1">
                             <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none"></select>
                             <span class="text-gray-300">:</span>
                             <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none"></select>
@@ -196,10 +199,10 @@
                 </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
-                        <label class="text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
+                        <label class="text-lg font-bold text-morandi-dark-gray font-cursive">End Date</label>
                         <div class="flex items-center gap-2">
                             <input type="date" id="inputEndDate" class="custom-input flex-[2]">
-                            <div class="flex flex-1 items-center gap-1 bg-gray-50 rounded-xl px-2 h-[42px] mt-1">
+                            <div id="endTimeBox" class="hidden flex-1 items-center gap-1 bg-gray-50 rounded-xl px-2 h-[42px] mt-1">
                                 <select id="selectEndHour" class="bg-transparent text-xs flex-1 outline-none"></select>
                                 <span class="text-gray-300">:</span>
                                 <select id="selectEndMinute" class="bg-transparent text-xs flex-1 outline-none"></select>
@@ -317,7 +320,7 @@ function initCalendar() {
         events: userEvents,
         eventContent: (arg) => {
             let container = document.createElement('div');
-            container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;';
+            container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;width:100%;';
             
             const isReading = arg.event.extendedProps.isReading;
             const bgColor = arg.event.extendedProps.bgColor || '#E5E5E5';
@@ -343,8 +346,6 @@ function initCalendar() {
     calendar.render();
 }
 
-// ── BOOKS ──────────────────────────────────────────────────
-
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
 function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); }
 
@@ -366,7 +367,6 @@ function renderBooks() {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
-
     const active = books.filter(b => !b.done);
     if (active.length === 0) {
         const tempId = 'new_' + Date.now();
@@ -430,7 +430,6 @@ function handleCoverUpload(input) {
         const row = input.closest('.book-row');
         const preview = row.querySelector('.cover-preview-box');
         preview.innerHTML = `<img src="${e.target.result}"><input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">`;
-        
         const { books, book } = getOrCreateBook(row);
         book.cover = e.target.result;
         saveBooks(books);
@@ -456,14 +455,11 @@ function updateField(el, field) {
     const { books, book } = getOrCreateBook(row);
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
-
     const meta = calcMeta(book);
     const fill = row.querySelector('.progress-bar-fill');
     if (fill) fill.style.width = meta.pct + '%';
-    
     const chipsEl = row.querySelector('.pct');
     if (chipsEl) chipsEl.innerText = `${meta.pct}% 完成`;
-    
     const daysEl = row.querySelector('.days-count');
     if (daysEl) daysEl.innerText = `已讀 ${meta.daysRead} 天`;
 }
@@ -484,26 +480,20 @@ function addBookRow() {
     renderBooks();
 }
 
-// ── AI ──────────────────────────────────────────────────────
-
 async function runAIAnalysis() {
     const books = loadBooks();
     const spin = document.getElementById('ai-spin');
     const icon = document.getElementById('ai-icon');
     const resultEl = document.getElementById('ai-result');
-
     spin.style.display = 'block'; icon.style.display = 'none';
     resultEl.classList.remove('show');
-
     const info = books.length > 0
         ? books.map(b => {
             const m = calcMeta(b);
             return `《${b.title || '未命名'}》已讀${b.currentPage}/${b.totalPages}頁（${m.pct}%），開始日${b.startDate||'未知'}，${b.done?'已完成':'進行中'}`;
           }).join('\n')
         : '（目前無閱讀紀錄）';
-
     const prompt = `你是一位閱讀教練，以下是使用者的閱讀紀錄：\n${info}\n\n請用繁體中文，語氣溫暖簡潔地給出：1) 閱讀狀況分析（2句），2) 具體閱讀建議（2-3點）。不要使用markdown格式或星號。`;
-
     try {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -525,8 +515,6 @@ async function runAIAnalysis() {
         spin.style.display = 'none'; icon.style.display = 'inline';
     }
 }
-
-// ── MODAL ───────────────────────────────────────────────────
 
 function openUnifiedModal() {
     document.getElementById('unifiedModal').classList.remove('hidden');
@@ -562,50 +550,75 @@ function setCategory(cat) {
         const b = document.getElementById(`cat-${c}`); if (b) b.classList.remove('selected');
     });
     const sel = document.getElementById(`cat-${cat}`); if (sel) sel.classList.add('selected');
-    document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'flex' : 'none';
-    document.getElementById('travel-end-container').style.display = (cat === 'Travel') ? 'flex' : 'none';
-    document.getElementById('dateLabel').innerText = (cat === 'Travel') ? 'Start Date & Time' : 'Date & Time';
+    
+    // 修正點：當類別為旅行時，隱藏開始與結束的時間輸入容器
+    const startTimeBox = document.getElementById('startTimeBox');
+    const endTimeBox = document.getElementById('endTimeBox');
+    const travelEndContainer = document.getElementById('travel-end-container');
+    const workHoursContainer = document.getElementById('work-hours-container');
+    
+    if (cat === 'Travel') {
+        if(startTimeBox) startTimeBox.style.display = 'none';
+        if(endTimeBox) endTimeBox.style.display = 'none';
+        travelEndContainer.style.display = 'flex';
+        workHoursContainer.style.display = 'none';
+        document.getElementById('dateLabel').innerText = 'Start Date';
+    } else {
+        if(startTimeBox) startTimeBox.style.display = 'flex';
+        travelEndContainer.style.display = 'none';
+        workHoursContainer.style.display = (cat === 'Tutor') ? 'flex' : 'none';
+        document.getElementById('dateLabel').innerText = 'Date & Time';
+    }
 }
 
 function handleSave() {
     const date = document.getElementById('inputDate').value; if (!date) return;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
-    let title, bgColor, end, priority = 1, isReading = false, cover = null;
+    let title, bgColor, startStr, endStr, priority = 1, isReading = false, cover = null, isAllDay = false;
 
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
         bgColor = colorMap[currentCategory];
-        if (currentCategory === 'Tutor') {
+        
+        if (currentCategory === 'Travel') {
+            isAllDay = true;
+            title = main;
+            startStr = date;
+            const ed = document.getElementById('inputEndDate').value;
+            if (ed) {
+                // 修正點：FullCalendar 區間結束日為 Exclusive (+1天) 才能顯示完整長方形條
+                let d = new Date(ed);
+                d.setDate(d.getDate() + 1);
+                endStr = d.toISOString().split('T')[0];
+            }
+        } else if (currentCategory === 'Tutor') {
             const wh = document.getElementById('workHours').value;
             title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
-        } else if (currentCategory === 'Travel') {
-            title = `${hour}:${min} ${main}`;
-            const ed = document.getElementById('inputEndDate').value;
-            const eh = document.getElementById('selectEndHour').value;
-            const em = document.getElementById('selectEndMinute').value;
-            end = `${ed}T${eh}:${em}:00`;
+            startStr = `${date}T${hour}:${min}:00`;
         } else {
             title = `${hour}:${min} ${main}`;
+            startStr = `${date}T${hour}:${min}:00`;
         }
     } else {
         const active = loadBooks().filter(b => !b.done);
         const b = active[0];
         if (!b) return;
-        const meta = calcMeta(b);
-        // 修改顯示格式：📖 書名 (p.目前/總數)
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#D1D1E8'; // 指定淺紫色莫蘭迪色
-        priority = 99; // 設為最高優先權，確保排在最底
+        bgColor = '#D1D1E8';
+        priority = 99;
         isReading = true;
         cover = b.cover;
+        startStr = today();
+        isAllDay = true;
     }
 
     const ev = { 
         title, 
-        start: `${date}T${hour}:${min}:00`, 
-        end, 
+        start: startStr, 
+        end: endStr, 
+        allDay: isAllDay,
         extendedProps: { bgColor, priority, isReading, cover } 
     };
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
