@@ -145,7 +145,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .ai-spin { display: none; width: 12px; height: 12px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
 
-        /* 新增區塊樣式 */
         .section-container { display: none; }
         .section-container.active { display: block; }
         .card-flat { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #EEEEEE; }
@@ -195,32 +194,14 @@
             <section id="tigps-section" class="section-container flex-1 overflow-y-auto">
                 <div class="card-flat">
                     <h3 class="font-cursive text-xl mb-4 text-morandi-green-dark">Current Projects</h3>
-                    <div class="space-y-3">
-                        <div class="p-3 bg-morandi-green-light rounded-xl flex justify-between items-center">
-                            <span>TIGPS Research Phase 1</span>
-                            <span class="text-xs bg-white px-2 py-1 rounded-md">80%</span>
-                        </div>
-                        <div class="p-3 bg-morandi-soft-orange rounded-xl flex justify-between items-center">
-                            <span>Lab Equipment Setup</span>
-                            <span class="text-xs bg-white px-2 py-1 rounded-md">30%</span>
-                        </div>
-                    </div>
+                    <div id="tigps-content" class="space-y-3"></div>
                 </div>
             </section>
 
             <section id="phd-section" class="section-container flex-1 overflow-y-auto">
                 <div class="card-flat">
                     <h3 class="font-cursive text-xl mb-4 text-morandi-blue-dark">Thesis Progress</h3>
-                    <div class="border-l-4 border-morandi-blue-dark pl-4 space-y-4">
-                        <div>
-                            <p class="font-bold">Literature Review</p>
-                            <p class="text-xs text-gray-500">Updated: 2026-04-10</p>
-                        </div>
-                        <div>
-                            <p class="font-bold">Methodology Chapter</p>
-                            <p class="text-xs text-gray-500">Status: In progress</p>
-                        </div>
-                    </div>
+                    <div id="phd-content" class="border-l-4 border-morandi-blue-dark pl-4 space-y-4"></div>
                 </div>
             </section>
 
@@ -228,13 +209,10 @@
                 <div class="card-flat">
                     <h3 class="font-cursive text-xl mb-4 text-morandi-dark-gray">Monthly Expenses</h3>
                     <table class="w-full text-sm text-left">
-                        <thead class="text-gray-400 border-bottom">
+                        <thead class="text-gray-400 border-b">
                             <tr><th class="pb-2">Date</th><th class="pb-2">Item</th><th class="pb-2">Amount</th></tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr><td class="py-2">04/15</td><td>Software Subscription</td><td>$450</td></tr>
-                            <tr><td class="py-2">04/14</td><td>Reference Books</td><td>$1,200</td></tr>
-                        </tbody>
+                        <tbody id="finance-tbody" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </section>
@@ -258,25 +236,26 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
+            <div class="field-group mb-4">
+                <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date</label>
+                <div class="datetime-row">
+                    <input type="date" id="inputDate" class="custom-input flex-1">
+                    <div id="time-selector" class="time-box">
+                        <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                        <span class="text-gray-300 self-center">:</span>
+                        <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                    </div>
+                </div>
+            </div>
+
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
                     <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
-                <div class="field-group">
-                    <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
-                    <div class="datetime-row">
-                        <input type="date" id="inputDate" class="custom-input flex-1">
-                        <div class="time-box">
-                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                            <span class="text-gray-300 self-center">:</span>
-                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                        </div>
-                    </div>
-                </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
-                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
+                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date</label>
                         <div class="datetime-row">
                             <input type="date" id="inputEndDate" class="custom-input flex-1">
                             <div class="time-box">
@@ -333,7 +312,7 @@
 const quotes = [
     { en: "The only way to do great work is to love what you do.", zh: "成就偉業的唯一途徑是熱愛自己的工作。", author: "Steve Jobs" },
     { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" },
-    { en: "Success is not final, failure is not fatal: it is the courage to continue that counts.", zh: "成功不是終點，失敗也不是終結：重要的是繼續前行的勇氣。", author: "Winston Churchill" }
+    { en: "Success is not final, failure is not fatal.", zh: "成功不是終點，失敗也不是終結。", author: "Churchill" }
 ];
 
 const TAIWAN_SPECIAL_DAYS = [
@@ -341,6 +320,7 @@ const TAIWAN_SPECIAL_DAYS = [
     { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
     { date: '2026-02-19', title: '初三', type: 'holiday' }, { date: '2026-02-28', title: '和平紀念日', type: 'holiday' },
     { date: '2026-04-04', title: '兒童節', type: 'holiday' }, { date: '2026-04-05', title: '清明節', type: 'holiday' },
+    { date: '2026-06-19', title: '端午節', type: 'holiday' }, { date: '2026-09-25', title: '中秋節', type: 'holiday' },
     { date: '2026-10-10', title: '國慶日', type: 'holiday' }
 ];
 
@@ -413,18 +393,7 @@ function initCalendar() {
             return { domNodes: [container] };
         },
         eventClick: (info) => {
-            const props = info.event.extendedProps;
-            const eventData = {
-                id: info.event.id,
-                title: info.event.title,
-                start: info.event.start,
-                end: info.event.end,
-                category: props.category || 'Private',
-                workHours: props.workHours || '',
-                isReading: props.isReading || false,
-                originalTitle: props.originalTitle || info.event.title
-            };
-            openUnifiedModal(eventData);
+            openUnifiedModal(info.event);
         }
     });
     calendar.render();
@@ -438,7 +407,7 @@ function calcMeta(book) {
     let daysRead = 1;
     if (book.startDate) {
         const start = new Date(book.startDate);
-        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000));
+        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000) + 1);
     }
     return { pct, daysRead };
 }
@@ -447,16 +416,18 @@ function renderBooks() {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
+    
+    // 只顯示尚未讀完的書
     const active = books.filter(b => !b.done);
-    if (active.length === 0) {
-        const emptyBook = { id: Date.now().toString(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
-        renderBookRow(container, emptyBook);
-    } else {
+    if (active.length > 0) {
         active.forEach(b => renderBookRow(container, b));
+    } else {
+        // 如果沒有書，自動生成一個空白列
+        addBookRow();
     }
 }
 
-function today() { return new Date().toISOString().split('T')[0]; }
+function today() { return new Date().toLocaleDateString('en-CA'); }
 
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
@@ -466,7 +437,6 @@ function renderBookRow(container, book) {
     row.onclick = (e) => {
         if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
             editingId = String(book.id);
-            document.getElementById('deleteBtn').classList.remove('hidden');
             renderBooks();
         }
     };
@@ -509,15 +479,13 @@ function updateField(el, field) {
     const row = el.closest('.book-row');
     const books = loadBooks();
     let book = books.find(b => String(b.id) === String(row.dataset.id));
-    if (!book) {
-        book = { id: row.dataset.id, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
-        books.push(book);
+    if (book) {
+        book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
+        saveBooks(books);
+        const meta = calcMeta(book);
+        row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
+        row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
     }
-    book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
-    saveBooks(books);
-    const meta = calcMeta(book);
-    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
-    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
 }
 
 function addBookRow() { 
@@ -535,7 +503,14 @@ function switchType(type) {
     document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
-    if(type === 'reading') renderBooks();
+    
+    const timeSel = document.getElementById('time-selector');
+    if (type === 'reading') {
+        timeSel.style.visibility = 'hidden';
+        renderBooks();
+    } else {
+        timeSel.style.visibility = 'visible';
+    }
 }
 
 function setCategory(cat) {
@@ -547,40 +522,40 @@ function setCategory(cat) {
     const selectedBtn = document.getElementById(`cat-${cat}`);
     if(selectedBtn) selectedBtn.classList.add('selected');
     
-    const dateLabel = document.getElementById('dateLabel');
     if(cat === 'Travel') {
-        dateLabel.innerText = "Start Date & Time";
         document.getElementById('travel-end-container').style.display = 'block';
     } else {
-        dateLabel.innerText = "Date & Time";
         document.getElementById('travel-end-container').style.display = 'none';
     }
     document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
 }
 
-function openUnifiedModal(data = null) { 
+function openUnifiedModal(eventObj = null) { 
     document.getElementById('unifiedModal').classList.remove('hidden'); 
     const delBtn = document.getElementById('deleteBtn');
+    const dateInput = document.getElementById('inputDate');
     
-    if (data) {
-        editingId = String(data.id);
+    if (eventObj) {
+        editingId = String(eventObj.id);
         delBtn.classList.remove('hidden');
-        if (data.isReading) {
+        const props = eventObj.extendedProps;
+        dateInput.value = eventObj.startStr.split('T')[0];
+        
+        if (props.isReading) {
             switchType('reading');
         } else {
             switchType('schedule');
-            document.getElementById('inputMain').value = data.originalTitle || data.title;
-            const start = new Date(data.start);
-            document.getElementById('inputDate').value = start.toISOString().split('T')[0];
+            document.getElementById('inputMain').value = props.originalTitle || eventObj.title;
+            const start = new Date(eventObj.start);
             document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
             document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
-            setCategory(data.category);
+            setCategory(props.category);
         }
     } else {
         editingId = null;
         delBtn.classList.add('hidden');
+        dateInput.value = today();
         document.getElementById('inputMain').value = '';
-        document.getElementById('inputDate').value = today();
         initTimeDropdowns(); 
         setCategory('Private');
         switchType('schedule');
@@ -598,24 +573,20 @@ function handleDelete() {
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     
-    let books = loadBooks();
-    books = books.filter(b => String(b.id) !== String(editingId));
-    saveBooks(books);
-    
     const ev = calendar.getEventById(editingId);
     if (ev) ev.remove();
-    calendar.refetchEvents();
-    if (currentType === 'reading') renderBooks();
     closeUnifiedModal();
 }
 
 function handleSave() {
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
+    const targetDate = document.getElementById('inputDate').value;
+    if (!targetDate) return;
+
+    let title, bgColor, priority = 1, isReading = false, originalTitle = '';
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
 
     if (currentType === 'schedule') {
-        targetDate = document.getElementById('inputDate').value;
         const main = document.getElementById('inputMain').value; 
         if (!main) return;
         originalTitle = main;
@@ -623,22 +594,25 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        targetDate = today();
         const books = loadBooks();
-        const b = books.find(book => String(book.id) === String(editingId)) || books.filter(book => !book.done)[0];
-        if (!b) return;
-        title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
+        // 抓取當前選中的書，或第一本未讀完的書
+        const b = books.find(book => String(book.id) === String(editingId)) || books.find(book => !book.done);
+        if (!b || !b.title) return;
+        title = `📖 ${b.title} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
         isReading = true;
-        if (!editingId) editingId = String(b.id);
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const evId = editingId || Date.now().toString();
+    const startTime = currentType === 'schedule' ? `${targetDate}T${hour}:${min}:00` : targetDate;
+
     const ev = { 
-        id: editingId || Date.now().toString(),
+        id: evId,
         title, 
-        start: `${targetDate}T${hour}:${min}:00`,
+        start: startTime,
+        allDay: currentType === 'reading',
         extendedProps: { 
             bgColor, priority, isReading, 
             category: currentCategory, 
@@ -657,30 +631,24 @@ function handleSave() {
 }
 
 function showSection(id) { 
-    const sections = ['calendar', 'tigps', 'phd', 'finance'];
-    sections.forEach(s => {
+    ['calendar', 'tigps', 'phd', 'finance'].forEach(s => {
         const el = document.getElementById(`${s}-section`);
-        if(el) {
-            el.classList.toggle('active', s === id);
-        }
+        if(el) el.classList.toggle('active', s === id);
     });
     if (id === 'calendar' && calendar) setTimeout(() => calendar.render(), 50); 
 }
 
 async function runAIAnalysis() {
     const spin = document.getElementById('ai-spin');
-    const icon = document.getElementById('ai-icon');
     const resultEl = document.getElementById('ai-result');
     spin.style.display = 'block';
-    icon.style.display = 'none';
     resultEl.classList.add('show');
-    resultEl.innerText = "Analyzing reading habits...";
+    resultEl.innerText = "正在分析閱讀趨勢...";
     
     setTimeout(() => {
         spin.style.display = 'none';
-        icon.style.display = 'block';
-        resultEl.innerText = "Analysis Complete: Your reading pace is consistent. Consider increasing deep-work sessions for the upcoming PhD thesis phase.";
-    }, 1500);
+        resultEl.innerText = "分析完成：閱讀進度穩定，建議針對當前書籍增加每日閱讀頁數以符合 PhD 計畫進度。";
+    }, 1200);
 }
 </script>
 </body>
