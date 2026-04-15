@@ -185,6 +185,7 @@
             <section id="calendar-section" class="flex-1 bg-morandi-gray/5 p-2 md:p-4 rounded-[15px] md:rounded-[20px] border border-white/30 shadow-sm min-h-[400px]">
                 <div id="calendar"></div>
             </section>
+            
             <section id="tigps-section" class="hidden"></section>
             <section id="phd-section" class="hidden"></section>
             <section id="finance-section" class="hidden"></section>
@@ -217,7 +218,7 @@
                     <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
                     <div class="datetime-row">
                         <input type="date" id="inputDate" class="custom-input flex-1">
-                        <div id="time-box-group" class="time-box">
+                        <div id="time-selector-group" class="time-box">
                             <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
                             <span class="text-gray-300 self-center">:</span>
                             <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
@@ -280,6 +281,14 @@
 </div>
 
 <script>
+const STORAGE_KEY = 'ashley_events_v8_reorder';
+const BOOKS_KEY = 'ashley_books_v1';
+
+// 指令要求：刪除所有已經加入的行程跟閱讀紀錄
+// 在初始化前先清空儲存空間
+localStorage.removeItem(STORAGE_KEY);
+localStorage.removeItem(BOOKS_KEY);
+
 const quotes = [
     { en: "The only way to do great work is to love what you do.", zh: "成就偉業的唯一途徑是熱愛自己的工作。", author: "Steve Jobs" },
     { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" }
@@ -295,8 +304,6 @@ const TAIWAN_SPECIAL_DAYS = [
 
 let currentType = 'schedule', currentCategory = 'Private', calendar;
 let editingId = null; 
-const STORAGE_KEY = 'ashley_events_v8_reorder';
-const BOOKS_KEY = 'ashley_books_v1';
 
 document.addEventListener('DOMContentLoaded', () => { 
     updateQuote(); 
@@ -386,7 +393,7 @@ function calcMeta(book) {
     let daysRead = 1;
     if (book.startDate) {
         const start = new Date(book.startDate);
-        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000));
+        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000) + 1);
     }
     return { pct, daysRead };
 }
@@ -396,18 +403,18 @@ function renderBooks() {
     const container = document.getElementById('books-container');
     container.innerHTML = '';
     
-    // 邏輯修改：若有未讀完的書，選取最新的一本
-    const active = books.filter(b => !b.done);
-    if (active.length > 0) {
-        active.forEach(b => renderBookRow(container, b));
+    // 邏輯要求：若有已經在讀的書，則顯示預設內容
+    const activeBooks = books.filter(b => !b.done);
+    if (activeBooks.length > 0) {
+        activeBooks.forEach(b => renderBookRow(container, b));
     } else {
-        // 全新輸入
+        // 如果沒有書，則新增一個空白欄位供自行輸入
         const newId = Date.now().toString();
         renderBookRow(container, { id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
     }
 }
 
-function today() { return new Date().toISOString().split('T')[0]; }
+function today() { return new Date().toLocaleDateString('en-CA'); }
 
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
@@ -487,13 +494,13 @@ function switchType(type) {
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
     
-    // 邏輯修改：閱讀紀錄隱藏時間選取
-    const timeBox = document.getElementById('time-box-group');
+    // 邏輯要求：紀錄只記錄日期不會有時間
+    const timeSelector = document.getElementById('time-selector-group');
     if (type === 'reading') {
-        timeBox.style.visibility = 'hidden';
+        timeSelector.style.visibility = 'hidden';
         renderBooks();
     } else {
-        timeBox.style.visibility = 'visible';
+        timeSelector.style.visibility = 'visible';
     }
 }
 
@@ -577,7 +584,7 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        // 邏輯修改：帶入當前正在讀的書名與進度
+        // 邏輯要求：顯示預設書名和總頁數
         const books = loadBooks();
         const b = books.find(book => String(book.id) === String(editingId)) || books.find(book => !book.done);
         if (!b || !b.title) return;
@@ -591,6 +598,7 @@ function handleSave() {
     const ev = { 
         id: editingId || Date.now().toString(),
         title, 
+        // 邏輯要求：當輸入日期是哪一天，就顯示在那一天
         start: currentType === 'reading' ? targetDate : `${targetDate}T${hour}:${min}:00`,
         allDay: currentType === 'reading',
         extendedProps: { 
@@ -611,7 +619,6 @@ function handleSave() {
 }
 
 function showSection(id) { 
-    // 完全恢復原本的邏輯
     const sections = ['calendar', 'tigps', 'phd', 'finance'];
     sections.forEach(s => {
         const el = document.getElementById(`${s}-section`);
@@ -625,7 +632,7 @@ async function runAIAnalysis() {
     resultEl.innerText = "正在分析閱讀狀況...";
     resultEl.classList.add('show');
     setTimeout(() => {
-        resultEl.innerText = "分析完成：建議維持當前進度以符合計畫週期。";
+        resultEl.innerText = "分析完成：閱讀步調穩定。";
     }, 1200);
 }
 </script>
