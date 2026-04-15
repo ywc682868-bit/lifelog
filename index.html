@@ -120,6 +120,10 @@
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
         
+        .book-title-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+        .book-title-input { flex: 1; min-width: 0; }
+        .book-done-cb { width: 18px; height: 18px; accent-color: #7F9F9F; cursor: pointer; flex-shrink: 0; }
+
         .start-date-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; font-size: 0.7rem; color: #3A4750; outline: none; font-family: var(--font-zh); padding: 1px 2px; width: 100%; }
         .days-count { font-size: 9px; color: #AAAAAA; white-space: nowrap; }
 
@@ -134,9 +138,6 @@
         .ai-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #EDF3ED; border: none; border-radius: 20px; padding: 7px 16px; cursor: pointer; font-size: 0.7rem; color: #3A4750; width: 100%; }
         .ai-result { margin-top: 8px; background: #F5F8F5; border-radius: 12px; padding: 10px; font-size: 0.7rem; color: #555; display: none; max-height: 100px; overflow-y: auto; }
         .ai-result.show { display: block; }
-        
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .ai-spin { display: none; width: 12px; height: 12px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
@@ -355,18 +356,16 @@ function initCalendar() {
     calendar.render();
 }
 
-// ── 修改模式邏輯 ──
 function openEditModal(event) {
-    editingEventId = event.extendedProps.id || event.start.getTime(); // 使用儲存的 ID 或時間戳
+    editingEventId = event.extendedProps.id || event.start.getTime();
     const isReading = event.extendedProps.isReading;
     
     if (isReading) {
         switchType('reading');
-        // 閱讀紀錄點擊直接開啟閱讀分頁，因閱讀是連動數據，此處維持現狀
     } else {
         switchType('schedule');
         const titleParts = event.title.split(' ');
-        const timeStr = titleParts[0]; // "HH:mm"
+        const timeStr = titleParts[0];
         const mainText = titleParts.slice(1).join(' ').replace(/\(\d+(\.\d+)?h\)/, '').trim();
         
         document.getElementById('inputMain').value = mainText;
@@ -374,23 +373,9 @@ function openEditModal(event) {
         document.getElementById('selectHour').value = timeStr.split(':')[0];
         document.getElementById('selectMinute').value = timeStr.split(':')[1];
         
-        // 類別判斷
         const colorMap = { '#E8D1D1':'Work', '#D5E0D5':'Exercise', '#EBE5D1':'Travel', '#EEDFD2':'Tutor', '#E5E5E5':'Private' };
         const cat = colorMap[event.extendedProps.bgColor] || 'Private';
         setCategory(cat);
-        
-        if (cat === 'Tutor') {
-            const hourMatch = event.title.match(/\((\d+(\.\d+)?)h\)/);
-            if (hourMatch) document.getElementById('workHours').value = hourMatch[1];
-        }
-        if (cat === 'Travel' && event.end) {
-            document.getElementById('inputEndDate').value = event.endStr.split('T')[0];
-            const endT = event.endStr.split('T')[1];
-            if(endT) {
-                document.getElementById('selectEndHour').value = endT.split(':')[0];
-                document.getElementById('selectEndMinute').value = endT.split(':')[1];
-            }
-        }
     }
     document.getElementById('unifiedModal').classList.remove('hidden');
 }
@@ -451,7 +436,7 @@ function handleSave() {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    location.reload(); // 重新整理以更新行事曆
+    location.reload();
 }
 
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
@@ -489,7 +474,10 @@ function renderBookRow(container, book, isTemp) {
     row.innerHTML = `
         <div class="cover-preview-box"><i class="fa-solid fa-camera text-gray-300 text-xs"></i></div>
         <div class="book-main-info">
-            <input class="book-title-input w-full text-sm font-bold bg-transparent outline-none mb-1" type="text" placeholder="書名 Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
+            <div class="book-title-line">
+                <input class="book-title-input text-sm font-bold bg-transparent outline-none" type="text" placeholder="書名 Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
+                <input type="checkbox" class="book-done-cb" ${book.done ? 'checked' : ''} onchange="toggleDone(this)" title="完成閱讀" />
+            </div>
             <div class="flex items-center gap-2 mb-1">
                 <input type="date" class="start-date-input" value="${book.startDate || today()}" oninput="updateField(this,'startDate')" />
                 <span class="days-count">已讀 ${meta.daysRead} 天</span>
@@ -520,6 +508,17 @@ function updateField(el, field) {
     const meta = calcMeta(book);
     row.querySelector('.pct').innerText = `${meta.pct}% 完成`;
     row.querySelector('.days-count').innerText = `已讀 ${meta.daysRead} 天`;
+}
+
+function toggleDone(el) {
+    const row = el.closest('.book-row');
+    const books = loadBooks();
+    let book = books.find(b => String(b.id) === String(row.dataset.id));
+    if (book) {
+        book.done = el.checked;
+        saveBooks(books);
+        renderBooks();
+    }
 }
 
 function addBookRow() { 
