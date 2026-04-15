@@ -47,41 +47,16 @@
         .fc .fc-button { padding: 2px 6px !important; font-size: 0.65rem !important; border-radius: 8px !important; background-color: #C6D8E2 !important; border: none !important; color: #3A4750 !important; }
         .fc .fc-yearDisplay-button { background-color: transparent !important; border: none !important; color: #3A4750 !important; font-size: 1rem !important; font-family: var(--font-en); font-weight: 600 !important; padding: 0 8px !important; cursor: default !important; }
 
-        /* 修改：將日期與標籤的佈局調整為兩端對齊 */
-.fc .fc-daygrid-day-top {
-    display: flex !important;
-    flex-direction: row-reverse !important; /* 關鍵：讓內容反向排列，確保日期在右 */
-    justify-content: space-between !important; /* 讓兩者分開至左右兩端 */
-    align-items: flex-start !important;
-    padding: 2px 4px !important;
-    min-height: 30px;
-    width: 100%;
-}
-
-/* 確保標籤（國定假日、節氣）靠左 */
-.special-label { 
-    font-size: 10px; 
-    padding: 1px 5px; 
-    border-radius: 4px; 
-    line-height: 1.4; 
-    white-space: nowrap; 
-    flex-shrink: 0; 
-    margin-top: 2px;
-    margin-right: auto; /* 強制靠左推 */
-}
-
-/* 確保日期數字靠右 */
-.fc .fc-daygrid-day-number { 
-    padding: 0 2px !important; 
-    text-decoration: none !important; 
-    color: #555; 
-    font-size: 0.8rem; 
-    float: none !important; 
-    flex-shrink: 0; 
-    margin-top: 1px;
-    text-align: right; /* 文字對齊向右 */
-}
-        .special-label { font-size: 10px; padding: 1px 5px; border-radius: 4px; line-height: 1.4; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+        .fc .fc-daygrid-day-top {
+            display: flex !important;
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            padding: 2px 4px !important;
+            min-height: 30px;
+            width: 100%;
+        }
+        .special-label { font-size: 10px; padding: 1px 5px; border-radius: 4px; line-height: 1.4; white-space: nowrap; flex-shrink: 0; margin-top: 2px; margin-right: auto; }
         .label-holiday { background-color: #E8D1D1; color: #A64444; font-weight: 600; }
         .label-solar { color: #2D3748; background: transparent !important; font-weight: 600; }
         .fc .fc-daygrid-day-number { padding: 0 2px !important; text-decoration: none !important; color: #555; font-size: 0.8rem; float: none !important; flex-shrink: 0; margin-top: 1px; }
@@ -132,7 +107,6 @@
         .page-total-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; padding: 2px 4px; width: 58px; font-size: 0.82rem; text-align: center; outline: none; font-family: var(--font-zh); color: #BBBBBB; height: 28px; box-sizing: border-box; }
         .pages-label { font-size: 10px; color: #AAAAAA; }
 
-        .progress-bar-wrap { margin-top: 8px; height: 4px; background: #EBEBEB; border-radius: 4px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: #7F9F9F; border-radius: 4px; transition: width 0.4s; }
 
         .book-meta { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
@@ -159,10 +133,30 @@
             </div>
         </button>
         <ul class="space-y-2 flex-grow">
-            <li><button onclick="showSection('calendar')" class="flex items-center gap-3 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base text-morandi-blue"><i class="fa-solid fa-pen-nib text-xs"></i> Journal</button></li>
-            <li><button onclick="showSection('tigps')" class="flex items-center gap-3 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base"><i class="fa-solid fa-layer-group text-xs"></i> Projects</button></li>
-            <li><button onclick="showSection('phd')" class="flex items-center gap-3 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base"><i class="fa-solid fa-graduation-cap text-xs"></i> Thesis</button></li>
-            <li><button onclick="showSection('finance')" class="flex items-center gap-3 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base"><i class="fa-solid fa-calculator text-xs"></i> Accounting</button></li>
+            <li>
+                <button onclick="showSection('calendar')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
+                    <i class="fa-solid fa-pen-nib text-xs text-morandi-blue-dark"></i> 
+                    Journal
+                </button>
+            </li>
+            <li>
+                <button onclick="showSection('tigps')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
+                    <i class="fa-solid fa-layer-group text-xs text-morandi-blue-dark"></i> 
+                    Projects
+                </button>
+            </li>
+            <li>
+                <button onclick="showSection('phd')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
+                    <i class="fa-solid fa-graduation-cap text-xs text-morandi-blue-dark"></i> 
+                    Thesis
+                </button>
+            </li>
+            <li>
+                <button onclick="showSection('finance')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
+                    <i class="fa-solid fa-calculator text-xs text-morandi-blue-dark"></i> 
+                    Accounting
+                </button>
+            </li>
         </ul>
     </nav>
 
@@ -198,7 +192,6 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
-            <!-- SCHEDULE -->
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
                     <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
@@ -248,7 +241,6 @@
                 </div>
             </div>
 
-            <!-- READING -->
             <div id="read-fields" style="display:none;" class="text-left">
                 <div class="read-header">
                     <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Reading</label>
@@ -352,8 +344,6 @@ function initCalendar() {
     calendar.render();
 }
 
-// ── BOOKS ──────────────────────────────────────────────────
-
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
 function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); }
 
@@ -375,16 +365,12 @@ function renderBooks() {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
-
     const active = books.filter(b => !b.done);
-    const list = active.length > 0 ? active : [];
-
-    // Always show at least one empty row if no books
-    if (list.length === 0) {
+    if (active.length === 0) {
         const tempId = 'new_' + Date.now();
         renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false }, true);
     } else {
-        list.forEach(b => renderBookRow(container, b, false));
+        active.forEach(b => renderBookRow(container, b, false));
     }
 }
 
@@ -416,7 +402,7 @@ function renderBookRow(container, book, isTemp) {
                 oninput="updateField(this,'totalPages')" />
             <span class="pages-label" style="margin-left:4px;">pages</span>
         </div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${meta.pct}%"></div></div>
+        <div class="progress-bar-wrap" style="margin-top: 8px; height: 4px; background: #EBEBEB; border-radius: 4px; overflow: hidden;"><div class="progress-bar-fill" style="width:${meta.pct}%"></div></div>
         <div class="book-meta">
             <span class="meta-chip pct">${meta.pct}% 完成</span>
             ${meta.eta !== null ? `<span class="meta-chip">預計還需 ${meta.eta} 天</span>` : ''}
@@ -429,7 +415,6 @@ function renderBookRow(container, book, isTemp) {
 function getOrCreateBook(row) {
     const books = loadBooks();
     const rawId = row.dataset.id;
-    const isTemp = row.dataset.temp === '1';
     let book = books.find(b => String(b.id) === String(rawId));
     if (!book) {
         book = { id: rawId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
@@ -445,8 +430,6 @@ function updateField(el, field) {
     const { books, book } = getOrCreateBook(row);
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
-
-    // Refresh meta display
     const meta = calcMeta(book);
     const fill = row.querySelector('.progress-bar-fill');
     if (fill) fill.style.width = meta.pct + '%';
@@ -474,35 +457,23 @@ function addBookRow() {
     renderBooks();
 }
 
-// ── AI ──────────────────────────────────────────────────────
-
 async function runAIAnalysis() {
     const books = loadBooks();
     const spin = document.getElementById('ai-spin');
     const icon = document.getElementById('ai-icon');
     const resultEl = document.getElementById('ai-result');
-
     spin.style.display = 'block'; icon.style.display = 'none';
     resultEl.classList.remove('show');
-
-    const info = books.length > 0
-        ? books.map(b => {
-            const m = calcMeta(b);
-            return `《${b.title || '未命名'}》已讀${b.currentPage}/${b.totalPages}頁（${m.pct}%），開始日${b.startDate||'未知'}，${b.done?'已完成':'進行中'}`;
-          }).join('\n')
-        : '（目前無閱讀紀錄）';
-
+    const info = books.length > 0 ? books.map(b => {
+        const m = calcMeta(b);
+        return `《${b.title || '未命名'}》已讀${b.currentPage}/${b.totalPages}頁（${m.pct}%），開始日${b.startDate||'未知'}，${b.done?'已完成':'進行中'}`;
+    }).join('\n') : '（目前無閱讀紀錄）';
     const prompt = `你是一位閱讀教練，以下是使用者的閱讀紀錄：\n${info}\n\n請用繁體中文，語氣溫暖簡潔地給出：1) 閱讀狀況分析（2句），2) 具體閱讀建議（2-3點）。不要使用markdown格式或星號。`;
-
     try {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
-                messages: [{ role: 'user', content: prompt }]
-            })
+            body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
         });
         const data = await res.json();
         const text = (data.content || []).map(c => c.text || '').join('') || '無法取得分析。';
@@ -515,8 +486,6 @@ async function runAIAnalysis() {
         spin.style.display = 'none'; icon.style.display = 'inline';
     }
 }
-
-// ── MODAL ───────────────────────────────────────────────────
 
 function openUnifiedModal() {
     document.getElementById('unifiedModal').classList.remove('hidden');
@@ -562,11 +531,10 @@ function handleSave() {
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
     let title, colorClass, end;
-
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
-        const colors = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
-        colorClass = 'soft-' + currentCategory.toLowerCase();
+        const colors2 = { Work:'bg-morandi-soft-red', Exercise:'bg-morandi-soft-green', Travel:'bg-morandi-soft-yellow', Tutor:'bg-morandi-soft-orange', Private:'bg-morandi-soft-gray' };
+        colorClass = colors2[currentCategory];
         if (currentCategory === 'Tutor') {
             const wh = document.getElementById('workHours').value;
             title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
@@ -579,15 +547,12 @@ function handleSave() {
         } else {
             title = `${hour}:${min} ${main}`;
         }
-        const colors2 = { Work:'bg-morandi-soft-red', Exercise:'bg-morandi-soft-green', Travel:'bg-morandi-soft-yellow', Tutor:'bg-morandi-soft-orange', Private:'bg-morandi-soft-gray' };
-        colorClass = colors2[currentCategory];
     } else {
         const active = loadBooks().filter(b => !b.done);
         const b = active[0];
         title = b ? `📖 ${hour}:${min} ${b.title||'Reading'} (p.${b.currentPage||0}/${b.totalPages||0})` : `📖 ${hour}:${min} Reading`;
         colorClass = 'bg-morandi-soft-green';
     }
-
     const ev = { title, start: `${date}T${hour}:${min}:00`, end, extendedProps: { colorClass } };
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage.push(ev); localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
