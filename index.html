@@ -361,7 +361,7 @@ function initCalendar() {
         },
         eventClick: (info) => {
             const props = info.event.extendedProps;
-            const eventData = {
+            openUnifiedModal({
                 id: info.event.id,
                 title: info.event.title,
                 start: info.event.start,
@@ -370,8 +370,7 @@ function initCalendar() {
                 workHours: props.workHours || '',
                 isReading: props.isReading || false,
                 originalTitle: props.originalTitle || info.event.title
-            };
-            openUnifiedModal(eventData);
+            });
         }
     });
     calendar.render();
@@ -459,9 +458,6 @@ function updateField(el, field) {
     }
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
-    const meta = calcMeta(book);
-    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
-    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
 }
 
 function addBookRow() { 
@@ -497,8 +493,7 @@ function openUnifiedModal(data = null) {
         delBtn.classList.remove('hidden');
         if (data.isReading) {
             switchType('reading');
-            // 修改閱讀進度時，將日期選單設定為該筆紀錄在行事曆上的日期
-            const start = new Date(data.start || new Date());
+            const start = data.start ? new Date(data.start) : new Date();
             document.getElementById('inputDate').value = start.toISOString().split('T')[0];
         } else {
             switchType('schedule');
@@ -527,20 +522,29 @@ function closeUnifiedModal() {
 
 function handleDelete() {
     if (!editingId) return;
+
+    // 1. 同步從行事曆事件庫中刪除（無論是行程還是閱讀快照）
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    
-    // 從行事曆刪除並重整
+
+    // 2. 如果目前在閱讀分頁，同步從書目清單中刪除
+    if (currentType === 'reading') {
+        let books = loadBooks();
+        books = books.filter(b => String(b.id) !== String(editingId));
+        saveBooks(books);
+        renderBooks();
+    }
+
+    // 3. 更新行事曆視圖
     calendar.getEventById(editingId)?.remove();
     calendar.removeAllEvents();
     calendar.addEventSource(storage);
-    
+
     closeUnifiedModal();
 }
 
 function handleSave() {
-    // 日期抓取自 inputDate，確保閱讀進度能顯示在使用者指定的日期
     const dateInput = document.getElementById('inputDate').value;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
@@ -555,7 +559,9 @@ function handleSave() {
     } else {
         const active = loadBooks().filter(b => !b.done);
         if (active.length === 0) return;
-        const b = active[0];
+        // 如果是編輯模式，尋找對應 ID 的書；否則取第一本
+        const b = editingId ? active.find(book => String(book.id) === String(editingId)) : active[0];
+        if (!b) return;
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
@@ -564,7 +570,6 @@ function handleSave() {
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    // 必須確保 id 被寫在最外層，FullCalendar 才能透過 getEventById 找到它
     const ev = { 
         id: editingId || Date.now().toString(),
         title, 
