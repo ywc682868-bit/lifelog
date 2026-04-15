@@ -116,11 +116,17 @@
         .read-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .add-book-btn { background: none; border: none; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; background: #E2E8E8; display: flex; align-items: center; justify-content: center; color: #7F9F9F; transition: background 0.2s; flex-shrink: 0; }
 
-        .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background 0.2s; }
+        .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background 0.2s; position: relative; }
         .book-row:hover { background: #F1F3F5; }
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
         
+        /* 閱讀勾選框樣式 */
+        .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; }
+        .check-input { width: 18px; height: 18px; border: 2px solid #7F9F9F; border-radius: 50%; appearance: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .check-input:checked { background-color: #7F9F9F; }
+        .check-input:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 10px; }
+
         .start-date-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; font-size: 0.7rem; color: #3A4750; outline: none; font-family: var(--font-zh); padding: 1px 2px; width: 100%; }
         .days-count { font-size: 9px; color: #AAAAAA; white-space: nowrap; }
 
@@ -246,7 +252,7 @@
 
             <div id="read-fields" style="display:none;" class="text-left">
                 <div class="read-header">
-                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Reading</label>
+                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Reading Record</label>
                     <button onclick="addBookRow()" class="add-book-btn">
                         <i class="fa-solid fa-plus" style="font-size:10px;"></i>
                     </button>
@@ -262,8 +268,9 @@
                 </div>
             </div>
 
-            <div class="pt-4">
-                <button onclick="handleSave()" id="saveBtn" class="w-full md:w-1/2 mx-auto block py-2 text-white rounded-full font-cursive text-sm shadow-sm active:scale-95 transition-all" style="background-color:#8DAAB9;">Keep it</button>
+            <div class="pt-6 flex justify-between items-center gap-4">
+                <button onclick="handleDelete()" id="deleteBtn" class="hidden px-8 py-2 text-morandi-dark-gray rounded-full font-cursive text-sm transition-all border border-morandi-soft-red hover:bg-morandi-soft-red">Delete</button>
+                <button onclick="handleSave()" id="saveBtn" class="flex-1 py-2 text-white rounded-full font-cursive text-sm shadow-sm active:scale-95 transition-all text-center" style="background-color:#8DAAB9;">Keep it</button>
             </div>
         </div>
     </div>
@@ -284,7 +291,7 @@ const TAIWAN_SPECIAL_DAYS = [
 ];
 
 let currentType = 'schedule', currentCategory = 'Private', calendar;
-let editingId = null; // 用於追蹤正在修改的項目 ID
+let editingId = null; 
 const STORAGE_KEY = 'ashley_events_v8_reorder';
 const BOOKS_KEY = 'ashley_books_v1';
 
@@ -304,20 +311,16 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    
     [h, m, eh, em].forEach(el => el.innerHTML = '');
-
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        h.innerHTML += o;
-        eh.innerHTML += o;
+        h.innerHTML += o; eh.innerHTML += o;
     }
     for (let i = 0; i < 60; i += 5) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        m.innerHTML += o;
-        em.innerHTML += o;
+        m.innerHTML += o; em.innerHTML += o;
     }
 }
 
@@ -355,7 +358,6 @@ function initCalendar() {
             return { domNodes: [container] };
         },
         eventClick: (info) => {
-            // 點擊行事曆項目進入修改頁面
             const props = info.event.extendedProps;
             const eventData = {
                 id: info.event.id,
@@ -365,7 +367,7 @@ function initCalendar() {
                 category: props.category || 'Private',
                 workHours: props.workHours || '',
                 isReading: props.isReading || false,
-                originalTitle: props.originalTitle || info.event.title.split(' ').slice(1).join(' ')
+                originalTitle: props.originalTitle || info.event.title
             };
             openUnifiedModal(eventData);
         }
@@ -392,32 +394,35 @@ function renderBooks() {
     container.innerHTML = '';
     const active = books.filter(b => !b.done);
     if (active.length === 0) {
-        renderBookRow(container, { id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false }, true);
+        renderBookRow(container, { id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
     } else {
-        active.forEach(b => renderBookRow(container, b, false));
+        active.forEach(b => renderBookRow(container, b));
     }
 }
 
 function today() { return new Date().toISOString().split('T')[0]; }
 
-function renderBookRow(container, book, isTemp) {
+function renderBookRow(container, book) {
     const meta = calcMeta(book);
     const row = document.createElement('div');
     row.className = 'book-row';
     row.dataset.id = book.id;
-    // 點擊閱讀紀錄行進入修改頁面
+    // 點擊該行進入修改頁面
     row.onclick = (e) => {
-        if (e.target.tagName !== 'INPUT') {
+        if (!['INPUT', 'SELECT'].includes(e.target.tagName)) {
             openUnifiedModal({ ...book, isReading: true });
         }
     };
     row.innerHTML = `
+        <div class="check-container">
+            <input type="checkbox" class="check-input" ${book.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleDone(this)">
+        </div>
         <div class="cover-preview-box"><i class="fa-solid fa-camera text-gray-300 text-xs"></i></div>
         <div class="book-main-info">
-            <input class="book-title-input w-full text-sm font-bold bg-transparent outline-none mb-1" type="text" placeholder="書名 Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
+            <input class="book-title-input w-full text-sm font-bold bg-transparent outline-none mb-1" type="text" placeholder="Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
             <div class="flex items-center gap-2 mb-1">
                 <input type="date" class="start-date-input" value="${book.startDate || today()}" oninput="updateField(this,'startDate')" />
-                <span class="days-count">已讀 ${meta.daysRead} 天</span>
+                <span class="days-count">Read ${meta.daysRead} days</span>
             </div>
             <div class="page-row">
                 <div class="page-input-group">
@@ -425,11 +430,22 @@ function renderBookRow(container, book, isTemp) {
                     <span class="text-gray-300">/</span>
                     <input type="number" class="page-total-input" value="${book.totalPages || ''}" oninput="updateField(this,'totalPages')" />
                 </div>
-                <span class="meta-chip pct">${meta.pct}% 完成</span>
+                <span class="meta-chip pct">${meta.pct}% Completed</span>
             </div>
         </div>
     `;
     container.appendChild(row);
+}
+
+function toggleDone(el) {
+    const row = el.closest('.book-row');
+    const books = loadBooks();
+    const book = books.find(b => String(b.id) === String(row.dataset.id));
+    if (book) {
+        book.done = el.checked;
+        saveBooks(books);
+        renderBooks();
+    }
 }
 
 function updateField(el, field) {
@@ -443,8 +459,8 @@ function updateField(el, field) {
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
     const meta = calcMeta(book);
-    row.querySelector('.pct').innerText = `${meta.pct}% 完成`;
-    row.querySelector('.days-count').innerText = `已讀 ${meta.daysRead} 天`;
+    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
+    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
 }
 
 function addBookRow() { 
@@ -473,13 +489,15 @@ function setCategory(cat) {
 
 function openUnifiedModal(data = null) { 
     document.getElementById('unifiedModal').classList.remove('hidden'); 
+    const delBtn = document.getElementById('deleteBtn');
     
     if (data) {
-        // 修改模式
         editingId = data.id || data.id.toString();
+        delBtn.classList.remove('hidden');
         if (data.isReading) {
             switchType('reading');
-            renderBooks();
+            // 閱讀資料回填邏輯，維持相同格式
+            document.getElementById('inputDate').value = today();
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = data.originalTitle || data.title;
@@ -487,23 +505,13 @@ function openUnifiedModal(data = null) {
             document.getElementById('inputDate').value = start.toISOString().split('T')[0];
             document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
             document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
-            
-            if (data.end) {
-                const end = new Date(data.end);
-                document.getElementById('inputEndDate').value = end.toISOString().split('T')[0];
-                document.getElementById('selectEndHour').value = String(end.getHours()).padStart(2, '0');
-                document.getElementById('selectEndMinute').value = String(Math.floor(end.getMinutes() / 5) * 5).padStart(2, '0');
-            }
-            if (data.workHours) document.getElementById('workHours').value = data.workHours;
             setCategory(data.category);
         }
     } else {
-        // 新增模式
         editingId = null;
+        delBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
         document.getElementById('inputDate').valueAsDate = new Date();
-        document.getElementById('inputEndDate').valueAsDate = new Date();
-        document.getElementById('workHours').value = '';
         initTimeDropdowns(); 
         setCategory('Private');
         switchType('schedule');
@@ -513,6 +521,15 @@ function openUnifiedModal(data = null) {
 function closeUnifiedModal() { 
     document.getElementById('unifiedModal').classList.add('hidden'); 
     editingId = null;
+}
+
+function handleDelete() {
+    if (!editingId) return;
+    let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    storage = storage.filter(e => String(e.id) !== String(editingId));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+    calendar.getEventById(editingId)?.remove();
+    closeUnifiedModal();
 }
 
 function handleSave() {
@@ -526,62 +543,41 @@ function handleSave() {
         originalTitle = main;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
         bgColor = colorMap[currentCategory];
-        
-        if (currentCategory === 'Tutor') {
-            const wh = document.getElementById('workHours').value;
-            title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
-        } else {
-            title = `${hour}:${min} ${main}`;
-        }
+        title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
         const active = loadBooks().filter(b => !b.done);
         if (active.length === 0) return;
         const b = active[0];
+        // 顯示該日閱讀頁數紀錄
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
         isReading = true;
     }
 
-    const startStr = `${date}T${hour}:${min}:00`;
-    let endStr = null;
-    if (currentCategory === 'Travel') {
-        const endDate = document.getElementById('inputEndDate').value;
-        const endHour = document.getElementById('selectEndHour').value;
-        const endMin = document.getElementById('selectEndMinute').value;
-        endStr = `${endDate}T${endHour}:${endMin}:00`;
-    }
-
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const ev = { 
         id: editingId || Date.now().toString(),
         title, 
-        start: startStr,
-        end: endStr,
+        start: `${date}T${hour}:${min}:00`,
         extendedProps: { 
-            bgColor, 
-            priority, 
-            isReading, 
-            category: currentCategory,
+            bgColor, priority, isReading, 
+            category: currentCategory, 
             workHours: document.getElementById('workHours').value,
             originalTitle: originalTitle
         } 
     };
 
     if (editingId) {
-        const index = storage.findIndex(e => String(e.id) === String(editingId));
-        if (index > -1) storage[index] = ev;
-        else storage.push(ev);
+        const idx = storage.findIndex(e => String(e.id) === String(editingId));
+        if (idx > -1) storage[idx] = ev; else storage.push(ev);
     } else {
         storage.push(ev);
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    
-    // 重新載入行事曆事件
     calendar.removeAllEvents();
     calendar.addEventSource(storage);
-    
     closeUnifiedModal();
 }
 
@@ -594,7 +590,7 @@ async function runAIAnalysis() {
     resultEl.innerText = "正在分析閱讀狀況...";
     resultEl.classList.add('show');
     setTimeout(() => {
-        resultEl.innerText = "根據目前紀錄，您的閱讀進度穩定。建議每天維持至少 20 頁的閱讀量以達成目標。";
+        resultEl.innerText = "您的閱讀進度穩定。建議每天維持目標閱讀量。";
     }, 1500);
 }
 </script>
