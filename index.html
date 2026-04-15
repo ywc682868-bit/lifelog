@@ -117,11 +117,11 @@
         .add-book-btn { background: none; border: none; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; background: #E2E8E8; display: flex; align-items: center; justify-content: center; color: #7F9F9F; transition: background 0.2s; flex-shrink: 0; }
 
         .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background 0.2s; position: relative; }
+        .book-row.editing { border: 2px solid #7F9F9F; }
         .book-row:hover { background: #F1F3F5; }
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
         
-        /* 閱讀勾選框樣式 */
         .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; }
         .check-input { width: 18px; height: 18px; border: 2px solid #7F9F9F; border-radius: 50%; appearance: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .check-input:checked { background-color: #7F9F9F; }
@@ -258,6 +258,10 @@
                     </button>
                 </div>
                 <div id="books-container"></div>
+                <div class="field-group mt-2">
+                    <label class="text-xs font-bold text-gray-400 font-cursive">Log Date</label>
+                    <input type="date" id="readLogDate" class="custom-input !h-8 !text-xs">
+                </div>
                 <div class="ai-section">
                     <button class="ai-btn" onclick="runAIAnalysis()">
                         <div id="ai-spin" class="ai-spin"></div>
@@ -394,7 +398,9 @@ function renderBooks() {
     container.innerHTML = '';
     const active = books.filter(b => !b.done);
     if (active.length === 0) {
-        renderBookRow(container, { id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
+        // 若完全沒紀錄，預設給一筆空的讓使用者填寫
+        const emptyBook = { id: Date.now().toString(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
+        renderBookRow(container, emptyBook);
     } else {
         active.forEach(b => renderBookRow(container, b));
     }
@@ -405,12 +411,13 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
     const row = document.createElement('div');
-    row.className = 'book-row';
+    row.className = `book-row ${String(editingId) === String(book.id) ? 'editing' : ''}`;
     row.dataset.id = book.id;
-    // 點擊該行進入修改頁面
     row.onclick = (e) => {
-        if (!['INPUT', 'SELECT'].includes(e.target.tagName)) {
-            openUnifiedModal({ ...book, isReading: true });
+        if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
+            editingId = book.id.toString();
+            document.getElementById('deleteBtn').classList.remove('hidden');
+            renderBooks();
         }
     };
     row.innerHTML = `
@@ -465,8 +472,10 @@ function updateField(el, field) {
 
 function addBookRow() { 
     const books = loadBooks();
-    books.push({ id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
+    const newId = Date.now().toString();
+    books.push({ id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
     saveBooks(books);
+    editingId = newId;
     renderBooks(); 
 }
 
@@ -476,13 +485,21 @@ function switchType(type) {
     document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
-    if(type === 'reading') renderBooks();
+    if(type === 'reading') {
+        document.getElementById('readLogDate').value = today();
+        renderBooks();
+    }
 }
 
 function setCategory(cat) {
     currentCategory = cat;
-    ['Work','Exercise','Travel','Tutor','Private'].forEach(c => document.getElementById(`cat-${c}`).classList.remove('selected'));
-    document.getElementById(`cat-${cat}`).classList.add('selected');
+    ['Work','Exercise','Travel','Tutor','Private'].forEach(c => {
+        const btn = document.getElementById(`cat-${c}`);
+        if(btn) btn.classList.remove('selected');
+    });
+    const selectedBtn = document.getElementById(`cat-${cat}`);
+    if(selectedBtn) selectedBtn.classList.add('selected');
+    
     document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
     document.getElementById('travel-end-container').style.display = (cat === 'Travel') ? 'block' : 'none';
 }
@@ -492,12 +509,11 @@ function openUnifiedModal(data = null) {
     const delBtn = document.getElementById('deleteBtn');
     
     if (data) {
-        editingId = data.id || data.id.toString();
+        editingId = data.id.toString();
         delBtn.classList.remove('hidden');
         if (data.isReading) {
             switchType('reading');
-            // 閱讀資料回填邏輯，維持相同格式
-            document.getElementById('inputDate').value = today();
+            document.getElementById('readLogDate').value = new Date(data.start).toISOString().split('T')[0];
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = data.originalTitle || data.title;
@@ -511,7 +527,8 @@ function openUnifiedModal(data = null) {
         editingId = null;
         delBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
-        document.getElementById('inputDate').valueAsDate = new Date();
+        document.getElementById('inputDate').value = today();
+        document.getElementById('readLogDate').value = today();
         initTimeDropdowns(); 
         setCategory('Private');
         switchType('schedule');
@@ -525,41 +542,59 @@ function closeUnifiedModal() {
 
 function handleDelete() {
     if (!editingId) return;
+    
+    // 從行程儲存空間刪除
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    calendar.getEventById(editingId)?.remove();
+    
+    // 從閱讀紀錄儲存空間刪除
+    let books = loadBooks();
+    books = books.filter(b => String(b.id) !== String(editingId));
+    saveBooks(books);
+    
+    // 從行事曆視圖移除
+    const ev = calendar.getEventById(editingId);
+    if (ev) ev.remove();
+    
+    // 重新渲染閱讀清單 (如果在閱讀模式)
+    if (currentType === 'reading') renderBooks();
+    
     closeUnifiedModal();
 }
 
 function handleSave() {
-    const date = document.getElementById('inputDate').value;
+    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '';
 
     if (currentType === 'schedule') {
-        const main = document.getElementById('inputMain').value; if (!main) return;
+        targetDate = document.getElementById('inputDate').value;
+        const main = document.getElementById('inputMain').value; 
+        if (!main) return;
         originalTitle = main;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        const active = loadBooks().filter(b => !b.done);
-        if (active.length === 0) return;
-        const b = active[0];
-        // 顯示該日閱讀頁數紀錄
+        targetDate = document.getElementById('readLogDate').value;
+        const books = loadBooks();
+        // 尋找當前正在編輯的書，或取清單中第一本
+        const b = books.find(book => String(book.id) === String(editingId)) || books.filter(book => !book.done)[0];
+        if (!b) return;
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
         isReading = true;
+        // 確保 event ID 與書籍 ID 同步，方便後續點擊與刪除
+        if (!editingId) editingId = b.id.toString();
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const ev = { 
         id: editingId || Date.now().toString(),
         title, 
-        start: `${date}T${hour}:${min}:00`,
+        start: `${targetDate}T${hour}:${min}:00`,
         extendedProps: { 
             bgColor, priority, isReading, 
             category: currentCategory, 
@@ -568,12 +603,8 @@ function handleSave() {
         } 
     };
 
-    if (editingId) {
-        const idx = storage.findIndex(e => String(e.id) === String(editingId));
-        if (idx > -1) storage[idx] = ev; else storage.push(ev);
-    } else {
-        storage.push(ev);
-    }
+    const idx = storage.findIndex(e => String(e.id) === String(ev.id));
+    if (idx > -1) storage[idx] = ev; else storage.push(ev);
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     calendar.removeAllEvents();
