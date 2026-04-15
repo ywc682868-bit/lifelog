@@ -76,7 +76,7 @@
         .fc-day-sat, .fc-day-sun { background-color: rgba(232,209,209,0.08) !important; }
         th.fc-day-sat a, th.fc-day-sun a { color: #D19A9A !important; }
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 10px !important; }
-        .fc-event { border: none !important; background: transparent !important; }
+        .fc-event { border: none !important; background: transparent !important; cursor: pointer; }
 
         #main-nav { transition: transform 0.3s ease-in-out; z-index: 50; }
         @media (max-width: 768px) {
@@ -106,10 +106,9 @@
         .custom-input { background-color: #F9FAFB; border: none; border-radius: 12px; padding: 10px 12px; outline: none; font-size: 0.85rem; height: 42px; width: 100%; margin-top: 4px; font-family: var(--font-zh); box-sizing: border-box; }
         .custom-input:focus { box-shadow: 0 0 0 1px #E5E7EB; }
         
-        /* 日期與時間合併列樣式 */
         .datetime-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
         .datetime-row .custom-input { margin-top: 0; }
-        .time-box { display: flex; items-center; gap: 4px; background-color: #F9FAFB; border-radius: 12px; px-3; height: 42px; flex-shrink: 0; min-width: 110px; padding: 0 10px; }
+        .time-box { display: flex; align-items: center; gap: 4px; background-color: #F9FAFB; border-radius: 12px; height: 42px; flex-shrink: 0; min-width: 110px; padding: 0 10px; }
 
         .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
         .fab-main { background-color: #EBC4B9; color: #3A4750; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
@@ -283,7 +282,7 @@ const TAIWAN_SPECIAL_DAYS = [
     { date: '2026-10-10', title: '國慶日', type: 'holiday' }
 ];
 
-let currentType = 'schedule', currentCategory = 'Private', calendar;
+let currentType = 'schedule', currentCategory = 'Private', calendar, editingEventId = null;
 const STORAGE_KEY = 'ashley_events_v8_reorder';
 const BOOKS_KEY = 'ashley_books_v1';
 
@@ -303,20 +302,16 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    
     [h, m, eh, em].forEach(el => el.innerHTML = '');
-
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        h.innerHTML += o;
-        eh.innerHTML += o;
+        h.innerHTML += o; eh.innerHTML += o;
     }
     for (let i = 0; i < 60; i += 5) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        m.innerHTML += o;
-        em.innerHTML += o;
+        m.innerHTML += o; em.innerHTML += o;
     }
 }
 
@@ -347,6 +342,9 @@ function initCalendar() {
             return { html: `${labelHtml}<a class="fc-daygrid-day-number">${arg.dayNumberText.replace('日','')}</a>` };
         },
         events: userEvents,
+        eventClick: (info) => {
+            openEditModal(info.event);
+        },
         eventContent: (arg) => {
             let container = document.createElement('div');
             container.style.cssText = 'font-size:9px;padding:1px 3px;margin-bottom:1px;border-radius:4px;overflow:hidden;color:#444;display:flex;align-items:center;gap:3px;background-color:' + (arg.event.extendedProps.bgColor || '#E5E5E5');
@@ -355,6 +353,105 @@ function initCalendar() {
         }
     });
     calendar.render();
+}
+
+// ── 修改模式邏輯 ──
+function openEditModal(event) {
+    editingEventId = event.extendedProps.id || event.start.getTime(); // 使用儲存的 ID 或時間戳
+    const isReading = event.extendedProps.isReading;
+    
+    if (isReading) {
+        switchType('reading');
+        // 閱讀紀錄點擊直接開啟閱讀分頁，因閱讀是連動數據，此處維持現狀
+    } else {
+        switchType('schedule');
+        const titleParts = event.title.split(' ');
+        const timeStr = titleParts[0]; // "HH:mm"
+        const mainText = titleParts.slice(1).join(' ').replace(/\(\d+(\.\d+)?h\)/, '').trim();
+        
+        document.getElementById('inputMain').value = mainText;
+        document.getElementById('inputDate').value = event.startStr.split('T')[0];
+        document.getElementById('selectHour').value = timeStr.split(':')[0];
+        document.getElementById('selectMinute').value = timeStr.split(':')[1];
+        
+        // 類別判斷
+        const colorMap = { '#E8D1D1':'Work', '#D5E0D5':'Exercise', '#EBE5D1':'Travel', '#EEDFD2':'Tutor', '#E5E5E5':'Private' };
+        const cat = colorMap[event.extendedProps.bgColor] || 'Private';
+        setCategory(cat);
+        
+        if (cat === 'Tutor') {
+            const hourMatch = event.title.match(/\((\d+(\.\d+)?)h\)/);
+            if (hourMatch) document.getElementById('workHours').value = hourMatch[1];
+        }
+        if (cat === 'Travel' && event.end) {
+            document.getElementById('inputEndDate').value = event.endStr.split('T')[0];
+            const endT = event.endStr.split('T')[1];
+            if(endT) {
+                document.getElementById('selectEndHour').value = endT.split(':')[0];
+                document.getElementById('selectEndMinute').value = endT.split(':')[1];
+            }
+        }
+    }
+    document.getElementById('unifiedModal').classList.remove('hidden');
+}
+
+function openUnifiedModal() { 
+    editingEventId = null;
+    document.getElementById('inputMain').value = '';
+    document.getElementById('workHours').value = '';
+    document.getElementById('unifiedModal').classList.remove('hidden'); 
+    document.getElementById('inputDate').valueAsDate = new Date();
+    document.getElementById('inputEndDate').valueAsDate = new Date();
+    setCategory('Private');
+}
+
+function handleSave() {
+    const date = document.getElementById('inputDate').value;
+    const hour = document.getElementById('selectHour').value;
+    const min = document.getElementById('selectMinute').value;
+    let title, bgColor, priority = 1, isReading = false, end = null;
+
+    if (currentType === 'schedule') {
+        const main = document.getElementById('inputMain').value; if (!main) return;
+        const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
+        bgColor = colorMap[currentCategory];
+        
+        if (currentCategory === 'Tutor') {
+            const wh = document.getElementById('workHours').value;
+            title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
+        } else if (currentCategory === 'Travel') {
+            title = `${hour}:${min} ${main}`;
+            const ed = document.getElementById('inputEndDate').value;
+            const eh = document.getElementById('selectEndHour').value;
+            const em = document.getElementById('selectEndMinute').value;
+            end = `${ed}T${eh}:${em}:00`;
+        } else {
+            title = `${hour}:${min} ${main}`;
+        }
+    } else {
+        const active = loadBooks().filter(b => !b.done);
+        if (active.length === 0) return;
+        const b = active[0];
+        title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
+        bgColor = '#D1D1E8';
+        priority = 99;
+        isReading = true;
+    }
+
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const newId = editingEventId || Date.now();
+    const ev = { id: newId, title, start: `${date}T${hour}:${min}:00`, end, extendedProps: { id: newId, bgColor, priority, isReading } };
+
+    if (editingEventId) {
+        const idx = storage.findIndex(e => (e.id || e.extendedProps?.id) == editingEventId);
+        if (idx > -1) storage[idx] = ev;
+        else storage.push(ev);
+    } else {
+        storage.push(ev);
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+    location.reload(); // 重新整理以更新行事曆
 }
 
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
@@ -449,61 +546,9 @@ function setCategory(cat) {
     document.getElementById('travel-end-container').style.display = (cat === 'Travel') ? 'block' : 'none';
 }
 
-function openUnifiedModal() { 
-    document.getElementById('unifiedModal').classList.remove('hidden'); 
-    document.getElementById('inputDate').valueAsDate = new Date();
-    document.getElementById('inputEndDate').valueAsDate = new Date();
-    setCategory('Private');
-}
 function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); }
-
-function handleSave() {
-    const date = document.getElementById('inputDate').value;
-    const hour = document.getElementById('selectHour').value;
-    const min = document.getElementById('selectMinute').value;
-    let title, bgColor, priority = 1, isReading = false;
-
-    if (currentType === 'schedule') {
-        const main = document.getElementById('inputMain').value; if (!main) return;
-        const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
-        bgColor = colorMap[currentCategory];
-        
-        if (currentCategory === 'Tutor') {
-            const wh = document.getElementById('workHours').value;
-            title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
-        } else {
-            title = `${hour}:${min} ${main}`;
-        }
-    } else {
-        const active = loadBooks().filter(b => !b.done);
-        if (active.length === 0) return;
-        const b = active[0];
-        title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#D1D1E8';
-        priority = 99;
-        isReading = true;
-    }
-
-    const ev = { title, start: `${date}T${hour}:${min}:00`, extendedProps: { bgColor, priority, isReading } };
-    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    storage.push(ev);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    calendar.addEvent(ev);
-    closeUnifiedModal();
-}
-
-function showSection(id) { 
-    if (id === 'calendar') setTimeout(() => calendar.render(), 50); 
-}
-
-async function runAIAnalysis() {
-    const resultEl = document.getElementById('ai-result');
-    resultEl.innerText = "正在分析閱讀狀況...";
-    resultEl.classList.add('show');
-    setTimeout(() => {
-        resultEl.innerText = "根據目前紀錄，您的閱讀進度穩定。建議每天維持至少 20 頁的閱讀量以達成目標。";
-    }, 1500);
-}
+function showSection(id) { if (id === 'calendar') setTimeout(() => calendar.render(), 50); }
+async function runAIAnalysis() { alert("AI 分析功能正在開發中..."); }
 </script>
 </body>
 </html>
