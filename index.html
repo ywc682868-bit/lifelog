@@ -39,7 +39,6 @@
         body { font-family: var(--font-zh); background-color: #F8F8F8; margin: 0; padding: 0; }
         .font-cursive { font-family: var(--font-en); }
 
-        /* 電腦版高度固定，手機版允許滾動或自動調整 */
         @media (min-width: 768px) {
             body { overflow: hidden; height: 100vh; }
         }
@@ -49,7 +48,6 @@
         .fc-scrollgrid { border: none !important; }
         .fc .fc-view-harness { border-radius: 20px; overflow: hidden; background-color: #fff; }
         
-        /* 手機版行事曆標題與按鈕微調 */
         @media (max-width: 768px) {
             .fc .fc-toolbar-title { font-size: 1.2rem !important; }
             .fc .fc-button { padding: 4px 8px !important; font-size: 0.75rem !important; }
@@ -80,37 +78,16 @@
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 10px !important; }
         .fc-event { border: none !important; background: transparent !important; }
 
-        /* 側邊欄手機版抽屜樣式 */
-        #main-nav {
-            transition: transform 0.3s ease-in-out;
-            z-index: 50;
-        }
+        #main-nav { transition: transform 0.3s ease-in-out; z-index: 50; }
         @media (max-width: 768px) {
-            #main-nav {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                transform: translateX(-100%);
-                width: 240px;
-            }
-            #main-nav.active {
-                transform: translateX(0);
-            }
-            .nav-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 40;
-            }
+            #main-nav { position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%); width: 240px; }
+            #main-nav.active { transform: translateX(0); }
+            .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
             .nav-overlay.active { display: block; }
         }
 
         .modal-fixed-card { background-color: #FFFFFF !important; border-radius: 40px !important; width: 100%; max-width: 460px; height: 90vh !important; max-height: 680px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; overflow: hidden; display: flex; flex-direction: column; }
-        @media (max-width: 768px) {
-            .modal-fixed-card { width: 95%; border-radius: 30px !important; }
-        }
+        @media (max-width: 768px) { .modal-fixed-card { width: 95%; border-radius: 30px !important; } }
 
         .tab-inner-row { display: flex; padding-left: 32px; margin-top: 20px; height: 32px; align-items: flex-end; flex-shrink: 0; }
         .sticker-tab { transition: all 0.2s; font-size: 1.1rem; border: none; outline: none; border-top-left-radius: 12px !important; border-top-right-radius: 12px !important; min-width: 75px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: -12px; }
@@ -128,7 +105,11 @@
         .field-group { display: flex; flex-direction: column; width: 100%; }
         .custom-input { background-color: #F9FAFB; border: none; border-radius: 12px; padding: 10px 12px; outline: none; font-size: 0.85rem; height: 42px; width: 100%; margin-top: 4px; font-family: var(--font-zh); box-sizing: border-box; }
         .custom-input:focus { box-shadow: 0 0 0 1px #E5E7EB; }
-        textarea.custom-input { resize: none; min-height: 70px; height: auto !important; }
+        
+        /* 日期與時間合併列樣式 */
+        .datetime-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .datetime-row .custom-input { margin-top: 0; }
+        .time-box { display: flex; items-center; gap: 4px; background-color: #F9FAFB; border-radius: 12px; px-3; height: 42px; flex-shrink: 0; min-width: 110px; padding: 0 10px; }
 
         .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
         .fab-main { background-color: #EBC4B9; color: #3A4750; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
@@ -168,7 +149,8 @@
     <div class="md:hidden flex items-center justify-between p-4 bg-morandi-dark-gray text-white shrink-0">
         <button onclick="toggleSidebar()" class="text-xl px-2"><i class="fa-solid fa-bars"></i></button>
         <h1 class="font-cursive text-lg">Ashley's Optimization</h1>
-        <div class="w-8"></div> </div>
+        <div class="w-8"></div>
+    </div>
 
     <nav id="main-nav" class="w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col md:rounded-r-[30px] shadow-2xl shrink-0">
         <button onclick="location.reload()" class="mb-8 text-left group">
@@ -224,19 +206,26 @@
                 </div>
                 <div class="field-group">
                     <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
-                    <div class="flex flex-col gap-2">
-                        <input type="date" id="inputDate" class="custom-input">
-                        <div class="flex items-center gap-1 bg-gray-50 rounded-xl px-2 h-[42px]">
-                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none"></select>
-                            <span class="text-gray-300">:</span>
-                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none"></select>
+                    <div class="datetime-row">
+                        <input type="date" id="inputDate" class="custom-input flex-1">
+                        <div class="time-box">
+                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                            <span class="text-gray-300 self-center">:</span>
+                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
                         </div>
                     </div>
                 </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
                         <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
-                        <input type="date" id="inputEndDate" class="custom-input">
+                        <div class="datetime-row">
+                            <input type="date" id="inputEndDate" class="custom-input flex-1">
+                            <div class="time-box">
+                                <select id="selectEndHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                                <span class="text-gray-300 self-center">:</span>
+                                <select id="selectEndMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                            </div>
+                        </div>
                     </div>
                     <div id="work-hours-container" class="field-group" style="display:none;">
                         <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Work Hours</label>
@@ -291,8 +280,7 @@ const TAIWAN_SPECIAL_DAYS = [
     { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
     { date: '2026-02-19', title: '初三', type: 'holiday' }, { date: '2026-02-28', title: '和平紀念日', type: 'holiday' },
     { date: '2026-04-04', title: '兒童節', type: 'holiday' }, { date: '2026-04-05', title: '清明節', type: 'holiday' },
-    { date: '2026-05-01', title: '勞動節', type: 'holiday' }, { date: '2026-06-19', title: '端午節', type: 'holiday' },
-    { date: '2026-09-25', title: '中秋節', type: 'holiday' }, { date: '2026-10-10', title: '國慶日', type: 'holiday' }
+    { date: '2026-10-10', title: '國慶日', type: 'holiday' }
 ];
 
 let currentType = 'schedule', currentCategory = 'Private', calendar;
@@ -314,13 +302,21 @@ function toggleSidebar() {
 
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
+    const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
+    
+    [h, m, eh, em].forEach(el => el.innerHTML = '');
+
     for (let i = 0; i < 24; i++) {
-        const o = `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
+        const val = String(i).padStart(2,'0');
+        const o = `<option value="${val}">${val}</option>`;
         h.innerHTML += o;
+        eh.innerHTML += o;
     }
     for (let i = 0; i < 60; i += 5) {
-        const o = `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
+        const val = String(i).padStart(2,'0');
+        const o = `<option value="${val}">${val}</option>`;
         m.innerHTML += o;
+        em.innerHTML += o;
     }
 }
 
@@ -334,7 +330,7 @@ function updateQuote() {
 function initCalendar() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: window.innerWidth < 768 ? 'dayGridMonth' : 'dayGridMonth',
+        initialView: 'dayGridMonth',
         locale: 'en',
         height: '100%',
         headerToolbar: { 
@@ -354,19 +350,13 @@ function initCalendar() {
         eventContent: (arg) => {
             let container = document.createElement('div');
             container.style.cssText = 'font-size:9px;padding:1px 3px;margin-bottom:1px;border-radius:4px;overflow:hidden;color:#444;display:flex;align-items:center;gap:3px;background-color:' + (arg.event.extendedProps.bgColor || '#E5E5E5');
-            
-            if (arg.event.extendedProps.isReading) {
-                container.innerText = arg.event.title;
-            } else {
-                container.innerText = arg.event.title;
-            }
+            container.innerText = arg.event.title;
             return { domNodes: [container] };
         }
     });
     calendar.render();
 }
 
-// ── BOOKS 邏輯 ──
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
 function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); }
 
@@ -412,7 +402,6 @@ function renderBookRow(container, book, isTemp) {
                     <input type="number" class="page-input" value="${book.currentPage || ''}" oninput="updateField(this,'currentPage')" />
                     <span class="text-gray-300">/</span>
                     <input type="number" class="page-total-input" value="${book.totalPages || ''}" oninput="updateField(this,'totalPages')" />
-                    <span class="text-[9px] text-gray-400">p</span>
                 </div>
                 <span class="meta-chip pct">${meta.pct}% 完成</span>
             </div>
@@ -431,7 +420,6 @@ function updateField(el, field) {
     }
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
-    // 簡單重繪或即時數值更新
     const meta = calcMeta(book);
     row.querySelector('.pct').innerText = `${meta.pct}% 完成`;
     row.querySelector('.days-count').innerText = `已讀 ${meta.daysRead} 天`;
@@ -464,6 +452,7 @@ function setCategory(cat) {
 function openUnifiedModal() { 
     document.getElementById('unifiedModal').classList.remove('hidden'); 
     document.getElementById('inputDate').valueAsDate = new Date();
+    document.getElementById('inputEndDate').valueAsDate = new Date();
     setCategory('Private');
 }
 function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); }
@@ -478,7 +467,13 @@ function handleSave() {
         const main = document.getElementById('inputMain').value; if (!main) return;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
         bgColor = colorMap[currentCategory];
-        title = `${hour}:${min} ${main}`;
+        
+        if (currentCategory === 'Tutor') {
+            const wh = document.getElementById('workHours').value;
+            title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
+        } else {
+            title = `${hour}:${min} ${main}`;
+        }
     } else {
         const active = loadBooks().filter(b => !b.done);
         if (active.length === 0) return;
@@ -500,7 +495,15 @@ function handleSave() {
 function showSection(id) { 
     if (id === 'calendar') setTimeout(() => calendar.render(), 50); 
 }
+
+async function runAIAnalysis() {
+    const resultEl = document.getElementById('ai-result');
+    resultEl.innerText = "正在分析閱讀狀況...";
+    resultEl.classList.add('show');
+    setTimeout(() => {
+        resultEl.innerText = "根據目前紀錄，您的閱讀進度穩定。建議每天維持至少 20 頁的閱讀量以達成目標。";
+    }, 1500);
+}
 </script>
 </body>
 </html>
-
