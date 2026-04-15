@@ -122,12 +122,10 @@
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
         
-        .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; display: flex; gap: 8px; }
+        .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; }
         .check-input { width: 18px; height: 18px; border: 2px solid #7F9F9F; border-radius: 50%; appearance: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .check-input:checked { background-color: #7F9F9F; }
         .check-input:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 10px; }
-        .delete-book-btn { color: #E8D1D1; font-size: 14px; cursor: pointer; }
-        .delete-book-btn:hover { color: #A64444; }
 
         .start-date-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; font-size: 0.7rem; color: #3A4750; outline: none; font-family: var(--font-zh); padding: 1px 2px; width: 100%; }
         .days-count { font-size: 9px; color: #AAAAAA; white-space: nowrap; }
@@ -207,22 +205,21 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
-            <div class="field-group mb-4">
-                <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
-                <div class="datetime-row">
-                    <input type="date" id="inputDate" class="custom-input flex-1">
-                    <div class="time-box">
-                        <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                        <span class="text-gray-300 self-center">:</span>
-                        <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                    </div>
-                </div>
-            </div>
-
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
                     <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
+                </div>
+                <div class="field-group">
+                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
+                    <div class="datetime-row">
+                        <input type="date" id="inputDate" class="custom-input flex-1">
+                        <div class="time-box">
+                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                            <span class="text-gray-300 self-center">:</span>
+                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                        </div>
+                    </div>
                 </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
@@ -261,6 +258,16 @@
                     </button>
                 </div>
                 <div id="books-container"></div>
+                
+                <div class="field-group mt-2">
+                    <label class="text-xs font-bold text-gray-400 font-cursive">Time (Today)</label>
+                    <div class="time-box !h-10 !w-32 mt-1">
+                        <select id="selectReadHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                        <span class="text-gray-300 self-center">:</span>
+                        <select id="selectReadMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                    </div>
+                </div>
+
                 <div class="ai-section">
                     <button class="ai-btn" onclick="runAIAnalysis()">
                         <div id="ai-spin" class="ai-spin"></div>
@@ -314,16 +321,17 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    [h, m, eh, em].forEach(el => el.innerHTML = '');
+    const rh = document.getElementById('selectReadHour'), rm = document.getElementById('selectReadMinute');
+    [h, m, eh, em, rh, rm].forEach(el => el.innerHTML = '');
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        h.innerHTML += o; eh.innerHTML += o;
+        h.innerHTML += o; eh.innerHTML += o; rh.innerHTML += o;
     }
     for (let i = 0; i < 60; i += 5) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        m.innerHTML += o; em.innerHTML += o;
+        m.innerHTML += o; em.innerHTML += o; rm.innerHTML += o;
     }
 }
 
@@ -412,7 +420,7 @@ function renderBookRow(container, book) {
     row.className = `book-row ${String(editingId) === String(book.id) ? 'editing' : ''}`;
     row.dataset.id = book.id;
     row.onclick = (e) => {
-        if (!['INPUT', 'SELECT', 'BUTTON', 'I'].includes(e.target.tagName)) {
+        if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
             editingId = book.id.toString();
             document.getElementById('deleteBtn').classList.remove('hidden');
             renderBooks();
@@ -420,7 +428,6 @@ function renderBookRow(container, book) {
     };
     row.innerHTML = `
         <div class="check-container">
-            <i class="fa-solid fa-trash-can delete-book-btn" onclick="event.stopPropagation(); deleteIndividualBook('${book.id}')"></i>
             <input type="checkbox" class="check-input" ${book.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleDone(this)">
         </div>
         <div class="cover-preview-box"><i class="fa-solid fa-camera text-gray-300 text-xs"></i></div>
@@ -441,14 +448,6 @@ function renderBookRow(container, book) {
         </div>
     `;
     container.appendChild(row);
-}
-
-function deleteIndividualBook(id) {
-    if (!confirm('確定要刪除這本閱讀紀錄嗎？')) return;
-    let books = loadBooks();
-    books = books.filter(b => String(b.id) !== String(id));
-    saveBooks(books);
-    renderBooks();
 }
 
 function toggleDone(el) {
@@ -492,17 +491,6 @@ function switchType(type) {
     document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
-    
-    // 控制日期欄位的顯示 (修正：閱讀模式不顯示日期輸入，固定為今天)
-    const dateInput = document.getElementById('inputDate');
-    if (type === 'reading') {
-        dateInput.style.display = 'none';
-        document.getElementById('dateLabel').innerText = "Time (Today)";
-    } else {
-        dateInput.style.display = 'block';
-        document.getElementById('dateLabel').innerText = "Date & Time";
-    }
-
     if(type === 'reading') {
         renderBooks();
     }
@@ -528,18 +516,18 @@ function openUnifiedModal(data = null) {
     if (data) {
         editingId = data.id.toString();
         delBtn.classList.remove('hidden');
-
-        // 修改時間功能：填入現有時間
         const start = new Date(data.start);
-        document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
-        document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
-
+        
         if (data.isReading) {
             switchType('reading');
+            document.getElementById('selectReadHour').value = String(start.getHours()).padStart(2, '0');
+            document.getElementById('selectReadMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = data.originalTitle || data.title;
             document.getElementById('inputDate').value = start.toISOString().split('T')[0];
+            document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
+            document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
             setCategory(data.category);
         }
     } else {
@@ -561,6 +549,7 @@ function closeUnifiedModal() {
 function handleDelete() {
     if (!editingId) return;
     
+    // 修正：從行事曆與閱讀清單中完整移除該 ID
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
@@ -577,12 +566,12 @@ function handleDelete() {
 }
 
 function handleSave() {
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
-    const hour = document.getElementById('selectHour').value;
-    const min = document.getElementById('selectMinute').value;
+    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate, hour, min;
 
     if (currentType === 'schedule') {
         targetDate = document.getElementById('inputDate').value;
+        hour = document.getElementById('selectHour').value;
+        min = document.getElementById('selectMinute').value;
         const main = document.getElementById('inputMain').value; 
         if (!main) return;
         originalTitle = main;
@@ -591,6 +580,8 @@ function handleSave() {
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
         targetDate = today(); // 修正：Log Date 就是今天
+        hour = document.getElementById('selectReadHour').value;
+        min = document.getElementById('selectReadMinute').value;
         const books = loadBooks();
         const b = books.find(book => String(book.id) === String(editingId)) || books.filter(book => !book.done)[0];
         if (!b) return;
