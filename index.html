@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Log</title>
+    <title>System Registry</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -25,7 +25,8 @@
                             'soft-orange': '#EEDFD2',
                             'soft-yellow': '#EBE5D1',
                             'soft-green': '#D5E0D5',
-                            'soft-gray': '#E5E5E5'
+                            'soft-gray': '#E5E5E5',
+                            'soft-lavender': '#D1D1E8' // 專屬閱讀色
                         }
                     }
                 }
@@ -47,16 +48,17 @@
         .fc .fc-button { padding: 2px 6px !important; font-size: 0.65rem !important; border-radius: 8px !important; background-color: #C6D8E2 !important; border: none !important; color: #3A4750 !important; }
         .fc .fc-yearDisplay-button { background-color: transparent !important; border: none !important; color: #3A4750 !important; font-size: 1rem !important; font-family: var(--font-en); font-weight: 600 !important; padding: 0 8px !important; cursor: default !important; }
 
-        .fc .fc-daygrid-day-top {
+        .fc-daygrid-day-top {
             display: flex !important;
-            flex-direction: row-reverse !important;
-            justify-content: space-between !important;
+            flex-direction: row !important;
+            justify-content: flex-end !important;
             align-items: flex-start !important;
             padding: 2px 4px !important;
             min-height: 30px;
             width: 100%;
+            gap: 4px;
         }
-        .special-label { font-size: 10px; padding: 1px 5px; border-radius: 4px; line-height: 1.4; white-space: nowrap; flex-shrink: 0; margin-top: 2px; margin-right: auto; }
+        .special-label { font-size: 10px; padding: 1px 5px; border-radius: 4px; line-height: 1.4; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
         .label-holiday { background-color: #E8D1D1; color: #A64444; font-weight: 600; }
         .label-solar { color: #2D3748; background: transparent !important; font-weight: 600; }
         .fc .fc-daygrid-day-number { padding: 0 2px !important; text-decoration: none !important; color: #555; font-size: 0.8rem; float: none !important; flex-shrink: 0; margin-top: 1px; }
@@ -86,20 +88,22 @@
         .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
         .fab-main { background-color: #EBC4B9; color: #3A4750; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
 
-        /* Reading module */
         .read-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .add-book-btn { background: none; border: none; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; background: #E2E8E8; display: flex; align-items: center; justify-content: center; color: #7F9F9F; transition: background 0.2s; flex-shrink: 0; }
         .add-book-btn:hover { background: #C6D8D8; }
 
-        .book-row { background: #F9FAFB; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; }
+        .book-row { background: #F9FAFB; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+        .cover-preview-box { width: 45px; height: 60px; background: #eee; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px dashed #ccc; cursor: pointer; }
+        .cover-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        .book-main-info { flex: 1; }
         .book-title-line { display: flex; align-items: center; gap: 8px; }
         .book-title-input { background: transparent; border: none; outline: none; font-size: 0.88rem; font-family: var(--font-zh); flex: 1; color: #3A4750; font-weight: 600; min-width: 0; }
         .book-title-input::placeholder { color: #CCCCCC; font-weight: 400; }
         .book-done-cb { width: 16px; height: 16px; accent-color: #7F9F9F; cursor: pointer; flex-shrink: 0; }
 
         .book-start-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-        .start-label { font-size: 10px; color: #BBBBBB; white-space: nowrap; }
-        .start-date-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; font-size: 0.75rem; color: #AAAAAA; outline: none; font-family: var(--font-zh); padding: 1px 4px; flex: 1; }
+        .start-label { font-size: 0.88rem; font-weight: 600; color: #3A4750; white-space: nowrap; }
+        .start-date-input { background: transparent; border: none; border-bottom: 1px dashed #DDDDDD; font-size: 0.75rem; color: #3A4750; outline: none; font-family: var(--font-zh); padding: 1px 4px; flex: 1; }
 
         .page-row { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
         .page-input { background: #EEEEEE; border: none; border-radius: 8px; padding: 4px 8px; width: 62px; font-size: 0.82rem; text-align: center; outline: none; font-family: var(--font-zh); color: #3A4750; height: 28px; box-sizing: border-box; }
@@ -108,6 +112,7 @@
         .pages-label { font-size: 10px; color: #AAAAAA; }
 
         .progress-bar-fill { height: 100%; background: #7F9F9F; border-radius: 4px; transition: width 0.4s; }
+        .progress-bar-wrap { margin-top: 8px; height: 4px; background: #EBEBEB; border-radius: 4px; overflow: hidden; }
 
         .book-meta { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
         .meta-chip { font-size: 10px; color: #888; background: #EEEEEE; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
@@ -126,37 +131,17 @@
 
 <div class="flex h-screen overflow-hidden">
     <nav class="w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-10">
-        <button onclick="location.reload()" class="mb-8 text-left">
+        <button onclick="location.reload()" class="mb-8 text-left group">
             <div class="flex items-center gap-2">
-                <h1 class="text-lg font-cursive text-morandi-green">Life Log</h1>
-                <i class="fa-solid fa-seedling text-morandi-green text-[12px]"></i>
+                <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">System Registry</h1>
+                <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
             </div>
         </button>
         <ul class="space-y-2 flex-grow">
-            <li>
-                <button onclick="showSection('calendar')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
-                    <i class="fa-solid fa-pen-nib text-xs text-morandi-blue-dark"></i> 
-                    Journal
-                </button>
-            </li>
-            <li>
-                <button onclick="showSection('tigps')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
-                    <i class="fa-solid fa-layer-group text-xs text-morandi-blue-dark"></i> 
-                    Projects
-                </button>
-            </li>
-            <li>
-                <button onclick="showSection('phd')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
-                    <i class="fa-solid fa-graduation-cap text-xs text-morandi-blue-dark"></i> 
-                    Thesis
-                </button>
-            </li>
-            <li>
-                <button onclick="showSection('finance')" class="flex items-center gap-3 text-gray-200 hover:text-white w-full text-left p-2 rounded-xl font-cursive text-lg">
-                    <i class="fa-solid fa-calculator text-xs text-morandi-blue-dark"></i> 
-                    Accounting
-                </button>
-            </li>
+            <li><button onclick="showSection('calendar')" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-pen-nib text-xs"></i> Journal</button></li>
+            <li><button onclick="showSection('tigps')" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-layer-group text-xs"></i> Projects</button></li>
+            <li><button onclick="showSection('phd')" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-graduation-cap text-xs"></i> Thesis</button></li>
+            <li><button onclick="showSection('finance')" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-calculator text-xs"></i> Accounting</button></li>
         </ul>
     </nav>
 
@@ -318,6 +303,7 @@ function initCalendar() {
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: new Date().getFullYear().toString() } },
         titleFormat: { month: 'long' },
+        eventOrder: 'priority,start',
         dayCellContent: (arg) => {
             const dateStr = arg.date.toLocaleDateString('en-CA');
             const special = TAIWAN_SPECIAL_DAYS.find(d => d.date === dateStr);
@@ -329,20 +315,34 @@ function initCalendar() {
         },
         events: userEvents,
         eventContent: (arg) => {
-            let div = document.createElement('div');
-            div.style.cssText = 'font-size:7.5px;padding:1px 3px;margin-bottom:1px;border-radius:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#444;box-shadow:2px 2px 5px rgba(0,0,0,0.08);';
-            const cc = arg.event.extendedProps.colorClass || '';
-            if (cc.includes('soft-red')) div.style.backgroundColor = '#E8D1D1';
-            else if (cc.includes('soft-green')) div.style.backgroundColor = '#D5E0D5';
-            else if (cc.includes('soft-yellow')) div.style.backgroundColor = '#EBE5D1';
-            else if (cc.includes('soft-orange')) div.style.backgroundColor = '#EEDFD2';
-            else div.style.backgroundColor = '#E5E5E5';
-            div.innerText = arg.event.title;
-            return { domNodes: [div] };
+            let container = document.createElement('div');
+            container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;';
+            
+            const isReading = arg.event.extendedProps.isReading;
+            const bgColor = arg.event.extendedProps.bgColor || '#E5E5E5';
+            container.style.backgroundColor = bgColor;
+
+            if (isReading) {
+                if (arg.event.extendedProps.cover) {
+                    const img = document.createElement('img');
+                    img.src = arg.event.extendedProps.cover;
+                    img.style.cssText = 'width:12px;height:16px;object-fit:cover;border-radius:1px;';
+                    container.appendChild(img);
+                }
+                const text = document.createElement('span');
+                text.innerText = arg.event.title;
+                text.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                container.appendChild(text);
+            } else {
+                container.innerText = arg.event.title;
+            }
+            return { domNodes: [container] };
         }
     });
     calendar.render();
 }
+
+// ── BOOKS ──────────────────────────────────────────────────
 
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
 function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); }
@@ -365,10 +365,11 @@ function renderBooks() {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
+
     const active = books.filter(b => !b.done);
     if (active.length === 0) {
         const tempId = 'new_' + Date.now();
-        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false }, true);
+        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null }, true);
     } else {
         active.forEach(b => renderBookRow(container, b, false));
     }
@@ -383,33 +384,56 @@ function renderBookRow(container, book, isTemp) {
     row.dataset.id = book.id;
     row.dataset.temp = isTemp ? '1' : '0';
     row.innerHTML = `
-        <div class="book-title-line">
-            <input class="book-title-input" type="text" placeholder="書名 Book Title" value="${book.title || ''}"
-                oninput="updateField(this,'title')" />
-            <input type="checkbox" class="book-done-cb" title="完成閱讀" ${book.done ? 'checked' : ''}
-                onchange="toggleDone(this)" />
+        <div class="cover-preview-box" onclick="triggerFileUpload(this)" title="上傳封面">
+            ${book.cover ? `<img src="${book.cover}">` : '<i class="fa-solid fa-camera text-gray-400 text-xs"></i>'}
+            <input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">
         </div>
-        <div class="book-start-row">
-            <span class="start-label">開始閱讀</span>
-            <input type="date" class="start-date-input" value="${book.startDate || today()}"
-                oninput="updateField(this,'startDate')" />
-        </div>
-        <div class="page-row">
-            <input type="number" class="page-input" placeholder="0" min="0" value="${book.currentPage || ''}"
-                oninput="updateField(this,'currentPage')" />
-            <span class="page-sep">/</span>
-            <input type="number" class="page-total-input" placeholder="總頁數" min="0" value="${book.totalPages || ''}"
-                oninput="updateField(this,'totalPages')" />
-            <span class="pages-label" style="margin-left:4px;">pages</span>
-        </div>
-        <div class="progress-bar-wrap" style="margin-top: 8px; height: 4px; background: #EBEBEB; border-radius: 4px; overflow: hidden;"><div class="progress-bar-fill" style="width:${meta.pct}%"></div></div>
-        <div class="book-meta">
-            <span class="meta-chip pct">${meta.pct}% 完成</span>
-            ${meta.eta !== null ? `<span class="meta-chip">預計還需 ${meta.eta} 天</span>` : ''}
-            ${meta.daysRead > 0 ? `<span class="meta-chip">已讀 ${meta.daysRead} 天</span>` : ''}
+        <div class="book-main-info">
+            <div class="book-title-line">
+                <input class="book-title-input" type="text" placeholder="書名 Book Title" value="${book.title || ''}"
+                    oninput="updateField(this,'title')" />
+            </div>
+            <div class="book-start-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                    <input type="date" class="start-date-input" value="${book.startDate || today()}"
+                        oninput="updateField(this,'startDate')" style="flex: 1;" />
+                </div>
+                <input type="checkbox" class="book-done-cb" title="完成閱讀" ${book.done ? 'checked' : ''}
+                    onchange="toggleDone(this)" />
+            </div>
+            <div class="page-row">
+                <input type="number" class="page-input" placeholder="0" min="0" value="${book.currentPage || ''}"
+                    oninput="updateField(this,'currentPage')" />
+                <span class="page-sep">/</span>
+                <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}"
+                    oninput="updateField(this,'totalPages')" />
+                <span class="pages-label">pages</span>
+            </div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${meta.pct}%"></div></div>
+            <div class="book-meta">
+                <span class="meta-chip pct">${meta.pct}% 完成</span>
+            </div>
         </div>
     `;
     container.appendChild(row);
+}
+
+function triggerFileUpload(el) { el.querySelector('input[type="file"]').click(); }
+
+function handleCoverUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const row = input.closest('.book-row');
+        const preview = row.querySelector('.cover-preview-box');
+        preview.innerHTML = `<img src="${e.target.result}"><input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">`;
+        
+        const { books, book } = getOrCreateBook(row);
+        book.cover = e.target.result;
+        saveBooks(books);
+    };
+    reader.readAsDataURL(file);
 }
 
 function getOrCreateBook(row) {
@@ -417,7 +441,7 @@ function getOrCreateBook(row) {
     const rawId = row.dataset.id;
     let book = books.find(b => String(b.id) === String(rawId));
     if (!book) {
-        book = { id: rawId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
+        book = { id: rawId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null };
         books.push(book);
         row.dataset.temp = '0';
         saveBooks(books);
@@ -430,15 +454,12 @@ function updateField(el, field) {
     const { books, book } = getOrCreateBook(row);
     book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
     saveBooks(books);
+
     const meta = calcMeta(book);
     const fill = row.querySelector('.progress-bar-fill');
     if (fill) fill.style.width = meta.pct + '%';
-    const chipsEl = row.querySelector('.book-meta');
-    if (chipsEl) chipsEl.innerHTML = `
-        <span class="meta-chip pct">${meta.pct}% 完成</span>
-        ${meta.eta !== null ? `<span class="meta-chip">預計還需 ${meta.eta} 天</span>` : ''}
-        ${meta.daysRead > 0 ? `<span class="meta-chip">已讀 ${meta.daysRead} 天</span>` : ''}
-    `;
+    const chipsEl = row.querySelector('.pct');
+    if (chipsEl) chipsEl.innerText = `${meta.pct}% 完成`;
 }
 
 function toggleDone(el) {
@@ -451,29 +472,41 @@ function toggleDone(el) {
 
 function addBookRow() {
     const books = loadBooks();
-    const nb = { id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
+    const nb = { id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null };
     books.push(nb);
     saveBooks(books);
     renderBooks();
 }
+
+// ── AI ──────────────────────────────────────────────────────
 
 async function runAIAnalysis() {
     const books = loadBooks();
     const spin = document.getElementById('ai-spin');
     const icon = document.getElementById('ai-icon');
     const resultEl = document.getElementById('ai-result');
+
     spin.style.display = 'block'; icon.style.display = 'none';
     resultEl.classList.remove('show');
-    const info = books.length > 0 ? books.map(b => {
-        const m = calcMeta(b);
-        return `《${b.title || '未命名'}》已讀${b.currentPage}/${b.totalPages}頁（${m.pct}%），開始日${b.startDate||'未知'}，${b.done?'已完成':'進行中'}`;
-    }).join('\n') : '（目前無閱讀紀錄）';
+
+    const info = books.length > 0
+        ? books.map(b => {
+            const m = calcMeta(b);
+            return `《${b.title || '未命名'}》已讀${b.currentPage}/${b.totalPages}頁（${m.pct}%），開始日${b.startDate||'未知'}，${b.done?'已完成':'進行中'}`;
+          }).join('\n')
+        : '（目前無閱讀紀錄）';
+
     const prompt = `你是一位閱讀教練，以下是使用者的閱讀紀錄：\n${info}\n\n請用繁體中文，語氣溫暖簡潔地給出：1) 閱讀狀況分析（2句），2) 具體閱讀建議（2-3點）。不要使用markdown格式或星號。`;
+
     try {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1000,
+                messages: [{ role: 'user', content: prompt }]
+            })
         });
         const data = await res.json();
         const text = (data.content || []).map(c => c.text || '').join('') || '無法取得分析。';
@@ -486,6 +519,8 @@ async function runAIAnalysis() {
         spin.style.display = 'none'; icon.style.display = 'inline';
     }
 }
+
+// ── MODAL ───────────────────────────────────────────────────
 
 function openUnifiedModal() {
     document.getElementById('unifiedModal').classList.remove('hidden');
@@ -530,11 +565,12 @@ function handleSave() {
     const date = document.getElementById('inputDate').value; if (!date) return;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
-    let title, colorClass, end;
+    let title, bgColor, end, priority = 1, isReading = false, cover = null;
+
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
-        const colors2 = { Work:'bg-morandi-soft-red', Exercise:'bg-morandi-soft-green', Travel:'bg-morandi-soft-yellow', Tutor:'bg-morandi-soft-orange', Private:'bg-morandi-soft-gray' };
-        colorClass = colors2[currentCategory];
+        const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
+        bgColor = colorMap[currentCategory];
         if (currentCategory === 'Tutor') {
             const wh = document.getElementById('workHours').value;
             title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
@@ -550,10 +586,21 @@ function handleSave() {
     } else {
         const active = loadBooks().filter(b => !b.done);
         const b = active[0];
-        title = b ? `📖 ${hour}:${min} ${b.title||'Reading'} (p.${b.currentPage||0}/${b.totalPages||0})` : `📖 ${hour}:${min} Reading`;
-        colorClass = 'bg-morandi-soft-green';
+        if (!b) return;
+        const meta = calcMeta(b);
+        title = `📖 ${b.title || 'Reading'} (${meta.pct}%)`;
+        bgColor = '#D1D1E8';
+        priority = 99;
+        isReading = true;
+        cover = b.cover;
     }
-    const ev = { title, start: `${date}T${hour}:${min}:00`, end, extendedProps: { colorClass } };
+
+    const ev = { 
+        title, 
+        start: `${date}T${hour}:${min}:00`, 
+        end, 
+        extendedProps: { bgColor, priority, isReading, cover } 
+    };
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage.push(ev); localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     calendar.addEvent(ev);
