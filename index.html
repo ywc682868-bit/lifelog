@@ -368,7 +368,7 @@
 
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
-                    <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Schedule / Event</label>
+                    <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
                 <div class="field-group">
@@ -395,7 +395,7 @@
                 <div class="field-group">
                     <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Category</label>
                     <div class="category-grid">
-                        <button onclick="setCategory('Tutor')" id="cat-Academic" class="cat-btn" style="background-color:#E2EBF0;">Academic</button>
+                        <button onclick="setCategory('Tutor')" id="cat-Tutor" class="cat-btn" style="background-color:#E2EBF0;">Tutor</button>
                         <button onclick="setCategory('Work')" id="cat-Work" class="cat-btn" style="background-color:#E8D1D1;">Work</button>
                         <button onclick="setCategory('Exercise')" id="cat-Exercise" class="cat-btn" style="background-color:#D5E0D5;">Exercise</button>
                         <button onclick="setCategory('Travel')" id="cat-Travel" class="cat-btn" style="background-color:#EBE5D1;">Travel</button>
@@ -1540,7 +1540,7 @@ function switchType(type) {
 
 function setCategory(cat) {
     currentCategory = cat;
-    ['Academic','Work','Exercise','Travel','Tutor','Personal'].forEach(c => {
+    ['Tutor','Work','Exercise','Travel','Tutor','Personal'].forEach(c => {
         const b = document.getElementById(`cat-${c}`);
         if (b) b.classList.toggle('selected', c === cat);
     });
@@ -1588,7 +1588,7 @@ function handleSave() {
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
         notes = document.getElementById('inputNotes').value;
-        const colorMap = { Academic: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Personal:'#E5E5E5' };
+        const colorMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Personal:'#E5E5E5' };
         bgColor = colorMap[currentCategory] || '#E5E5E5';
         
         if (currentCategory === 'Travel') {
