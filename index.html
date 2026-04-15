@@ -113,9 +113,6 @@
         .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
         .fab-main { background-color: #EBC4B9; color: #3A4750; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
 
-        .read-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .add-book-btn { background: none; border: none; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; background: #E2E8E8; display: flex; align-items: center; justify-content: center; color: #7F9F9F; transition: background 0.2s; flex-shrink: 0; }
-
         .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
         .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
         .book-main-info { flex: 1; min-width: 0; }
@@ -145,7 +142,6 @@
 <div id="nav-overlay" class="nav-overlay" onclick="toggleSidebar()"></div>
 
 <div class="flex flex-col md:flex-row h-screen overflow-hidden">
-    
     <div class="md:hidden flex items-center justify-between p-4 bg-morandi-dark-gray text-white shrink-0">
         <button onclick="toggleSidebar()" class="text-xl px-2"><i class="fa-solid fa-bars"></i></button>
         <h1 class="font-cursive text-lg">Ashley's Optimization</h1>
@@ -199,22 +195,24 @@
                 <i class="fa-solid fa-times text-xs"></i>
             </button>
 
+            <div class="field-group mb-4">
+                <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
+                <div class="datetime-row">
+                    <input type="date" id="inputDate" class="custom-input flex-1">
+                    <div class="time-box">
+                        <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                        <span class="text-gray-300 self-center">:</span>
+                        <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
+                    </div>
+                </div>
+            </div>
+
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
                     <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Schedule</label>
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
-                <div class="field-group">
-                    <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
-                    <div class="datetime-row">
-                        <input type="date" id="inputDate" class="custom-input flex-1">
-                        <div class="time-box">
-                            <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                            <span class="text-gray-300 self-center">:</span>
-                            <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                        </div>
-                    </div>
-                </div>
+                
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
                         <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
@@ -360,22 +358,27 @@ function openEditModal(event) {
     editingEventId = event.extendedProps.id || event.start.getTime();
     const isReading = event.extendedProps.isReading;
     
+    // 設定共用的日期與時間
+    document.getElementById('inputDate').value = event.startStr.split('T')[0];
+    const timeStr = event.startStr.split('T')[1]?.substring(0,5) || "00:00";
+    document.getElementById('selectHour').value = timeStr.split(':')[0];
+    document.getElementById('selectMinute').value = timeStr.split(':')[1];
+
     if (isReading) {
         switchType('reading');
     } else {
         switchType('schedule');
-        const titleParts = event.title.split(' ');
-        const timeStr = titleParts[0];
-        const mainText = titleParts.slice(1).join(' ').replace(/\(\d+(\.\d+)?h\)/, '').trim();
-        
+        const mainText = event.title.split(' ').slice(1).join(' ').replace(/\(\d+(\.\d+)?h\)/, '').trim();
         document.getElementById('inputMain').value = mainText;
-        document.getElementById('inputDate').value = event.startStr.split('T')[0];
-        document.getElementById('selectHour').value = timeStr.split(':')[0];
-        document.getElementById('selectMinute').value = timeStr.split(':')[1];
-        
         const colorMap = { '#E8D1D1':'Work', '#D5E0D5':'Exercise', '#EBE5D1':'Travel', '#EEDFD2':'Tutor', '#E5E5E5':'Private' };
         const cat = colorMap[event.extendedProps.bgColor] || 'Private';
         setCategory(cat);
+        if (cat === 'Travel' && event.end) {
+            document.getElementById('inputEndDate').value = event.endStr.split('T')[0];
+            const endT = event.endStr.split('T')[1]?.substring(0,5) || "00:00";
+            document.getElementById('selectEndHour').value = endT.split(':')[0];
+            document.getElementById('selectEndMinute').value = endT.split(':')[1];
+        }
     }
     document.getElementById('unifiedModal').classList.remove('hidden');
 }
@@ -400,7 +403,6 @@ function handleSave() {
         const main = document.getElementById('inputMain').value; if (!main) return;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
         bgColor = colorMap[currentCategory];
-        
         if (currentCategory === 'Tutor') {
             const wh = document.getElementById('workHours').value;
             title = `${hour}:${min} ${main}${wh?' ('+wh+'h)':''}`;
@@ -417,6 +419,7 @@ function handleSave() {
         const active = loadBooks().filter(b => !b.done);
         if (active.length === 0) return;
         const b = active[0];
+        // 閱讀紀錄標題帶入當前輸入的頁數進度
         title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#D1D1E8';
         priority = 99;
@@ -547,7 +550,7 @@ function setCategory(cat) {
 
 function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); }
 function showSection(id) { if (id === 'calendar') setTimeout(() => calendar.render(), 50); }
-async function runAIAnalysis() { alert("AI 分析功能正在開發中..."); }
+async function runAIAnalysis() { alert("AI 分析功能開發中..."); }
 </script>
 </body>
 </html>
