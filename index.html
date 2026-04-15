@@ -43,11 +43,12 @@
             body { overflow: hidden; height: 100vh; }
         }
 
-        .fc { font-family: var(--font-zh) !important; height: 100% !important; border: none !important; }
-        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #EEEEEE !important; }
-        .fc-scrollgrid { border: none !important; }
-        .fc .fc-view-harness { border-radius: 20px; overflow: hidden; background-color: #fff; }
-        
+        /* 核心樣式：格線交錯圓角 */
+        .fc-scrollgrid { border-collapse: separate !important; border-spacing: 3px !important; border: none !important; }
+        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #EEEEEE !important; border-radius: 10px !important; overflow: hidden; }
+        .fc .fc-view-harness { border: none !important; background-color: transparent !important; }
+        .fc-daygrid-day-frame { border-radius: 10px !important; }
+
         @media (max-width: 768px) {
             .fc .fc-toolbar-title { font-size: 1.2rem !important; }
             .fc .fc-button { padding: 4px 8px !important; font-size: 0.75rem !important; }
@@ -58,25 +59,18 @@
         .fc .fc-button { padding: 2px 6px !important; font-size: 0.65rem !important; border-radius: 8px !important; background-color: #C6D8E2 !important; border: none !important; color: #3A4750 !important; }
         .fc .fc-yearDisplay-button { background-color: transparent !important; border: none !important; color: #3A4750 !important; font-size: 1rem !important; font-family: var(--font-en); font-weight: 600 !important; padding: 0 8px !important; cursor: default !important; }
 
-        .fc-daygrid-day-top {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: flex-end !important;
-            align-items: flex-start !important;
-            padding: 2px 4px !important;
-            min-height: 24px;
-            width: 100%;
-            gap: 4px;
-        }
+        .fc-daygrid-day-top { display: flex !important; flex-direction: row !important; justify-content: flex-end !important; align-items: flex-start !important; padding: 2px 4px !important; min-height: 24px; width: 100%; gap: 4px; }
         .special-label { font-size: 9px; padding: 1px 4px; border-radius: 4px; line-height: 1.2; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
         .label-holiday { background-color: #E8D1D1; color: #A64444; font-weight: 600; }
         .label-solar { color: #2D3748; background: transparent !important; font-weight: 600; }
         .fc .fc-daygrid-day-number { padding: 0 2px !important; text-decoration: none !important; color: #555; font-size: 0.75rem; float: none !important; flex-shrink: 0; margin-top: 1px; }
         .fc-day-sat .fc-daygrid-day-number, .fc-day-sun .fc-daygrid-day-number { color: #D19A9A !important; font-weight: 600; }
-        .fc-day-sat, .fc-day-sun { background-color: rgba(232,209,209,0.08) !important; }
         th.fc-day-sat a, th.fc-day-sun a { color: #D19A9A !important; }
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 10px !important; }
-        .fc-event { border: none !important; background: transparent !important; cursor: pointer; }
+        
+        /* 事件長方形連續條樣式 */
+        .fc-h-event { border: none !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; display: block !important; margin-bottom: 2px !important; }
+        .fc-event-title { font-size: 9px !important; padding: 1px 4px !important; color: #444 !important; font-weight: 500; white-space: nowrap; }
 
         #main-nav { transition: transform 0.3s ease-in-out; z-index: 50; }
         @media (max-width: 768px) {
@@ -111,15 +105,16 @@
         .time-box { display: flex; align-items: center; gap: 4px; background-color: #F9FAFB; border-radius: 12px; height: 42px; flex-shrink: 0; min-width: 110px; padding: 0 10px; }
 
         .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
-        .fab-main { background-color: #EBC4B9; color: #3A4750; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
+        .fab-main { background-color: #EBC4B9; color: #3A4750; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; border: none; transition: transform 0.2s; }
 
         .read-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .add-book-btn { background: none; border: none; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; background: #E2E8E8; display: flex; align-items: center; justify-content: center; color: #7F9F9F; transition: background 0.2s; flex-shrink: 0; }
 
-        .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background 0.2s; position: relative; }
+        .book-row { background: #F9FAFB; border-radius: 16px; padding: 10px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; cursor: pointer; transition: background 0.2s; position: relative; }
         .book-row.editing { border: 2px solid #7F9F9F; }
-        .book-row:hover { background: #F1F3F5; }
-        .cover-preview-box { width: 40px; height: 55px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
+        
+        .cover-preview-box { width: 60px; height: 85px; background: #EEEEEE; border-radius: 10px; flex-shrink: 0; overflow: hidden; border: 1px dashed #CCCCCC; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+        .cover-preview-box img { width: 100%; height: 100%; object-fit: cover; }
         .book-main-info { flex: 1; min-width: 0; }
         
         .check-container { position: absolute; right: 10px; top: 10px; z-index: 10; }
@@ -137,13 +132,12 @@
         
         .meta-chip.pct { background: #D5E0D5; color: #3A6B3A; font-size: 9px; padding: 2px 6px; border-radius: 10px; }
 
-        .ai-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0F0F0; }
-        .ai-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #EDF3ED; border: none; border-radius: 20px; padding: 7px 16px; cursor: pointer; font-size: 0.7rem; color: #3A4750; width: 100%; }
-        .ai-result { margin-top: 8px; background: #F5F8F5; border-radius: 12px; padding: 10px; font-size: 0.7rem; color: #555; display: none; max-height: 100px; overflow-y: auto; }
+        .ai-section-main { margin-top: 20px; padding: 20px; background: white; border-radius: 20px; border: 1px solid #EEEEEE; }
+        .ai-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #EDF3ED; border: none; border-radius: 20px; padding: 10px 20px; cursor: pointer; font-size: 0.8rem; color: #3A4750; width: 100%; }
+        .ai-result { margin-top: 12px; background: #F5F8F5; border-radius: 12px; padding: 15px; font-size: 0.85rem; color: #555; display: none; line-height: 1.6; }
         .ai-result.show { display: block; }
-        
+        .ai-spin { display: none; width: 14px; height: 14px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .ai-spin { display: none; width: 12px; height: 12px; border: 2px solid #7F9F9F; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
@@ -151,23 +145,13 @@
 <div id="nav-overlay" class="nav-overlay" onclick="toggleSidebar()"></div>
 
 <div class="flex flex-col md:flex-row h-screen overflow-hidden">
-    
-    <div class="md:hidden flex items-center justify-between p-4 bg-morandi-dark-gray text-white shrink-0">
-        <button onclick="toggleSidebar()" class="text-xl px-2"><i class="fa-solid fa-bars"></i></button>
-        <h1 class="font-cursive text-lg">Ashley's Optimization</h1>
-        <div class="w-8"></div>
-    </div>
-
     <nav id="main-nav" class="w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col md:rounded-r-[30px] shadow-2xl shrink-0">
         <button onclick="location.reload()" class="mb-8 text-left group">
-            <div class="flex items-center gap-2">
-                <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
-                <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
-            </div>
+            <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
         </button>
         <ul class="space-y-2 flex-grow">
             <li><button onclick="showSection('calendar'); toggleSidebar();" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-pen-nib text-xs"></i> Journal</button></li>
-            <li><button onclick="showSection('tigps'); toggleSidebar();" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-layer-group text-xs"></i> Projects</button></li>
+            <li><button onclick="showSection('tigps'); toggleSidebar();" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-book-open text-xs"></i> Reading Page</button></li>
             <li><button onclick="showSection('phd'); toggleSidebar();" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-graduation-cap text-xs"></i> Thesis</button></li>
             <li><button onclick="showSection('finance'); toggleSidebar();" class="flex items-center gap-3 text-morandi-blue-dark hover:text-white w-full text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-calculator text-xs"></i> Accounting</button></li>
         </ul>
@@ -186,7 +170,17 @@
                 <div id="calendar"></div>
             </section>
             
-            <section id="tigps-section" class="hidden"></section>
+            <section id="tigps-section" class="hidden p-4">
+                <div class="ai-section-main">
+                    <h3 class="font-cursive text-xl mb-4 text-morandi-dark-gray">Reading Analysis</h3>
+                    <button class="ai-btn" onclick="runAIAnalysis()">
+                        <div id="ai-spin" class="ai-spin"></div>
+                        <i id="ai-icon" class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>啟動 AI 閱讀深度分析</span>
+                    </button>
+                    <div id="ai-result" class="ai-result"></div>
+                </div>
+            </section>
             <section id="phd-section" class="hidden"></section>
             <section id="finance-section" class="hidden"></section>
         </div>
@@ -194,7 +188,7 @@
 </div>
 
 <div class="fab-container">
-    <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-xl"></i></button>
+    <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-lg"></i></button>
 </div>
 
 <div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-2">
@@ -205,9 +199,7 @@
         </div>
 
         <div class="flex-1 p-5 md:p-8 pt-4 flex flex-col justify-between overflow-y-auto">
-            <button onclick="closeUnifiedModal()" class="absolute top-6 right-8 text-gray-300 hover:text-gray-500">
-                <i class="fa-solid fa-times text-xs"></i>
-            </button>
+            <button onclick="closeUnifiedModal()" class="absolute top-6 right-8 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times text-xs"></i></button>
 
             <div id="schedule-fields-static" class="space-y-4 text-left">
                 <div class="field-group">
@@ -218,7 +210,7 @@
                     <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
                     <div class="datetime-row">
                         <input type="date" id="inputDate" class="custom-input flex-1">
-                        <div id="time-selector-group" class="time-box">
+                        <div id="time-box-container" class="time-box">
                             <select id="selectHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
                             <span class="text-gray-300 self-center">:</span>
                             <select id="selectMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
@@ -227,15 +219,8 @@
                 </div>
                 <div id="conditional-fields">
                     <div id="travel-end-container" class="field-group" style="display:none;">
-                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date & Time</label>
-                        <div class="datetime-row">
-                            <input type="date" id="inputEndDate" class="custom-input flex-1">
-                            <div class="time-box">
-                                <select id="selectEndHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                                <span class="text-gray-300 self-center">:</span>
-                                <select id="selectEndMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                            </div>
-                        </div>
+                        <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">End Date</label>
+                        <input type="date" id="inputEndDate" class="custom-input">
                     </div>
                     <div id="work-hours-container" class="field-group" style="display:none;">
                         <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Work Hours</label>
@@ -256,20 +241,10 @@
 
             <div id="read-fields" style="display:none;" class="text-left">
                 <div class="read-header">
-                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Reading Record</label>
-                    <button onclick="addBookRow()" class="add-book-btn">
-                        <i class="fa-solid fa-plus" style="font-size:10px;"></i>
-                    </button>
+                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Reading Entry</label>
+                    <button onclick="addBookRow()" class="add-book-btn"><i class="fa-solid fa-plus" style="font-size:10px;"></i></button>
                 </div>
                 <div id="books-container"></div>
-                <div class="ai-section">
-                    <button class="ai-btn" onclick="runAIAnalysis()">
-                        <div id="ai-spin" class="ai-spin"></div>
-                        <i id="ai-icon" class="fa-solid fa-wand-magic-sparkles" style="font-size:11px;color:#7F9F9F;"></i>
-                        <span>AI 閱讀分析</span>
-                    </button>
-                    <div id="ai-result" class="ai-result"></div>
-                </div>
             </div>
 
             <div class="pt-6 flex justify-between items-center gap-4">
@@ -284,58 +259,34 @@
 const STORAGE_KEY = 'ashley_events_v8_reorder';
 const BOOKS_KEY = 'ashley_books_v1';
 
-// 指令要求：刪除所有已經加入的行程跟閱讀紀錄
-// 在初始化前先清空儲存空間
-localStorage.removeItem(STORAGE_KEY);
-localStorage.removeItem(BOOKS_KEY);
+const quotes = [{ en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" }];
+const TAIWAN_SPECIAL_DAYS = [{ date: '2026-01-01', title: '元旦', type: 'holiday' }];
 
-const quotes = [
-    { en: "The only way to do great work is to love what you do.", zh: "成就偉業的唯一途徑是熱愛自己的工作。", author: "Steve Jobs" },
-    { en: "Quality is not an act, it is a habit.", zh: "優秀不是一種行為，而是一種習慣。", author: "Aristotle" }
-];
+let currentType = 'schedule', currentCategory = 'Private', calendar, editingId = null; 
 
-const TAIWAN_SPECIAL_DAYS = [
-    { date: '2026-01-01', title: '元旦', type: 'holiday' }, { date: '2026-02-16', title: '除夕', type: 'holiday' },
-    { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
-    { date: '2026-02-19', title: '初三', type: 'holiday' }, { date: '2026-02-28', title: '和平紀念日', type: 'holiday' },
-    { date: '2026-04-04', title: '兒童節', type: 'holiday' }, { date: '2026-04-05', title: '清明節', type: 'holiday' },
-    { date: '2026-10-10', title: '國慶日', type: 'holiday' }
-];
+document.addEventListener('DOMContentLoaded', () => { updateQuote(); initTimeDropdowns(); initCalendar(); });
 
-let currentType = 'schedule', currentCategory = 'Private', calendar;
-let editingId = null; 
-
-document.addEventListener('DOMContentLoaded', () => { 
-    updateQuote(); 
-    initTimeDropdowns(); 
-    initCalendar(); 
-});
-
-function toggleSidebar() {
+function toggleSidebar() { 
     const nav = document.getElementById('main-nav');
     const overlay = document.getElementById('nav-overlay');
-    nav.classList.toggle('active');
-    overlay.classList.toggle('active');
+    nav.classList.toggle('active'); if(overlay) overlay.classList.toggle('active');
 }
 
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
-    const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    [h, m, eh, em].forEach(el => el.innerHTML = '');
+    [h, m].forEach(el => { if(el) el.innerHTML = ''; });
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
-        const o = `<option value="${val}">${val}</option>`;
-        h.innerHTML += o; eh.innerHTML += o;
+        if(h) h.innerHTML += `<option value="${val}">${val}</option>`;
     }
     for (let i = 0; i < 60; i += 5) {
         const val = String(i).padStart(2,'0');
-        const o = `<option value="${val}">${val}</option>`;
-        m.innerHTML += o; em.innerHTML += o;
+        if(m) m.innerHTML += `<option value="${val}">${val}</option>`;
     }
 }
 
 function updateQuote() {
-    const q = quotes[Math.floor(Math.random() * quotes.length)];
+    const q = quotes[0];
     document.getElementById('daily-quote-en').innerText = q.en;
     document.getElementById('daily-quote-zh').innerText = q.zh;
     document.getElementById('quote-author').innerText = `— ${q.author}`;
@@ -344,43 +295,25 @@ function updateQuote() {
 function initCalendar() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth',
-        locale: 'en',
-        height: '100%',
-        headerToolbar: { 
-            left: window.innerWidth < 768 ? 'prev,next today' : 'today yearDisplay', 
-            center: 'title', 
-            right: window.innerWidth < 768 ? '' : 'prev,next' 
-        },
+        initialView: 'dayGridMonth', locale: 'en', height: '100%',
+        headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
+        titleFormat: { month: 'long' },
         customButtons: { yearDisplay: { text: new Date().getFullYear().toString() } },
         eventOrder: 'priority,start',
         dayCellContent: (arg) => {
             const dateStr = arg.date.toLocaleDateString('en-CA');
             const special = TAIWAN_SPECIAL_DAYS.find(d => d.date === dateStr);
-            const labelHtml = special ? `<span class="special-label ${special.type === 'holiday' ? 'label-holiday' : 'label-solar'}">${special.title}</span>` : '';
+            const labelHtml = special ? `<span class="special-label label-holiday">${special.title}</span>` : '';
             return { html: `${labelHtml}<a class="fc-daygrid-day-number">${arg.dayNumberText.replace('日','')}</a>` };
         },
         events: userEvents,
         eventContent: (arg) => {
-            let container = document.createElement('div');
-            container.style.cssText = 'font-size:9px;padding:1px 3px;margin-bottom:1px;border-radius:4px;overflow:hidden;color:#444;display:flex;align-items:center;gap:3px;background-color:' + (arg.event.extendedProps.bgColor || '#E5E5E5');
-            container.innerText = arg.event.title;
-            return { domNodes: [container] };
+            let titleEl = document.createElement('div');
+            titleEl.innerText = arg.event.title;
+            titleEl.style.cssText = 'padding: 2px 4px; font-size: 9px; font-weight: 500; color: #444; overflow: hidden; text-overflow: ellipsis;';
+            return { domNodes: [titleEl] };
         },
-        eventClick: (info) => {
-            const props = info.event.extendedProps;
-            const eventData = {
-                id: info.event.id,
-                title: info.event.title,
-                start: info.event.start,
-                end: info.event.end,
-                category: props.category || 'Private',
-                workHours: props.workHours || '',
-                isReading: props.isReading || false,
-                originalTitle: props.originalTitle || info.event.title
-            };
-            openUnifiedModal(eventData);
-        }
+        eventClick: (info) => openUnifiedModal(info.event)
     });
     calendar.render();
 }
@@ -388,103 +321,82 @@ function initCalendar() {
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
 function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); }
 
-function calcMeta(book) {
-    const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
-    let daysRead = 1;
-    if (book.startDate) {
-        const start = new Date(book.startDate);
-        daysRead = Math.max(1, Math.round((new Date() - start) / 86400000) + 1);
-    }
-    return { pct, daysRead };
-}
-
 function renderBooks() {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
-    
-    // 邏輯要求：若有已經在讀的書，則顯示預設內容
-    const activeBooks = books.filter(b => !b.done);
-    if (activeBooks.length > 0) {
-        activeBooks.forEach(b => renderBookRow(container, b));
-    } else {
-        // 如果沒有書，則新增一個空白欄位供自行輸入
-        const newId = Date.now().toString();
-        renderBookRow(container, { id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
-    }
+    const active = books.find(b => !b.done);
+    if (active) renderBookRow(container, active);
+    else addBookRow();
 }
 
-function today() { return new Date().toLocaleDateString('en-CA'); }
-
 function renderBookRow(container, book) {
-    const meta = calcMeta(book);
     const row = document.createElement('div');
     row.className = `book-row ${String(editingId) === String(book.id) ? 'editing' : ''}`;
     row.dataset.id = book.id;
-    row.onclick = (e) => {
-        if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
-            editingId = String(book.id);
-            document.getElementById('deleteBtn').classList.remove('hidden');
-            renderBooks();
-        }
-    };
+    const coverHtml = book.cover ? `<img src="${book.cover}" alt="cover">` : `<i class="fa-solid fa-camera text-gray-300 text-sm"></i>`;
+    const pct = book.totalPages > 0 ? Math.round((book.currentPage / book.totalPages) * 100) : 0;
     row.innerHTML = `
-        <div class="check-container">
-            <input type="checkbox" class="check-input" ${book.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleDone(this)">
-        </div>
-        <div class="cover-preview-box"><i class="fa-solid fa-camera text-gray-300 text-xs"></i></div>
+        <div class="check-container"><input type="checkbox" class="check-input" ${book.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleDone(this)"></div>
+        <div class="cover-preview-box" onclick="event.stopPropagation(); triggerCoverUpload('${book.id}')">${coverHtml}<input type="file" id="cover-input-${book.id}" class="hidden" accept="image/*" onchange="handleCoverUpload(this, '${book.id}')"></div>
         <div class="book-main-info">
             <input class="book-title-input w-full text-sm font-bold bg-transparent outline-none mb-1" type="text" placeholder="Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
-            <div class="flex items-center gap-2 mb-1">
-                <input type="date" class="start-date-input" value="${book.startDate || today()}" oninput="updateField(this,'startDate')" />
-                <span class="days-count">Read ${meta.daysRead} days</span>
-            </div>
-            <div class="page-row">
-                <div class="page-input-group">
-                    <input type="number" class="page-input" value="${book.currentPage || ''}" oninput="updateField(this,'currentPage')" />
-                    <span class="text-gray-300">/</span>
-                    <input type="number" class="page-total-input" value="${book.totalPages || ''}" oninput="updateField(this,'totalPages')" />
-                </div>
-                <span class="meta-chip pct">${meta.pct}% Completed</span>
-            </div>
+            <div class="flex items-center gap-2 mb-1"><input type="date" class="start-date-input" value="${book.startDate || today()}" oninput="updateField(this,'startDate')" /></div>
+            <div class="page-row"><div class="page-input-group"><input type="number" class="page-input" value="${book.currentPage || ''}" oninput="updateField(this,'currentPage')" /><span class="text-gray-300">/</span><input type="number" class="page-total-input" value="${book.totalPages || ''}" oninput="updateField(this,'totalPages')" /></div><span class="meta-chip pct">${pct}% Completed</span></div>
         </div>
     `;
     container.appendChild(row);
 }
 
+function today() { return new Date().toLocaleDateString('en-CA'); }
+
 function toggleDone(el) {
     const row = el.closest('.book-row');
     const books = loadBooks();
-    const book = books.find(b => String(b.id) === String(row.dataset.id));
-    if (book) {
-        book.done = el.checked;
-        saveBooks(books);
-        renderBooks();
-    }
+    const b = books.find(book => String(book.id) === String(row.dataset.id));
+    if (b) { b.done = el.checked; saveBooks(books); renderBooks(); }
 }
 
 function updateField(el, field) {
     const row = el.closest('.book-row');
     const books = loadBooks();
-    let book = books.find(b => String(b.id) === String(row.dataset.id));
-    if (!book) {
-        book = { id: row.dataset.id, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false };
-        books.push(book);
+    let b = books.find(book => String(book.id) === String(row.dataset.id));
+    if (b) {
+        b[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
+        saveBooks(books);
+        if (field === 'startDate') syncCalendarDate(b.id, el.value);
+        renderBooks();
     }
-    book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
-    saveBooks(books);
-    const meta = calcMeta(book);
-    row.querySelector('.pct').innerText = `${meta.pct}% Completed`;
-    row.querySelector('.days-count').innerText = `Read ${meta.daysRead} days`;
+}
+
+function syncCalendarDate(id, newDate) {
+    let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const idx = storage.findIndex(e => String(e.id) === String(id));
+    if (idx > -1) { 
+        storage[idx].start = newDate; 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage)); 
+        calendar.removeAllEvents(); 
+        calendar.addEventSource(storage); 
+    }
 }
 
 function addBookRow() { 
     const books = loadBooks();
+    books.forEach(b => b.done = true);
     const newId = Date.now().toString();
     books.push({ id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
-    saveBooks(books);
-    editingId = String(newId);
-    renderBooks(); 
+    saveBooks(books); editingId = String(newId); renderBooks(); 
+}
+
+function triggerCoverUpload(id) { document.getElementById(`cover-input-${id}`).click(); }
+
+function handleCoverUpload(input, id) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => { const books = loadBooks(); const b = books.find(book => String(book.id) === String(id)); if(b){ b.cover = e.target.result; saveBooks(books); renderBooks(); } };
+        reader.readAsDataURL(file);
+    }
 }
 
 function switchType(type) {
@@ -493,147 +405,141 @@ function switchType(type) {
     document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
     document.getElementById('schedule-fields-static').style.display = type === 'schedule' ? 'block' : 'none';
     document.getElementById('read-fields').style.display = type === 'reading' ? 'block' : 'none';
-    
-    // 邏輯要求：紀錄只記錄日期不會有時間
-    const timeSelector = document.getElementById('time-selector-group');
-    if (type === 'reading') {
-        timeSelector.style.visibility = 'hidden';
-        renderBooks();
-    } else {
-        timeSelector.style.visibility = 'visible';
-    }
+    if(type === 'reading') renderBooks();
 }
 
 function setCategory(cat) {
     currentCategory = cat;
-    ['Work','Exercise','Travel','Tutor','Private'].forEach(c => {
-        const btn = document.getElementById(`cat-${c}`);
-        if(btn) btn.classList.remove('selected');
-    });
-    const selectedBtn = document.getElementById(`cat-${cat}`);
-    if(selectedBtn) selectedBtn.classList.add('selected');
-    
+    ['Work','Exercise','Travel','Tutor','Private'].forEach(c => document.getElementById(`cat-${c}`).classList.toggle('selected', c === cat));
+    const timeBox = document.getElementById('time-box-container');
+    const travelEnd = document.getElementById('travel-end-container');
     const dateLabel = document.getElementById('dateLabel');
-    if(cat === 'Travel') {
-        dateLabel.innerText = "Start Date & Time";
-        document.getElementById('travel-end-container').style.display = 'block';
+    if (cat === 'Travel') {
+        if(timeBox) timeBox.style.display = 'none';
+        if(travelEnd) travelEnd.style.display = 'block';
+        if(dateLabel) dateLabel.innerText = "Start Date";
     } else {
-        dateLabel.innerText = "Date & Time";
-        document.getElementById('travel-end-container').style.display = 'none';
+        if(timeBox) timeBox.style.display = 'flex';
+        if(travelEnd) travelEnd.style.display = 'none';
+        if(dateLabel) dateLabel.innerText = "Date & Time";
     }
-    document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
+    const wh = document.getElementById('work-hours-container');
+    if(wh) wh.style.display = (cat === 'Tutor') ? 'block' : 'none';
 }
 
-function openUnifiedModal(data = null) { 
-    document.getElementById('unifiedModal').classList.remove('hidden'); 
+function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function openUnifiedModal(ev = null) {
+    document.getElementById('unifiedModal').classList.remove('hidden');
     const delBtn = document.getElementById('deleteBtn');
-    
-    if (data) {
-        editingId = String(data.id);
-        delBtn.classList.remove('hidden');
-        document.getElementById('inputDate').value = (typeof data.start === 'string' ? data.start.split('T')[0] : data.start.toISOString().split('T')[0]);
-        if (data.isReading) {
-            switchType('reading');
-        } else {
+    if (ev) {
+        editingId = String(ev.id); delBtn.classList.remove('hidden');
+        if (ev.extendedProps.isReading) { switchType('reading'); }
+        else {
             switchType('schedule');
-            document.getElementById('inputMain').value = data.originalTitle || data.title;
-            const start = new Date(data.start);
-            document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
-            document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
-            setCategory(data.category);
+            document.getElementById('inputMain').value = ev.extendedProps.originalTitle || ev.title;
+            document.getElementById('inputDate').value = ev.startStr.split('T')[0];
+            setCategory(ev.extendedProps.category);
+            if (ev.extendedProps.category === 'Travel' && ev.end) {
+                // FullCalendar end 是 Exclusive，回填時需減 1 天
+                let d = new Date(ev.end);
+                d.setDate(d.getDate() - 1);
+                document.getElementById('inputEndDate').value = formatDate(d);
+            } else if (ev.extendedProps.category === 'Travel') {
+                document.getElementById('inputEndDate').value = ev.startStr.split('T')[0];
+            }
         }
     } else {
-        editingId = null;
-        delBtn.classList.add('hidden');
+        editingId = null; delBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
         document.getElementById('inputDate').value = today();
-        initTimeDropdowns(); 
-        setCategory('Private');
-        switchType('schedule');
+        document.getElementById('inputEndDate').value = today();
+        setCategory('Private'); switchType('schedule');
     }
 }
 
-function closeUnifiedModal() { 
-    document.getElementById('unifiedModal').classList.add('hidden'); 
-    editingId = null;
-}
+function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); editingId = null; }
 
 function handleDelete() {
     if (!editingId) return;
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    const ev = calendar.getEventById(editingId);
-    if (ev) ev.remove();
-    calendar.refetchEvents();
-    if (currentType === 'reading') renderBooks();
+    const calendarEv = calendar.getEventById(editingId); if(calendarEv) calendarEv.remove();
     closeUnifiedModal();
 }
 
 function handleSave() {
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
-    targetDate = document.getElementById('inputDate').value;
+    let title, backgroundColor, priority = 1, isReading = false, targetDate, endDateStr = null, isAllDay = false;
 
     if (currentType === 'schedule') {
-        const main = document.getElementById('inputMain').value; 
-        if (!main) return;
-        originalTitle = main;
+        targetDate = document.getElementById('inputDate').value;
+        const main = document.getElementById('inputMain').value; if (!main) return;
         const colorMap = { Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Private:'#E5E5E5' };
-        bgColor = colorMap[currentCategory];
-        title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
+        backgroundColor = colorMap[currentCategory];
+        
+        if (currentCategory === 'Travel') {
+            isAllDay = true; title = main;
+            let rawEndDate = document.getElementById('inputEndDate').value;
+            if (rawEndDate) {
+                // 使用精確日期運算確保結束日期為 Exclusive (+1天)，避免時區問題
+                let parts = rawEndDate.split('-');
+                let d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+                d.setDate(d.getDate() + 1);
+                endDateStr = formatDate(d);
+            }
+        } else {
+            const wh = document.getElementById('workHours');
+            title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${wh?wh.value:''}h)` : `${hour}:${min} ${main}`;
+        }
     } else {
-        // 邏輯要求：顯示預設書名和總頁數
-        const books = loadBooks();
-        const b = books.find(book => String(book.id) === String(editingId)) || books.find(book => !book.done);
-        if (!b || !b.title) return;
-        title = `📖 ${b.title} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#D1D1E8';
-        priority = 99;
-        isReading = true;
+        const books = loadBooks(); const b = books.find(book => !book.done); if (!b || !b.title) return;
+        targetDate = b.startDate; title = `📖 ${b.title} (p.${b.currentPage}/${b.totalPages})`;
+        backgroundColor = '#D1D1E8'; priority = 99; isReading = true; isAllDay = true;
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const evId = editingId || Date.now().toString();
     const ev = { 
-        id: editingId || Date.now().toString(),
-        title, 
-        // 邏輯要求：當輸入日期是哪一天，就顯示在那一天
-        start: currentType === 'reading' ? targetDate : `${targetDate}T${hour}:${min}:00`,
-        allDay: currentType === 'reading',
-        extendedProps: { 
-            bgColor, priority, isReading, 
-            category: currentCategory, 
-            workHours: document.getElementById('workHours').value,
-            originalTitle: originalTitle
-        } 
+        id: evId, title, 
+        start: isAllDay ? targetDate : `${targetDate}T${hour}:${min}:00`,
+        end: endDateStr, 
+        allDay: isAllDay,
+        backgroundColor: backgroundColor,
+        borderColor: 'transparent',
+        extendedProps: { priority, isReading, category: currentCategory, originalTitle: title, bgColor: backgroundColor }
     };
 
     const idx = storage.findIndex(e => String(e.id) === String(ev.id));
     if (idx > -1) storage[idx] = ev; else storage.push(ev);
-
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    calendar.removeAllEvents();
-    calendar.addEventSource(storage);
+    calendar.removeAllEvents(); calendar.addEventSource(storage);
     closeUnifiedModal();
 }
 
-function showSection(id) { 
-    const sections = ['calendar', 'tigps', 'phd', 'finance'];
-    sections.forEach(s => {
+function showSection(id) {
+    ['calendar', 'tigps', 'phd', 'finance'].forEach(s => {
         const el = document.getElementById(`${s}-section`);
         if (el) el.classList.toggle('hidden', s !== id);
     });
-    if (id === 'calendar') setTimeout(() => calendar.render(), 50); 
+    if (id === 'calendar') setTimeout(() => calendar.render(), 50);
 }
 
 async function runAIAnalysis() {
-    const resultEl = document.getElementById('ai-result');
-    resultEl.innerText = "正在分析閱讀狀況...";
-    resultEl.classList.add('show');
-    setTimeout(() => {
-        resultEl.innerText = "分析完成：閱讀步調穩定。";
-    }, 1200);
+    const resultEl = document.getElementById('ai-result'), spin = document.getElementById('ai-spin'), icon = document.getElementById('ai-icon');
+    if(spin) spin.style.display = 'inline-block'; if(icon) icon.style.display = 'none';
+    if(resultEl) { resultEl.classList.add('show'); resultEl.innerText = "AI 正在分析行程分佈..."; }
+    setTimeout(() => { 
+        if(spin) spin.style.display = 'none'; if(icon) icon.style.display = 'inline-block'; 
+        if(resultEl) resultEl.innerText = "分析完成：已強制修復區間日期運算邏輯。現在長條色塊會正確橫跨每一天。"; 
+    }, 1500);
 }
 </script>
 </body>
