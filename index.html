@@ -211,7 +211,7 @@
                     <input type="text" id="inputMain" placeholder="What's your plan?" class="custom-input">
                 </div>
                 <div class="field-group">
-                    <label class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
+                    <label id="dateLabel" class="text-base md:text-lg font-bold text-morandi-dark-gray font-cursive">Date & Time</label>
                     <div class="datetime-row">
                         <input type="date" id="inputDate" class="custom-input flex-1">
                         <div class="time-box">
@@ -258,16 +258,6 @@
                     </button>
                 </div>
                 <div id="books-container"></div>
-                
-                <div class="field-group mt-2">
-                    <label class="text-xs font-bold text-gray-400 font-cursive">Time (Today)</label>
-                    <div class="time-box !h-10 !w-32 mt-1">
-                        <select id="selectReadHour" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                        <span class="text-gray-300 self-center">:</span>
-                        <select id="selectReadMinute" class="bg-transparent text-xs flex-1 outline-none text-center"></select>
-                    </div>
-                </div>
-
                 <div class="ai-section">
                     <button class="ai-btn" onclick="runAIAnalysis()">
                         <div id="ai-spin" class="ai-spin"></div>
@@ -321,17 +311,16 @@ function toggleSidebar() {
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
     const eh = document.getElementById('selectEndHour'), em = document.getElementById('selectEndMinute');
-    const rh = document.getElementById('selectReadHour'), rm = document.getElementById('selectReadMinute');
-    [h, m, eh, em, rh, rm].forEach(el => el.innerHTML = '');
+    [h, m, eh, em].forEach(el => el.innerHTML = '');
     for (let i = 0; i < 24; i++) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        h.innerHTML += o; eh.innerHTML += o; rh.innerHTML += o;
+        h.innerHTML += o; eh.innerHTML += o;
     }
     for (let i = 0; i < 60; i += 5) {
         const val = String(i).padStart(2,'0');
         const o = `<option value="${val}">${val}</option>`;
-        m.innerHTML += o; em.innerHTML += o; rm.innerHTML += o;
+        m.innerHTML += o; em.innerHTML += o;
     }
 }
 
@@ -417,11 +406,12 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function renderBookRow(container, book) {
     const meta = calcMeta(book);
     const row = document.createElement('div');
+    // 強化選取邏輯
     row.className = `book-row ${String(editingId) === String(book.id) ? 'editing' : ''}`;
     row.dataset.id = book.id;
     row.onclick = (e) => {
         if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
-            editingId = book.id.toString();
+            editingId = String(book.id);
             document.getElementById('deleteBtn').classList.remove('hidden');
             renderBooks();
         }
@@ -481,7 +471,7 @@ function addBookRow() {
     const newId = Date.now().toString();
     books.push({ id: newId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false });
     saveBooks(books);
-    editingId = newId;
+    editingId = String(newId);
     renderBooks(); 
 }
 
@@ -505,8 +495,17 @@ function setCategory(cat) {
     const selectedBtn = document.getElementById(`cat-${cat}`);
     if(selectedBtn) selectedBtn.classList.add('selected');
     
+    // 依照要求：旅行是 Start Date & Time
+    const dateLabel = document.getElementById('dateLabel');
+    if(cat === 'Travel') {
+        dateLabel.innerText = "Start Date & Time";
+        document.getElementById('travel-end-container').style.display = 'block';
+    } else {
+        dateLabel.innerText = "Date & Time";
+        document.getElementById('travel-end-container').style.display = 'none';
+    }
+    
     document.getElementById('work-hours-container').style.display = (cat === 'Tutor') ? 'block' : 'none';
-    document.getElementById('travel-end-container').style.display = (cat === 'Travel') ? 'block' : 'none';
 }
 
 function openUnifiedModal(data = null) { 
@@ -514,17 +513,14 @@ function openUnifiedModal(data = null) {
     const delBtn = document.getElementById('deleteBtn');
     
     if (data) {
-        editingId = data.id.toString();
+        editingId = String(data.id);
         delBtn.classList.remove('hidden');
-        const start = new Date(data.start);
-        
         if (data.isReading) {
             switchType('reading');
-            document.getElementById('selectReadHour').value = String(start.getHours()).padStart(2, '0');
-            document.getElementById('selectReadMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = data.originalTitle || data.title;
+            const start = new Date(data.start);
             document.getElementById('inputDate').value = start.toISOString().split('T')[0];
             document.getElementById('selectHour').value = String(start.getHours()).padStart(2, '0');
             document.getElementById('selectMinute').value = String(Math.floor(start.getMinutes() / 5) * 5).padStart(2, '0');
@@ -546,32 +542,38 @@ function closeUnifiedModal() {
     editingId = null;
 }
 
+// 修正後的刪除邏輯
 function handleDelete() {
     if (!editingId) return;
     
-    // 修正：從行事曆與閱讀清單中完整移除該 ID
+    // 1. 從行事曆儲存空間刪除
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     storage = storage.filter(e => String(e.id) !== String(editingId));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     
+    // 2. 從閱讀紀錄儲存空間刪除
     let books = loadBooks();
     books = books.filter(b => String(b.id) !== String(editingId));
     saveBooks(books);
     
+    // 3. 從行事曆視圖移除並重新載入
     const ev = calendar.getEventById(editingId);
     if (ev) ev.remove();
     
+    // 4. 重整顯示與介面
+    calendar.refetchEvents();
     if (currentType === 'reading') renderBooks();
+    
     closeUnifiedModal();
 }
 
 function handleSave() {
-    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate, hour, min;
+    let title, bgColor, priority = 1, isReading = false, originalTitle = '', targetDate;
+    const hour = document.getElementById('selectHour').value;
+    const min = document.getElementById('selectMinute').value;
 
     if (currentType === 'schedule') {
         targetDate = document.getElementById('inputDate').value;
-        hour = document.getElementById('selectHour').value;
-        min = document.getElementById('selectMinute').value;
         const main = document.getElementById('inputMain').value; 
         if (!main) return;
         originalTitle = main;
@@ -579,9 +581,7 @@ function handleSave() {
         bgColor = colorMap[currentCategory];
         title = (currentCategory === 'Tutor') ? `${hour}:${min} ${main} (${document.getElementById('workHours').value}h)` : `${hour}:${min} ${main}`;
     } else {
-        targetDate = today(); // 修正：Log Date 就是今天
-        hour = document.getElementById('selectReadHour').value;
-        min = document.getElementById('selectReadMinute').value;
+        targetDate = today(); // Log Date 固定為今天
         const books = loadBooks();
         const b = books.find(book => String(book.id) === String(editingId)) || books.filter(book => !book.done)[0];
         if (!b) return;
@@ -589,7 +589,7 @@ function handleSave() {
         bgColor = '#D1D1E8';
         priority = 99;
         isReading = true;
-        if (!editingId) editingId = b.id.toString();
+        if (!editingId) editingId = String(b.id);
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
