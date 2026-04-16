@@ -668,6 +668,7 @@ let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
 let editingTrxId = null;
+let lastEditedBookId = null;
 
 // Finance Budget 月份切換變數
 let currentBudgetMonth = new Date().getMonth();
@@ -922,7 +923,7 @@ function initCalendars() {
             }
             
             if (arg.event.extendedProps.isReading) {
-                container.style.backgroundColor = '#DCD7ED'; 
+                container.style.backgroundColor = '#E4E1F2'; 
                 if (arg.event.extendedProps.cover) {
                     const img = document.createElement('img');
                     img.src = arg.event.extendedProps.cover;
@@ -963,7 +964,7 @@ function saveBooks(b) {
 }
 
 function calcMeta(book) {
-    let actualStartDate = book.startDate;
+    let actualStartDate = null;
     const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
     if (bookEvents.length > 0) {
@@ -991,7 +992,7 @@ function renderBooks() {
     
     if (active.length === 0) {
         const tempId = 'new_' + Date.now();
-        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
+        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
     } else {
         active.forEach(b => renderBookRow(container, b, false));
     }
@@ -1012,7 +1013,7 @@ function renderBookRow(container, book, isTemp) {
                 <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" onchange="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${meta.actualStartDate || book.startDate || today()}" onchange="updateField(this,'startDate')" />
+                <input type="date" class="start-date-input" value="${book.logDate || today()}" onchange="updateField(this,'logDate')" />
                 <span class="days-count">已讀 ${meta.daysRead} 天</span>
             </div>
             <div class="page-row">
@@ -1046,6 +1047,7 @@ function handleCoverUpload(input) {
         preview.innerHTML = `<img src="${e.target.result}"><input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">`;
         const { books, book } = getOrCreateBook(row);
         book.cover = e.target.result;
+        lastEditedBookId = book.id;
         saveBooks(books);
     };
     reader.readAsDataURL(file);
@@ -1056,7 +1058,7 @@ function getOrCreateBook(row) {
     const rawId = row.dataset.id;
     let book = books.find(b => String(b.id) === String(rawId));
     if (!book) {
-        book = { id: rawId, title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null, readHours: 0, isToRead: false };
+        book = { id: rawId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false };
         books.push(book);
         saveBooks(books);
     }
@@ -1066,7 +1068,8 @@ function getOrCreateBook(row) {
 function updateField(el, field) {
     const row = el.closest('.book-row');
     const { books, book } = getOrCreateBook(row);
-    book[field] = (field === 'title' || field === 'startDate') ? el.value : (parseInt(el.value) || 0);
+    book[field] = (field === 'title' || field === 'logDate') ? el.value : (parseInt(el.value) || 0);
+    lastEditedBookId = book.id;
     saveBooks(books);
     const meta = calcMeta(book);
     const fill = row.querySelector('.progress-bar-fill');
@@ -1084,6 +1087,7 @@ function toggleDone(el) {
     } else if (!book.done) {
         book.completedAt = null;
     }
+    lastEditedBookId = book.id;
     saveBooks(books);
     renderBooks();
     renderMonthlyStats(); 
@@ -1092,7 +1096,7 @@ function toggleDone(el) {
 
 function addBookRow() {
     const books = loadBooks();
-    books.push({ id: Date.now(), title: '', currentPage: 0, totalPages: 0, startDate: today(), done: false, cover: null, readHours: 0, isToRead: false });
+    books.push({ id: Date.now(), title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false });
     saveBooks(books);
     renderBooks();
 }
@@ -1142,9 +1146,6 @@ function renderMonthlyStats() {
         container.innerHTML = '<div class="text-sm text-gray-400 italic">今年尚未完成任何書籍。繼續保持閱讀習慣！</div>';
     }
 }
-
-let tempTrCover = null;
-let editingToReadId = null;
 
 function openToReadModal(bookId = null) {
     document.getElementById('toreadModal').classList.remove('hidden');
@@ -1217,7 +1218,7 @@ function saveToReadBook() {
             isToRead: true, 
             currentPage: 0,
             totalPages: 0,
-            startDate: '',
+            logDate: '',
             done: false,
             readHours: 0
         });
@@ -1231,7 +1232,7 @@ function saveToReadBook() {
 
 function deleteToReadBook() {
     if (editingToReadId) {
-        if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
+        if (!confirm('確定要刪除此待讀書籍嗎？')) return;
         let books = loadBooks();
         books = books.filter(b => String(b.id) !== String(editingToReadId));
         saveBooks(books);
@@ -1281,7 +1282,7 @@ function startReading(id) {
     let b = books.find(x => String(x.id) === String(id));
     if(b) {
         b.isToRead = false; 
-        b.startDate = today();
+        b.logDate = today();
         saveBooks(books);
         renderToRead();
         renderStatsTable();
@@ -1335,7 +1336,7 @@ function renderStatsTable() {
         const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
         const sessions = bookEvents.length || (book.isToRead ? 0 : 1); 
 
-        let actualStartDate = book.startDate;
+        let actualStartDate = null;
         if (bookEvents.length > 0) {
             const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
             if (sortedEvents[0].start) {
@@ -1941,7 +1942,8 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
             if (actBook) {
-                actBook.startDate = ev.startStr.split('T')[0];
+                actBook.logDate = ev.startStr.split('T')[0];
+                lastEditedBookId = actBook.id;
                 localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
             }
             switchType('reading');
@@ -1981,13 +1983,15 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         document.getElementById('inputDate').value = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
         
-        // 點擊空白日期時，將正在閱讀的書的 startDate 強制覆寫成選取的日期
+        // 把正在閱讀的書的預設紀錄日期，直接變成點選的那一天
         let currentBooks = loadBooks();
-        let actBook = currentBooks.find(b => !b.done && !b.isToRead);
-        if (actBook) {
-            actBook.startDate = targetDate;
-            localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
-        }
+        currentBooks.forEach(b => {
+            if (!b.done && !b.isToRead) {
+                b.logDate = targetDate;
+            }
+        });
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
+        lastEditedBookId = null; // 重置鎖定
 
         setCategory('Personal');
         switchType('schedule');
@@ -2083,12 +2087,14 @@ function handleSave() {
         }
     } else {
         const active = loadBooks().filter(b => !b.done && !b.isToRead);
-        const b = active[0]; if (!b) return;
+        // 如果有最後編輯的書籍，優先儲存那本；否則存第一本
+        const b = lastEditedBookId ? active.find(book => String(book.id) === String(lastEditedBookId)) : active[0];
+        if (!b) return;
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#DCD7ED'; priority = 99; isReading = true; cover = b.cover; 
+        bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
         
-        // 抓取書籍卡片上的日期作為打卡日期 (b.startDate 是透過 onchange 同步的)
-        startStr = b.startDate || today(); 
+        // 抓取書籍卡片上的日期作為打卡日期 (b.logDate 是透過 onchange 同步的)
+        startStr = b.logDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
     }
