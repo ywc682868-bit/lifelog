@@ -572,6 +572,7 @@
             <button onclick="deleteToReadBook()" class="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 font-bold text-sm hover:bg-gray-200 transition">Delete</button>
             <button onclick="saveToReadBook()" class="flex-1 py-2.5 rounded-full bg-morandi-green-dark text-white font-bold text-sm hover:opacity-90 transition shadow-sm">Save</button>
         </div>
+        <button onclick="closeToReadModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
     </div>
 </div>
 
@@ -1249,7 +1250,7 @@ function saveToReadBook() {
 
 function deleteToReadBook() {
     if (editingToReadId) {
-        if (!confirm('確定要刪除此待讀書籍嗎？')) return;
+        if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
         let books = loadBooks();
         books = books.filter(b => String(b.id) !== String(editingToReadId));
         saveBooks(books);
@@ -1382,7 +1383,7 @@ function renderStatsTable() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="w-16">
-                <div class="cursor-pointer hover:opacity-80 transition" onclick="openUnifiedModal(null, null, '${book.id}')" title="編輯書籍資訊">
+                <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
@@ -1393,15 +1394,15 @@ function renderStatsTable() {
                     ${!book.isToRead ? `<span class="ml-1">| 進度: ${book.currentPage}/${book.totalPages}</span>` : ''}
                 </div>
             </td>
-            <td class="w-32">
+            <td class="w-44 whitespace-nowrap min-w-[150px]">
                 <div class="text-[11px] text-gray-400">${periodText}</div>
             </td>
-            <td class="w-20">
+            <td class="w-24 whitespace-nowrap">
                 ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500">打卡 ${sessions} 次</div>`}
             </td>
-            <td>
+            <td class="whitespace-nowrap">
                 ${book.isToRead ? '-' : `
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1">
                         <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
                         <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
@@ -1417,7 +1418,7 @@ function renderStatsTable() {
                 </div>
                 `}
             </td>
-            <td class="w-36 relative">
+            <td class="w-40 relative whitespace-nowrap">
                 <div class="flex items-center justify-between gap-2">
                     <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
                         <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
