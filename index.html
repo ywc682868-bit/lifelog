@@ -984,12 +984,15 @@ function calcMeta(book) {
     return { pct, daysRead, actualStartDate };
 }
 
-function renderBooks() {
+function renderBooks(forceBookId = null) {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
-    const active = books.filter(b => !b.done && !b.isToRead);
     
+    // 若沒有強制指定，則列出所有尚未打勾完成的書，或包含強制指定的書
+    let active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
+    
+    // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
     if (active.length === 0) {
         const tempId = 'new_' + Date.now();
         renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
@@ -1089,7 +1092,6 @@ function toggleDone(el) {
     }
     lastEditedBookId = book.id;
     saveBooks(books);
-    renderBooks();
     renderMonthlyStats(); 
     renderStatsTable();   
 }
@@ -1146,6 +1148,9 @@ function renderMonthlyStats() {
         container.innerHTML = '<div class="text-sm text-gray-400 italic">今年尚未完成任何書籍。繼續保持閱讀習慣！</div>';
     }
 }
+
+let tempTrCover = null;
+let editingToReadId = null;
 
 function openToReadModal(bookId = null) {
     document.getElementById('toreadModal').classList.remove('hidden');
@@ -1352,8 +1357,8 @@ function renderStatsTable() {
         }
 
         const readHours = book.readHours || 0;
-        const calcMins = (sessions > 0 && readHours > 0) ? Math.round((readHours * 60) / sessions) : 0;
-        const calcPages = sessions > 0 ? Math.round((book.currentPage || 0) / sessions) : 0;
+        const calcMins = (sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / sessions) * 10) / 10 : 0;
+        const calcPages = (readHours > 0) ? Math.round(((book.currentPage || 0) / (readHours * 60)) * 10) / 10 : 0;
         
         const displayMins = book.manualAvgMins !== undefined ? book.manualAvgMins : calcMins;
         const displayPages = book.manualAvgPages !== undefined ? book.manualAvgPages : calcPages;
@@ -1361,7 +1366,7 @@ function renderStatsTable() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="w-16">
-                <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
+                <div class="cursor-pointer hover:opacity-80 transition" onclick="openUnifiedModal(null, null, '${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
@@ -1382,16 +1387,16 @@ function renderStatsTable() {
                 ${book.isToRead ? '-' : `
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-1">
-                        <input type="number" step="0.5" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-12 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
+                        <input type="number" step="0.5" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
                         <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <input type="number" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-12 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
+                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
                         <span class="text-xs text-gray-500 whitespace-nowrap">分鐘/次</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <input type="number" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-12 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">頁數/次</span>
+                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
+                        <span class="text-xs text-gray-500 whitespace-nowrap">頁/分鐘</span>
                     </div>
                 </div>
                 `}
@@ -1429,7 +1434,7 @@ function updateAvgField(bookId, field, val) {
     const books = loadBooks();
     const b = books.find(x => String(x.id) === String(bookId));
     if (b) {
-        b[field] = parseInt(val) || 0;
+        b[field] = parseFloat(val) || 0;
         saveBooks(books);
         renderStatsTable(); 
     }
@@ -1441,7 +1446,7 @@ function openGeminiAnalysis(title, current, total, sessions, hours, mins, pages,
         prompt = `我有一本待讀書籍《${title}》，請幫我介紹這本書的核心內容，並給我一些閱讀這本書的建議與計畫安排。`;
     } else {
         let status = isDone ? "已讀完" : `閱讀中（進度 ${current}/${total} 頁）`;
-        prompt = `我正在進行閱讀追蹤，書名是《${title}》，目前狀態：${status}。我總共打卡了 ${sessions} 次，累積閱讀時數 ${hours} 小時，平均每次閱讀 ${mins} 分鐘、${pages} 頁。請根據我的閱讀數據，給我詳細的閱讀分析、效率評估以及後續的學習成長建議。`;
+        prompt = `我正在進行閱讀追蹤，書名是《${title}》，目前狀態：${status}。我總共打卡了 ${sessions} 次，累積閱讀時數 ${hours} 小時，平均每次閱讀 ${mins} 分鐘、閱讀速度為每分鐘 ${pages} 頁。請根據我的閱讀數據，給我詳細的閱讀分析、效率評估以及後續的學習成長建議。`;
     }
     
     const textArea = document.createElement("textarea");
@@ -1930,15 +1935,28 @@ function deleteTrx() {
 }
 
 // ── UNIFIED MODAL LOGIC (Calendar & Record Saving) ──────────
-function openUnifiedModal(ev = null, clickedDateStr = null) {
+function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
     
+    // 若傳入 forceBookId，代表是從分析表格點擊進來的編輯需求
+    if (forceBookId) {
+        editingId = null; 
+        deleteBtn.classList.add('hidden'); // 因為這只用來編輯書籍資訊，不影響單一行事曆事件
+        let currentBooks = loadBooks();
+        let actBook = currentBooks.find(b => String(b.id) === String(forceBookId));
+        if (actBook) {
+            lastEditedBookId = actBook.id;
+        }
+        switchType('reading', forceBookId);
+        return;
+    }
+
     if (ev && ev.id) {
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 如果點擊的是既有的閱讀紀錄，把該本書籍卡片的日期強行設定為事件那天的日期，這會更新畫面上卡片的 date input
+            // 點擊既有的閱讀紀錄，把書籍卡片的日期改成事件日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
             if (actBook) {
@@ -1946,7 +1964,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
                 lastEditedBookId = actBook.id;
                 localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
             }
-            switchType('reading');
+            switchType('reading', ev.extendedProps.bookId);
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = ev.extendedProps.originalTitle || ev.title;
@@ -1983,7 +2001,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         document.getElementById('inputDate').value = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
         
-        // 把正在閱讀的書的預設紀錄日期，直接變成點選的那一天
+        // 把所有正在閱讀的書的預設日期變成點選的那一天
         let currentBooks = loadBooks();
         currentBooks.forEach(b => {
             if (!b.done && !b.isToRead) {
@@ -1991,7 +2009,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
             }
         });
         localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
-        lastEditedBookId = null; // 重置鎖定
+        lastEditedBookId = null; 
 
         setCategory('Personal');
         switchType('schedule');
@@ -2003,7 +2021,7 @@ function closeUnifiedModal() {
     editingId = null;
 }
 
-function switchType(type) {
+function switchType(type, forceBookId = null) {
     currentType = type;
     const s = document.getElementById('schedule-fields-static'), r = document.getElementById('read-fields'), btn = document.getElementById('saveBtn');
     document.getElementById('tab-schedule').classList.toggle('active', type === 'schedule');
@@ -2011,7 +2029,7 @@ function switchType(type) {
     if (type === 'schedule') {
         s.style.display = 'block'; r.style.display = 'none'; btn.style.backgroundColor = '#8DAAB9'; setCategory(currentCategory);
     } else {
-        s.style.display = 'none'; r.style.display = 'block'; btn.style.backgroundColor = '#7F9F9F'; renderBooks();
+        s.style.display = 'none'; r.style.display = 'block'; btn.style.backgroundColor = '#7F9F9F'; renderBooks(forceBookId);
     }
 }
 
@@ -2086,14 +2104,31 @@ function handleSave() {
             startStr = `${date}T${hour}:${min}:00`;
         }
     } else {
-        const active = loadBooks().filter(b => !b.done && !b.isToRead);
-        // 如果有最後編輯的書籍，優先儲存那本；否則存第一本
-        const b = lastEditedBookId ? active.find(book => String(book.id) === String(lastEditedBookId)) : active[0];
-        if (!b) return;
+        const allBooks = loadBooks();
+        let b = null;
+
+        // 優先找剛剛正在編輯的書
+        if (lastEditedBookId) {
+            b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
+        }
+
+        // 如果沒有鎖定目標，就找畫面上第一個渲染出來的書
+        if (!b) {
+            const firstRow = document.querySelector('#books-container .book-row');
+            if (firstRow) {
+                b = allBooks.find(book => String(book.id) === String(firstRow.dataset.id));
+            }
+        }
+
+        // 若是完全空白的未編輯卡片就不存行事曆
+        if (!b || (!b.title && b.currentPage === 0 && !b.cover)) {
+            closeUnifiedModal();
+            return;
+        }
+
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
         
-        // 抓取書籍卡片上的日期作為打卡日期 (b.logDate 是透過 onchange 同步的)
         startStr = b.logDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
