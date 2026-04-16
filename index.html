@@ -527,7 +527,7 @@
 
             <div id="read-fields" style="display:none;" class="text-left space-y-4">
                 <div class="field-group">
-                    <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Record Date</label>
+                    <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Log Date (打卡日期)</label>
                     <input type="date" id="inputReadDate" class="custom-input">
                 </div>
                 <div class="read-header">
@@ -907,6 +907,7 @@ function initCalendars() {
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
         eventOrder: 'priority,start',
+        dateClick: (info) => openUnifiedModal(null, info.dateStr), // 新增：點擊日期格可直接補登
         dayCellContent: (arg) => {
             const dateStr = arg.date.toLocaleDateString('en-CA');
             const special = TAIWAN_SPECIAL_DAYS.find(d => d.date === dateStr);
@@ -919,13 +920,12 @@ function initCalendars() {
             let container = document.createElement('div');
             container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;width:100%;';
             
-            // 動態校正顏色：確保畫面上顯示的與按鈕顏色完全一致，修復舊資料儲存的顏色問題
             const catMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
             let bgColor = arg.event.extendedProps.bgColor || '#E5E5E5';
             if (arg.event.extendedProps.category && catMap[arg.event.extendedProps.category]) {
                 bgColor = catMap[arg.event.extendedProps.category];
             }
-            
+
             if (arg.event.extendedProps.isReading) {
                 container.style.backgroundColor = '#D0BFFF'; // 強制閱讀紀錄顯示紫色
                 if (arg.event.extendedProps.cover) {
@@ -935,7 +935,7 @@ function initCalendars() {
                     container.appendChild(img);
                 }
                 const text = document.createElement('span');
-                text.innerText = arg.event.title;
+                text.innerText = arg.event.title; // 移除了 icon
                 text.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;';
                 container.appendChild(text);
             } else {
@@ -1201,7 +1201,7 @@ function saveToReadBook() {
         if (idx > -1) {
             books[idx].title = title;
             books[idx].platform = platform;
-            books[idx].cover = tempTrCover;
+            if (tempTrCover) books[idx].cover = tempTrCover;
         }
     } else {
         books.push({
@@ -1226,7 +1226,7 @@ function saveToReadBook() {
 
 function deleteToReadBook() {
     if (editingToReadId) {
-        if (!confirm('確定要刪除此待讀書籍嗎？')) return;
+        if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
         let books = loadBooks();
         books = books.filter(b => String(b.id) !== String(editingToReadId));
         saveBooks(books);
@@ -1346,7 +1346,9 @@ function renderStatsTable() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="w-16">
-                ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
+                <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
+                    ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
+                </div>
             </td>
             <td>
                 <div class="font-bold text-morandi-dark-gray">${book.title || '未命名'}</div>
@@ -1763,6 +1765,7 @@ function renderTutorIncome() {
         if (ev.extendedProps && ev.extendedProps.category === 'Tutor') {
             if (ev.start) {
                 const evDate = new Date(ev.start);
+                // 讀取「目前選擇的」年份與月份
                 if (evDate.getMonth() === currentBudgetMonth && evDate.getFullYear() === currentBudgetYear) {
                     totalHours += parseFloat(ev.extendedProps.workHours) || 0;
                 }
@@ -1782,6 +1785,7 @@ function renderTransactions() {
 
     const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
     
+    // 只篩選出「目前選擇的」年份與月份的記帳資料
     const filteredTrxs = trxs.filter(trx => {
         if(!trx.date) return false;
         const tDate = new Date(trx.date);
@@ -1826,20 +1830,22 @@ function renderTransactions() {
     const totalIncome = manualIncome + tutorIncome;
     const balance = totalIncome - totalExpense;
 
+    // 動態更新圓餅圖與統計列表
     const expPercent = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
     const pieChart = document.getElementById('budget-pie-chart');
     if (totalIncome === 0 && totalExpense === 0) {
-        pieChart.style.background = '#E5E5E5'; 
+        pieChart.style.background = '#E5E5E5'; // 灰色
     } else if (totalIncome === 0 && totalExpense > 0) {
-        pieChart.style.background = '#E8D1D1'; 
+        pieChart.style.background = '#E8D1D1'; // 全部紅色
     } else {
-        pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`; 
+        pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`; // 紅色(支出) 與 綠色(剩餘)
     }
 
     document.getElementById('summary-income').innerText = '$' + totalIncome.toLocaleString();
     document.getElementById('summary-expense').innerText = '$' + totalExpense.toLocaleString();
     document.getElementById('summary-balance').innerText = '$' + balance.toLocaleString();
 
+    // 更新標題月份顯示
     const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const displayEl = document.getElementById('budget-month-display');
     if(displayEl) {
@@ -1909,11 +1915,11 @@ function deleteTrx() {
 }
 
 // ── UNIFIED MODAL LOGIC (Calendar & Record Saving) ──────────
-function openUnifiedModal(ev = null) {
+function openUnifiedModal(ev = null, clickedDateStr = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
     
-    if (ev) {
+    if (ev && ev.id) { // 確保是已存在的事件
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
@@ -1944,14 +1950,17 @@ function openUnifiedModal(ev = null) {
                 document.getElementById('workHours').value = ev.extendedProps.workHours || '';
             }
         }
-    } else {
+    } else { // 新增紀錄，並帶入被點擊的日期 (或預設今天)
         editingId = null;
         deleteBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
         document.getElementById('inputNotes').value = '';
-        document.getElementById('inputDate').valueAsDate = new Date();
-        document.getElementById('inputEndDate').valueAsDate = new Date();
-        document.getElementById('inputReadDate').valueAsDate = new Date();
+        
+        let targetDate = clickedDateStr ? clickedDateStr : today();
+        document.getElementById('inputDate').value = targetDate;
+        document.getElementById('inputEndDate').value = targetDate;
+        document.getElementById('inputReadDate').value = targetDate;
+        
         setCategory('Personal');
         switchType('schedule');
     }
@@ -2047,7 +2056,7 @@ function handleSave() {
     } else {
         const active = loadBooks().filter(b => !b.done && !b.isToRead);
         const b = active[0]; if (!b) return;
-        title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
+        title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`; // 移除了 icon
         bgColor = '#D0BFFF'; priority = 99; isReading = true; cover = b.cover; 
         startStr = document.getElementById('inputReadDate').value || today(); 
         isAllDay = true;
