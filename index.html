@@ -744,17 +744,18 @@ function listenToCloud() {
 }
 
 function refreshAllUI() {
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     if (mainCalendar) {
         mainCalendar.removeAllEvents();
-        mainCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+        mainCalendar.addEventSource(storage);
     }
     if (bwCalendar) {
         bwCalendar.removeAllEvents();
-        bwCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+        bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading));
     }
     if (acadCalendar) {
         acadCalendar.removeAllEvents();
-        acadCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+        acadCalendar.addEventSource(storage);
     }
     renderBooks();
     renderMonthlyStats();
@@ -953,8 +954,12 @@ function initCalendars() {
     };
 
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
-    bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), calendarOptions);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
+    
+    const bwOptions = Object.assign({}, calendarOptions, {
+        events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
+    });
+    bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), bwOptions);
     
     mainCalendar.render();
 }
@@ -1455,12 +1460,9 @@ function deleteBookRecord(bookId) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
         syncToCloud();
         
-        [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
-            if (cal) {
-                cal.removeAllEvents();
-                cal.addEventSource(storage);
-            }
-        });
+        if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
+        if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+        if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
     }
 
     renderStatsTable();
@@ -1766,7 +1768,6 @@ function renderTutorIncome() {
         if (ev.extendedProps && ev.extendedProps.category === 'Tutor') {
             if (ev.start) {
                 const evDate = new Date(ev.start);
-                // 修改：讀取「目前選擇的」年份與月份
                 if (evDate.getMonth() === currentBudgetMonth && evDate.getFullYear() === currentBudgetYear) {
                     totalHours += parseFloat(ev.extendedProps.workHours) || 0;
                 }
@@ -1786,7 +1787,6 @@ function renderTransactions() {
 
     const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
     
-    // 修改：只篩選出「目前選擇的」年份與月份的記帳資料
     const filteredTrxs = trxs.filter(trx => {
         if(!trx.date) return false;
         const tDate = new Date(trx.date);
@@ -1831,22 +1831,20 @@ function renderTransactions() {
     const totalIncome = manualIncome + tutorIncome;
     const balance = totalIncome - totalExpense;
 
-    // 動態更新圓餅圖與統計列表
     const expPercent = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
     const pieChart = document.getElementById('budget-pie-chart');
     if (totalIncome === 0 && totalExpense === 0) {
-        pieChart.style.background = '#E5E5E5'; // 灰色
+        pieChart.style.background = '#E5E5E5'; 
     } else if (totalIncome === 0 && totalExpense > 0) {
-        pieChart.style.background = '#E8D1D1'; // 全部紅色
+        pieChart.style.background = '#E8D1D1'; 
     } else {
-        pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`; // 紅色(支出) 與 綠色(剩餘)
+        pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`; 
     }
 
     document.getElementById('summary-income').innerText = '$' + totalIncome.toLocaleString();
     document.getElementById('summary-expense').innerText = '$' + totalExpense.toLocaleString();
     document.getElementById('summary-balance').innerText = '$' + balance.toLocaleString();
 
-    // 更新標題月份顯示
     const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const displayEl = document.getElementById('budget-month-display');
     if(displayEl) {
@@ -2010,12 +2008,9 @@ function handleDelete() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
     
-    [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
-        if (cal) {
-            const ev = cal.getEventById(editingId);
-            if (ev) ev.remove();
-        }
-    });
+    if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
+    if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
     
     closeUnifiedModal();
     renderStatsTable();
@@ -2073,12 +2068,9 @@ function handleSave() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
     
-    [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
-        if (cal) {
-            cal.removeAllEvents();
-            cal.addEventSource(storage);
-        }
-    });
+    if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
+    if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
 
     closeUnifiedModal();
     
