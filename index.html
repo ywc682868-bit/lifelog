@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ======= Firebase 設定 =======
+        // ======= 您的 Firebase 真實設定 =======
         const firebaseConfig = {
             apiKey: "AIzaSyDpUQi1tIdk40h1YKiTFoAK6Y_nnoO7cIo",
             authDomain: "optimization-30a4f.firebaseapp.com",
@@ -23,32 +23,21 @@
             appId: "1:817567132664:web:b918b2342d71446841840d",
             measurementId: "G-MF7GKK6WXT"
         };
-
-        // 確保使用您申請的地區 URL
         firebaseConfig.databaseURL = "https://optimization-30a4f-default-rtdb.firebaseio.com";
 
-        // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        // ===========================
+        // ===================================
 
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         morandi: {
-                            'dark-gray': '#3A4750',
-                            'blue-light': '#E2EBF0',
-                            'blue-dark': '#8DAAB9',
-                            'green-light': '#E2E8E8',
-                            'green-dark': '#7F9F9F',
-                            'pink': '#EBC4B9',
-                            'soft-red': '#E8D1D1',
-                            'soft-orange': '#EEDFD2',
-                            'soft-yellow': '#EBE5D1',
-                            'soft-green': '#D5E0D5',
-                            'soft-gray': '#E5E5E5',
-                            'soft-lavender': '#D1D1E8' 
+                            'dark-gray': '#3A4750', 'blue-light': '#E2EBF0', 'blue-dark': '#8DAAB9',
+                            'green-light': '#E2E8E8', 'green-dark': '#7F9F9F', 'pink': '#EBC4B9',
+                            'soft-red': '#E8D1D1', 'soft-orange': '#EEDFD2', 'soft-yellow': '#EBE5D1',
+                            'soft-green': '#D5E0D5', 'soft-gray': '#E5E5E5', 'soft-lavender': '#D1D1E8' 
                         }
                     }
                 }
@@ -536,7 +525,11 @@
                 </div>
             </div>
 
-            <div id="read-fields" style="display:none;" class="text-left">
+            <div id="read-fields" style="display:none;" class="text-left space-y-4">
+                <div class="field-group">
+                    <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Record Date</label>
+                    <input type="date" id="inputReadDate" class="custom-input">
+                </div>
                 <div class="read-header">
                     <label class="text-lg font-bold text-morandi-dark-gray font-cursive">Reading</label>
                     <button onclick="addBookRow()" class="add-book-btn" title="新增書籍"><i class="fa-solid fa-plus" style="font-size:10px;"></i></button>
@@ -932,9 +925,9 @@ function initCalendars() {
             if (arg.event.extendedProps.category && catMap[arg.event.extendedProps.category]) {
                 bgColor = catMap[arg.event.extendedProps.category];
             }
-            container.style.backgroundColor = bgColor;
-
+            
             if (arg.event.extendedProps.isReading) {
+                container.style.backgroundColor = '#D0BFFF'; // 強制閱讀紀錄顯示紫色
                 if (arg.event.extendedProps.cover) {
                     const img = document.createElement('img');
                     img.src = arg.event.extendedProps.cover;
@@ -946,6 +939,7 @@ function initCalendars() {
                 text.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;';
                 container.appendChild(text);
             } else {
+                container.style.backgroundColor = bgColor;
                 container.innerText = arg.event.title;
             }
             return { domNodes: [container] };
@@ -956,6 +950,7 @@ function initCalendars() {
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
     
+    // Bookworm Calendar 專屬設定，只顯示閱讀紀錄
     const bwOptions = Object.assign({}, calendarOptions, {
         events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
     });
@@ -1923,6 +1918,7 @@ function openUnifiedModal(ev = null) {
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
             switchType('reading');
+            document.getElementById('inputReadDate').value = ev.startStr.split('T')[0];
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = ev.extendedProps.originalTitle || ev.title;
@@ -1955,6 +1951,7 @@ function openUnifiedModal(ev = null) {
         document.getElementById('inputNotes').value = '';
         document.getElementById('inputDate').valueAsDate = new Date();
         document.getElementById('inputEndDate').valueAsDate = new Date();
+        document.getElementById('inputReadDate').valueAsDate = new Date();
         setCategory('Personal');
         switchType('schedule');
     }
@@ -2050,8 +2047,10 @@ function handleSave() {
     } else {
         const active = loadBooks().filter(b => !b.done && !b.isToRead);
         const b = active[0]; if (!b) return;
-        title = `📖 ${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#D1D1E8'; priority = 99; isReading = true; cover = b.cover; startStr = today(); isAllDay = true;
+        title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
+        bgColor = '#D0BFFF'; priority = 99; isReading = true; cover = b.cover; 
+        startStr = document.getElementById('inputReadDate').value || today(); 
+        isAllDay = true;
         activeBookId = b.id; 
     }
 
