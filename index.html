@@ -396,9 +396,33 @@
                             <div class="border-t border-gray-200 mt-2 pt-2 flex justify-between items-center font-bold text-morandi-dark-gray"><span>Total Budget</span><span class="font-mono text-lg">$30,000</span></div>
                         </div>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-gray-700 mb-3 text-sm">Daily Ledger (Coming Soon)</h4>
-                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm">詳細每日記帳功能建置中... 未來可在此追蹤每一筆支出。</div>
+                    
+                    <div class="mt-8 relative">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-gray-700 text-sm">Income & Expenditure</h4>
+                            <button onclick="openTrxModal()" class="w-7 h-7 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm text-xs" title="新增記帳"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        
+                        <div class="bg-gray-50/50 p-4 rounded-xl mb-4 border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <label class="text-xs font-bold text-gray-600 whitespace-nowrap">家教時薪 $</label>
+                                <input type="number" id="tutor-rate-input" oninput="saveTutorRate(this.value)" class="custom-input h-[32px] mt-0 w-24 text-sm bg-white border border-gray-200 shadow-sm" placeholder="0">
+                            </div>
+                            <div class="text-sm font-bold text-morandi-dark-gray">
+                                當月家教預估收入: <span id="tutor-auto-income" class="text-lg text-morandi-blue-dark">$0</span> <span class="text-xs text-gray-400 font-normal" id="tutor-hours-display">(0 小時)</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <h5 class="text-xs font-bold text-green-600 mb-3 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> Income</h5>
+                                <div id="income-list" class="space-y-1"></div>
+                            </div>
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <h5 class="text-xs font-bold text-red-400 mb-3 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-down"></i> Expenditure</h5>
+                                <div id="expenditure-list" class="space-y-1"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -618,6 +642,38 @@
     </div>
 </div>
 
+<div id="trxModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+    <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative">
+        <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">新增記帳紀錄</h3>
+        <div class="space-y-3">
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">類型</label>
+                <select id="trx-type" class="custom-input h-[38px] text-sm mt-0 appearance-none bg-white shadow-sm border border-gray-100">
+                    <option value="income">收入 Income</option>
+                    <option value="expense">支出 Expenditure</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">日期</label>
+                <input type="date" id="trx-date" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">項目 / 描述</label>
+                <input type="text" id="trx-desc" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：午餐、薪水">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">金額</label>
+                <input type="number" id="trx-amount" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="0">
+            </div>
+        </div>
+        <div class="flex gap-4 mt-6">
+            <button id="trx-delete-btn" onclick="deleteTrx()" class="hidden flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 font-bold text-sm hover:bg-gray-200 transition">Delete</button>
+            <button onclick="saveTrx()" class="flex-1 py-2.5 rounded-full bg-morandi-green-dark text-white font-bold text-sm hover:opacity-90 transition shadow-sm">Save</button>
+        </div>
+        <button onclick="closeTrxModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
+    </div>
+</div>
+
 <script>
 // LocalStorage Keys
 const STORAGE_KEY = 'ashley_events_v8_reorder';
@@ -625,10 +681,13 @@ const BOOKS_KEY = 'ashley_books_v3';
 const ACAD_LIT_KEY = 'ashley_acad_lit_v1';
 const ACAD_PUB_KEY = 'ashley_acad_pub_v1';
 const WALLET_KEY = 'ashley_wallet_v1';
+const TRX_KEY = 'ashley_trx_v1';
+const SETTINGS_KEY = 'ashley_settings_v1';
 
 let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
+let editingTrxId = null;
 
 // ======= 雲端同步邏輯 =======
 
@@ -638,7 +697,9 @@ function syncToCloud() {
         books: localStorage.getItem(BOOKS_KEY) || '[]',
         lit: localStorage.getItem(ACAD_LIT_KEY) || '[]',
         pub: localStorage.getItem(ACAD_PUB_KEY) || '[]',
-        wallet: localStorage.getItem(WALLET_KEY) || '[]'
+        wallet: localStorage.getItem(WALLET_KEY) || '[]',
+        trx: localStorage.getItem(TRX_KEY) || '[]',
+        settings: localStorage.getItem(SETTINGS_KEY) || '{}'
     };
     
     const statusEl = document.getElementById('cloud-status');
@@ -664,12 +725,15 @@ function listenToCloud() {
             localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
             localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
             localStorage.setItem(WALLET_KEY, data.wallet || '[]');
+            localStorage.setItem(TRX_KEY, data.trx || '[]');
+            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
             
             if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
                 renderMonthlyStats();
                 initWallet();
+                renderTransactions();
             } else {
                 refreshAllUI();
             }
@@ -678,6 +742,7 @@ function listenToCloud() {
             initCalendars();
             renderMonthlyStats();
             initWallet();
+            renderTransactions();
         }
     });
 }
@@ -702,6 +767,7 @@ function refreshAllUI() {
     renderLitGrid();
     renderPubTable();
     renderWallet();
+    renderTransactions();
 }
 
 // ===========================
@@ -747,7 +813,7 @@ function showSection(id) {
         switchAcadTab('timeline');
     } else if (id === 'finance') {
         document.getElementById('finance-section').classList.remove('hidden');
-        switchFinTab('wallet');
+        switchFinTab('budget'); // 預設顯示 Budget
     }
 }
 
@@ -1513,14 +1579,14 @@ function renderWallet() {
     grid.innerHTML = items.map(item => {
         if (item.type === 'link') {
             return `
-            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
+            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center" onclick="window.open('${item.linkUrl}', '_blank')">
                 <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
-                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
                 <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
             </div>`;
         } else {
             return `
-            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group" onclick="openWalletEditModal('${item.id}')">
+            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
                 <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
                 <h4 class="font-bold text-gray-700 mb-2 text-sm">${item.title}</h4>
                 ${item.img ? `<img src="${item.img}" class="w-full max-w-[200px] h-16 object-contain mb-2">` : `<div class="w-full max-w-[200px] mock-barcode mb-2 opacity-30 flex items-center justify-center text-xs text-gray-400 font-zh">點擊上傳條碼圖片</div>`}
@@ -1655,6 +1721,137 @@ function deleteWalletItem() {
     closeWalletModal();
 }
 
+// ── FINANCE: INCOME & EXPENDITURE LOGIC ─────────────────────
+function saveTutorRate(val) {
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    settings.tutorRate = parseFloat(val) || 0;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    syncToCloud();
+    renderTutorIncome();
+}
+
+function renderTutorIncome() {
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    let rate = settings.tutorRate || 0;
+    document.getElementById('tutor-rate-input').value = rate || '';
+
+    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalHours = 0;
+    events.forEach(ev => {
+        if (ev.extendedProps && ev.extendedProps.category === 'Tutor') {
+            if (ev.start) {
+                const evDate = new Date(ev.start);
+                if (evDate.getMonth() === currentMonth && evDate.getFullYear() === currentYear) {
+                    totalHours += parseFloat(ev.extendedProps.workHours) || 0;
+                }
+            }
+        }
+    });
+
+    const autoIncome = totalHours * rate;
+    document.getElementById('tutor-auto-income').innerText = '$' + autoIncome.toLocaleString();
+    document.getElementById('tutor-hours-display').innerText = `(${totalHours} 小時)`;
+}
+
+function renderTransactions() {
+    const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
+    trxs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const incList = document.getElementById('income-list');
+    const expList = document.getElementById('expenditure-list');
+    incList.innerHTML = ''; expList.innerHTML = '';
+
+    let hasInc = false, hasExp = false;
+
+    trxs.forEach(trx => {
+        const el = document.createElement('div');
+        el.className = "flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-b border-gray-50 last:border-0 transition-colors";
+        el.onclick = () => openTrxModal(trx.id);
+        el.innerHTML = `
+            <div class="flex flex-col">
+                <span class="text-sm font-bold text-gray-700">${trx.desc}</span>
+                <span class="text-[10px] text-gray-400 font-mono">${trx.date}</span>
+            </div>
+            <span class="font-mono font-bold ${trx.type === 'income' ? 'text-green-600' : 'text-red-400'}">
+                ${trx.type === 'income' ? '+' : '-'}$${parseFloat(trx.amount).toLocaleString()}
+            </span>
+        `;
+        if (trx.type === 'income') { incList.appendChild(el); hasInc = true; }
+        else { expList.appendChild(el); hasExp = true; }
+    });
+
+    if(!hasInc) incList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">尚無收入紀錄</div>';
+    if(!hasExp) expList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">尚無支出紀錄</div>';
+
+    renderTutorIncome();
+}
+
+function openTrxModal(id = null) {
+    editingTrxId = id;
+    document.getElementById('trxModal').classList.remove('hidden');
+    const delBtn = document.getElementById('trx-delete-btn');
+    
+    if (id) {
+        const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
+        const trx = trxs.find(t => t.id === id);
+        if (trx) {
+            document.getElementById('trx-type').value = trx.type;
+            document.getElementById('trx-date').value = trx.date;
+            document.getElementById('trx-desc').value = trx.desc;
+            document.getElementById('trx-amount').value = trx.amount;
+            delBtn.classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('trx-type').value = 'expense';
+        document.getElementById('trx-date').value = today();
+        document.getElementById('trx-desc').value = '';
+        document.getElementById('trx-amount').value = '';
+        delBtn.classList.add('hidden');
+    }
+}
+
+function closeTrxModal() {
+    document.getElementById('trxModal').classList.add('hidden');
+    editingTrxId = null;
+}
+
+function saveTrx() {
+    const type = document.getElementById('trx-type').value;
+    const date = document.getElementById('trx-date').value || today();
+    const desc = document.getElementById('trx-desc').value || '未命名';
+    const amount = document.getElementById('trx-amount').value || 0;
+
+    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
+    if (editingTrxId) {
+        const idx = trxs.findIndex(t => t.id === editingTrxId);
+        if (idx > -1) {
+            trxs[idx] = { id: editingTrxId, type, date, desc, amount };
+        }
+    } else {
+        trxs.push({ id: 'trx_' + Date.now(), type, date, desc, amount });
+    }
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs));
+    syncToCloud();
+    closeTrxModal();
+    renderTransactions();
+}
+
+function deleteTrx() {
+    if (!editingTrxId) return;
+    if (!confirm("確定要刪除這筆紀錄嗎？")) return;
+    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
+    trxs = trxs.filter(t => t.id !== editingTrxId);
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs));
+    syncToCloud();
+    closeTrxModal();
+    renderTransactions();
+}
+
+
 // ── UNIFIED MODAL LOGIC (Calendar & Record Saving) ──────────
 function openUnifiedModal(ev = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
@@ -1758,7 +1955,9 @@ function handleDelete() {
     });
     
     closeUnifiedModal();
-    renderStatsTable(); 
+    renderStatsTable();
+    // 重新渲染家教收入（因為行事曆可能被刪除了家教紀錄）
+    renderTutorIncome();
 }
 
 function handleSave() {
@@ -1823,6 +2022,9 @@ function handleSave() {
     
     if (isReading) {
         renderStatsTable(); 
+    } else if (currentCategory === 'Tutor') {
+        // 如果新增或修改的是家教，重新計算收入
+        renderTutorIncome();
     }
 }
 </script>
