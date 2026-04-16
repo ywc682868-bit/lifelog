@@ -442,7 +442,7 @@
 </div>
 
 <div id="trxModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
-    <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative pt-8">
+    <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative pt-10">
         <div class="space-y-3">
             <div class="field-group">
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">Type</label>
@@ -965,6 +965,7 @@ function saveBooks(b) {
 
 function calcMeta(book) {
     let actualStartDate = null;
+    let actualEndDate = null;
     const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
     if (bookEvents.length > 0) {
@@ -972,16 +973,19 @@ function calcMeta(book) {
         if (sortedEvents[0].start) {
             actualStartDate = sortedEvents[0].start.split('T')[0];
         }
+        if (sortedEvents[sortedEvents.length - 1].start) {
+            actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
+        }
     }
 
     const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
     let daysRead = 0;
     if (actualStartDate && !book.isToRead) {
         const start = new Date(actualStartDate);
-        const t = new Date();
-        daysRead = Math.max(1, Math.round((t - start) / 86400000));
+        const end = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
+        daysRead = Math.max(1, Math.round((end - start) / 86400000) + 1); // 包含第一天
     }
-    return { pct, daysRead, actualStartDate };
+    return { pct, daysRead, actualStartDate, actualEndDate };
 }
 
 function renderBooks(forceBookId = null) {
@@ -989,8 +993,8 @@ function renderBooks(forceBookId = null) {
     const container = document.getElementById('books-container');
     container.innerHTML = '';
     
-    // 若沒有強制指定，則列出所有尚未打勾完成的書，或包含強制指定的書
-    let active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
+    // 找出尚未完成的，或是這次強制要顯示編輯的那本書（即使已完成）
+    const active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
     
     // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
     if (active.length === 0) {
@@ -1016,7 +1020,7 @@ function renderBookRow(container, book, isTemp) {
                 <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" onchange="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${book.logDate || today()}" onchange="updateField(this,'logDate')" />
+                <input type="date" class="start-date-input" value="${book.logDate || meta.actualStartDate || today()}" onchange="updateField(this,'logDate')" />
                 <span class="days-count">已讀 ${meta.daysRead} 天</span>
             </div>
             <div class="page-row">
@@ -1085,15 +1089,19 @@ function toggleDone(el) {
     const row = el.closest('.book-row');
     const { books, book } = getOrCreateBook(row);
     book.done = el.checked;
-    if (book.done && !book.completedAt) {
-        book.completedAt = new Date().toISOString(); 
-    } else if (!book.done) {
+    
+    const dateInput = row.querySelector('.start-date-input').value;
+    
+    if (book.done) {
+        book.completedAt = dateInput ? new Date(dateInput).toISOString() : new Date().toISOString(); 
+    } else {
         book.completedAt = null;
     }
     lastEditedBookId = book.id;
     saveBooks(books);
     renderMonthlyStats(); 
     renderStatsTable();   
+    // 注意：這裡不呼叫 renderBooks()，讓它保留在畫面上以便使用者點擊 Save
 }
 
 function addBookRow() {
@@ -1111,11 +1119,15 @@ function renderMonthlyStats() {
     const monthlyGroups = Array.from({length: 12}, () => []);
 
     books.forEach(b => {
-        if (b.done && b.completedAt && !b.isToRead) {
-            const date = new Date(b.completedAt);
-            if (date.getFullYear() === currentYear) {
-                monthlyGroups[date.getMonth()].push(b);
-                yearlyTotal++;
+        if (b.done && !b.isToRead) {
+            const meta = calcMeta(b);
+            let finalDateStr = meta.actualEndDate || b.completedAt || b.logDate;
+            if (finalDateStr) {
+                const date = new Date(finalDateStr);
+                if (date.getFullYear() === currentYear) {
+                    monthlyGroups[date.getMonth()].push(b);
+                    yearlyTotal++;
+                }
             }
         }
     });
@@ -1342,16 +1354,20 @@ function renderStatsTable() {
         const sessions = bookEvents.length || (book.isToRead ? 0 : 1); 
 
         let actualStartDate = null;
+        let actualEndDate = null;
         if (bookEvents.length > 0) {
             const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
             if (sortedEvents[0].start) {
                 actualStartDate = sortedEvents[0].start.split('T')[0];
             }
+            if (sortedEvents[sortedEvents.length - 1].start) {
+                actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
+            }
         }
 
         let periodText = book.isToRead ? '待讀中' : (actualStartDate || '-');
-        if (book.done && book.completedAt) {
-            periodText += ` ~ ${book.completedAt.split('T')[0]}`;
+        if (book.done && (actualEndDate || book.completedAt)) {
+            periodText += ` ~ ${(actualEndDate || book.completedAt).split('T')[0]}`;
         } else if (!book.isToRead && actualStartDate) {
             periodText += ' ~ 至今';
         }
@@ -1387,7 +1403,7 @@ function renderStatsTable() {
                 ${book.isToRead ? '-' : `
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-1">
-                        <input type="number" step="0.5" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
+                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
                         <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
                     </div>
                     <div class="flex items-center gap-1">
