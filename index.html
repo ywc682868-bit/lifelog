@@ -387,7 +387,7 @@
                                         <span class="text-sm font-bold text-gray-700">Tutor (Auto)</span>
                                         <div class="flex items-center gap-2 mt-1">
                                             <label class="text-[10px] text-gray-400">Rate $</label>
-                                            <input type="number" id="tutor-rate-input" oninput="saveTutorRate(this.value)" class="bg-white border border-gray-200 rounded px-1 w-16 text-[10px] outline-none h-4">
+                                            <input type="number" id="tutor-rate-input" onchange="saveTutorRate(this.value)" class="bg-white border border-gray-200 rounded px-1 w-16 text-[10px] outline-none h-4">
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -1009,17 +1009,17 @@ function renderBookRow(container, book, isTemp) {
         </div>
         <div class="book-main-info">
             <div class="book-title-line">
-                <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
+                <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" onchange="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${meta.actualStartDate || book.startDate || today()}" oninput="updateField(this,'startDate')" />
+                <input type="date" class="start-date-input" value="${meta.actualStartDate || book.startDate || today()}" onchange="updateField(this,'startDate')" />
                 <span class="days-count">已讀 ${meta.daysRead} 天</span>
             </div>
             <div class="page-row">
                 <div class="page-input-group">
-                    <input type="number" class="page-input" placeholder="0" min="0" value="${book.currentPage || ''}" oninput="updateField(this,'currentPage')" />
+                    <input type="number" class="page-input" placeholder="0" min="0" value="${book.currentPage || ''}" onchange="updateField(this,'currentPage')" />
                     <span class="page-sep">/</span>
-                    <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}" oninput="updateField(this,'totalPages')" />
+                    <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}" onchange="updateField(this,'totalPages')" />
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="meta-chip pct">${meta.pct}% 完成</span>
@@ -1231,7 +1231,7 @@ function saveToReadBook() {
 
 function deleteToReadBook() {
     if (editingToReadId) {
-        if (!confirm('確定要刪除此待讀書籍嗎？')) return;
+        if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
         let books = loadBooks();
         books = books.filter(b => String(b.id) !== String(editingToReadId));
         saveBooks(books);
@@ -1937,7 +1937,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 如果點擊的是既有的閱讀紀錄，讓書本的輸入日期變成行事曆上那天的日期
+            // 如果點擊的是既有的閱讀紀錄，把該本書籍卡片的日期強行設定為事件那天的日期，這會更新畫面上卡片的 date input
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
             if (actBook) {
@@ -1981,7 +1981,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         document.getElementById('inputDate').value = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
         
-        // 把正在閱讀的那本書的預設日期，直接變成點選的那一天
+        // 點擊空白日期時，將正在閱讀的書的 startDate 強制覆寫成選取的日期
         let currentBooks = loadBooks();
         let actBook = currentBooks.find(b => !b.done && !b.isToRead);
         if (actBook) {
@@ -2086,6 +2086,8 @@ function handleSave() {
         const b = active[0]; if (!b) return;
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#DCD7ED'; priority = 99; isReading = true; cover = b.cover; 
+        
+        // 抓取書籍卡片上的日期作為打卡日期 (b.startDate 是透過 onchange 同步的)
         startStr = b.startDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
