@@ -203,8 +203,8 @@
             .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
             #main-calendar, #bw-calendar, #acad-calendar { min-width: 233%; min-height: 800px; }
 
-            .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block; }
-            .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; }
+            .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block !important; }
+            .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; display: block !important; }
 
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
@@ -246,21 +246,21 @@
         <div class="p-4 h-full flex flex-col">
             
             <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div class="calendar-scroll-wrapper flex-1 w-full h-full">
+                <div class="calendar-scroll-wrapper flex-1 w-full h-full min-h-0">
                     <div id="main-calendar" class="w-full h-full"></div>
                 </div>
             </section>
 
             <section id="bookworm-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="pan-wrapper flex-1 relative">
-                    <div class="pan-inner flex flex-col h-full">
+                <div class="pan-wrapper flex-1 relative flex flex-col min-h-0">
+                    <div class="pan-inner flex flex-col flex-1 min-h-0">
                         <div class="bw-tab-container shrink-0 z-10 relative">
                             <button id="btn-tab-calendar" onclick="switchBwTab('calendar')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Calendar</button>
                             <button id="btn-tab-toread" onclick="switchBwTab('toread')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">To-Read List</button>
                             <button id="btn-tab-stats" onclick="switchBwTab('stats')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Analysis</button>
                         </div>
                         
-                        <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
+                        <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
                             <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
                                 <div id="bw-calendar" class="w-full h-full"></div>
                             </div>
@@ -270,7 +270,7 @@
                             </div>
                         </div>
 
-                        <div id="bw-tab-toread" class="bw-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
+                        <div id="bw-tab-toread" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-5 rounded-[20px] shadow-sm relative">
                             <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
                                 <i class="fa-solid fa-plus text-sm"></i>
                             </button>
@@ -278,7 +278,7 @@
                                 </div>
                         </div>
 
-                        <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto">
+                        <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0">
                             <div class="overflow-x-auto shadow-sm rounded-xl">
                                 <table class="stats-table min-w-full">
                                     <tbody id="stats-table-body">
@@ -291,28 +291,28 @@
             </section>
 
             <section id="academic-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="pan-wrapper flex-1 relative">
-                    <div class="pan-inner flex flex-col h-full">
+                <div class="pan-wrapper flex-1 relative flex flex-col min-h-0">
+                    <div class="pan-inner flex flex-col flex-1 min-h-0">
                         <div class="bw-tab-container shrink-0 z-10 relative">
                             <button id="btn-acad-timeline" onclick="switchAcadTab('timeline')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">PhD Timeline</button>
                             <button id="btn-acad-lit" onclick="switchAcadTab('lit')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Literature Review</button>
                             <button id="btn-acad-pub" onclick="switchAcadTab('pub')" class="bw-folder-tab" style="background-color: #E8D1D1; color: #3A4750; z-index: 1;">Publication Pipeline</button>
                         </div>
                         
-                        <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper flex-1 w-full min-h-[500px]">
+                        <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
+                            <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
                                 <div id="acad-calendar" class="w-full h-full"></div>
                             </div>
                         </div>
 
-                        <div id="acad-tab-lit" class="acad-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
+                        <div id="acad-tab-lit" class="acad-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-5 rounded-[20px] shadow-sm relative">
                             <button onclick="openLitModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增文獻">
                                 <i class="fa-solid fa-plus text-sm"></i>
                             </button>
                             <div id="lit-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 mt-6"></div>
                         </div>
 
-                        <div id="acad-tab-pub" class="acad-tab-content hidden flex-1 overflow-y-auto">
+                        <div id="acad-tab-pub" class="acad-tab-content hidden flex-1 overflow-y-auto min-h-0">
                             <div class="bg-white p-6 rounded-2xl shadow-sm">
                                 <div class="flex justify-between items-center mb-6">
                                     <h3 class="font-bold text-morandi-dark-gray">Manuscript Status Tracker</h3>
@@ -345,7 +345,7 @@
                     <button id="btn-fin-invest" onclick="switchFinTab('invest')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Investments</button>
                 </div>
                 
-                <div id="fin-tab-wallet" class="fin-tab-content flex-1 overflow-y-auto bg-white p-6 rounded-[20px] shadow-sm relative">
+                <div id="fin-tab-wallet" class="fin-tab-content flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm relative">
                     <button onclick="openWalletEditModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增會員或支付">
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
@@ -354,7 +354,7 @@
                         </div>
                 </div>
 
-                <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto bg-white p-6 rounded-[20px] shadow-sm">
+                <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-morandi-dark-gray font-zh">Monthly Budget Plan <span id="budget-month-display" class="text-sm text-gray-500 font-mono ml-2"></span></h3>
                         <div class="flex gap-2">
@@ -407,7 +407,7 @@
                     </div>
                 </div>
 
-                <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto bg-white p-6 rounded-[20px] shadow-sm">
+                <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
                     <h3 class="text-lg font-bold text-morandi-dark-gray mb-6 font-zh">Savings & Investments</h3>
                     <div class="space-y-6 mb-8">
                         <h4 class="font-bold text-gray-700 text-sm border-b border-gray-100 pb-2">Savings Goals</h4>
@@ -2145,6 +2145,7 @@ function handleSave() {
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
         
+        // 抓取書籍卡片上的日期作為打卡日期 (b.logDate 是透過 onchange 同步的)
         startStr = b.logDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
