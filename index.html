@@ -922,7 +922,7 @@ function initCalendars() {
             }
             
             if (arg.event.extendedProps.isReading) {
-                container.style.backgroundColor = '#E4E1F2'; 
+                container.style.backgroundColor = '#DCD7ED'; 
                 if (arg.event.extendedProps.cover) {
                     const img = document.createElement('img');
                     img.src = arg.event.extendedProps.cover;
@@ -945,6 +945,7 @@ function initCalendars() {
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
     
+    // Bookworm Calendar 只顯示閱讀紀錄
     const bwOptions = Object.assign({}, calendarOptions, {
         events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
     });
@@ -962,14 +963,24 @@ function saveBooks(b) {
 }
 
 function calcMeta(book) {
+    let actualStartDate = book.startDate;
+    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
+    if (bookEvents.length > 0) {
+        const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+        if (sortedEvents[0].start) {
+            actualStartDate = sortedEvents[0].start.split('T')[0];
+        }
+    }
+
     const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
     let daysRead = 0;
-    if (book.startDate && !book.isToRead) {
-        const start = new Date(book.startDate);
+    if (actualStartDate && !book.isToRead) {
+        const start = new Date(actualStartDate);
         const t = new Date();
         daysRead = Math.max(1, Math.round((t - start) / 86400000));
     }
-    return { pct, daysRead };
+    return { pct, daysRead, actualStartDate };
 }
 
 function renderBooks() {
@@ -1001,7 +1012,7 @@ function renderBookRow(container, book, isTemp) {
                 <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" oninput="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${book.startDate || today()}" oninput="updateField(this,'startDate')" />
+                <input type="date" class="start-date-input" value="${meta.actualStartDate || book.startDate || today()}" oninput="updateField(this,'startDate')" />
                 <span class="days-count">已讀 ${meta.daysRead} 天</span>
             </div>
             <div class="page-row">
@@ -1220,7 +1231,7 @@ function saveToReadBook() {
 
 function deleteToReadBook() {
     if (editingToReadId) {
-        if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
+        if (!confirm('確定要刪除此待讀書籍嗎？')) return;
         let books = loadBooks();
         books = books.filter(b => String(b.id) !== String(editingToReadId));
         saveBooks(books);
@@ -1321,12 +1332,21 @@ function renderStatsTable() {
     books.forEach(book => {
         if (!book.title && !book.cover && book.currentPage === 0 && !book.isToRead) return;
 
-        const sessions = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id)).length || (book.isToRead ? 0 : 1); 
+        const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
+        const sessions = bookEvents.length || (book.isToRead ? 0 : 1); 
 
-        let periodText = book.isToRead ? '待讀中' : (book.startDate || '-');
+        let actualStartDate = book.startDate;
+        if (bookEvents.length > 0) {
+            const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+            if (sortedEvents[0].start) {
+                actualStartDate = sortedEvents[0].start.split('T')[0];
+            }
+        }
+
+        let periodText = book.isToRead ? '待讀中' : (actualStartDate || '-');
         if (book.done && book.completedAt) {
             periodText += ` ~ ${book.completedAt.split('T')[0]}`;
-        } else if (!book.isToRead && book.startDate) {
+        } else if (!book.isToRead && actualStartDate) {
             periodText += ' ~ 至今';
         }
 
@@ -1917,7 +1937,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 如果點擊的是既有的閱讀紀錄，把那本書的打卡日設為該紀錄在行事曆上的日子
+            // 如果點擊的是既有的閱讀紀錄，讓書本的輸入日期變成行事曆上那天的日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
             if (actBook) {
@@ -1961,7 +1981,7 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         document.getElementById('inputDate').value = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
         
-        // 把正在閱讀的那本書的預設日期，直接變成你點選的那一天
+        // 把正在閱讀的那本書的預設日期，直接變成點選的那一天
         let currentBooks = loadBooks();
         let actBook = currentBooks.find(b => !b.done && !b.isToRead);
         if (actBook) {
@@ -2065,7 +2085,7 @@ function handleSave() {
         const active = loadBooks().filter(b => !b.done && !b.isToRead);
         const b = active[0]; if (!b) return;
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
+        bgColor = '#DCD7ED'; priority = 99; isReading = true; cover = b.cover; 
         startStr = b.startDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
