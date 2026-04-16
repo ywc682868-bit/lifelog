@@ -246,7 +246,7 @@
         <div class="p-4 h-full flex flex-col">
             
             <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div class="calendar-scroll-wrapper flex-1">
+                <div class="calendar-scroll-wrapper flex-1 w-full h-full">
                     <div id="main-calendar" class="w-full h-full"></div>
                 </div>
             </section>
@@ -261,8 +261,8 @@
                         </div>
                         
                         <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper shrink-0">
-                                <div id="bw-calendar" class="w-full h-[450px]"></div>
+                            <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
+                                <div id="bw-calendar" class="w-full h-full"></div>
                             </div>
                             <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
                                 <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
@@ -300,8 +300,8 @@
                         </div>
                         
                         <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper flex-1">
-                                <div id="acad-calendar" class="w-full min-h-[500px]"></div>
+                            <div class="calendar-scroll-wrapper flex-1 w-full min-h-[500px]">
+                                <div id="acad-calendar" class="w-full h-full"></div>
                             </div>
                         </div>
 
@@ -349,7 +349,9 @@
                     <button onclick="openWalletEditModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增會員或支付">
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>
+                    
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        </div>
                 </div>
 
                 <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto bg-white p-6 rounded-[20px] shadow-sm">
@@ -777,7 +779,7 @@ function showSection(id) {
     
     if (id === 'main') {
         document.getElementById('main-section').classList.remove('hidden');
-        setTimeout(() => { if (mainCalendar) mainCalendar.render(); }, 10);
+        setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 50);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
         switchBwTab('calendar'); 
@@ -806,7 +808,7 @@ function switchBwTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'calendar') { 
-        setTimeout(() => { if (bwCalendar) bwCalendar.render(); }, 10); 
+        setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 50); 
         renderMonthlyStats(); 
     } else if (tab === 'toread') { 
         renderToRead(); 
@@ -831,7 +833,7 @@ function switchAcadTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'timeline') { 
-        setTimeout(() => { if (acadCalendar) acadCalendar.render(); }, 10); 
+        setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 50); 
     } else if (tab === 'lit') { 
         renderLitGrid(); 
     } else if (tab === 'pub') { 
@@ -1778,7 +1780,7 @@ function renderTransactions() {
     const balance = totalIncome - totalExpense;
 
     // 動態更新圓餅圖與統計列表
-    const expPercent = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / totalIncome) * 100)) : (totalExpense > 0 ? 100 : 0);
+    const expPercent = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
     const pieChart = document.getElementById('budget-pie-chart');
     if (totalIncome === 0 && totalExpense === 0) {
         pieChart.style.background = '#E5E5E5'; // 灰色
@@ -1958,7 +1960,7 @@ function handleDelete() {
     
     closeUnifiedModal();
     renderStatsTable();
-    renderTutorIncome(); // 刪除行事曆可能影響家教收入
+    renderTutorIncome(); 
 }
 
 function handleSave() {
@@ -2024,7 +2026,7 @@ function handleSave() {
     if (isReading) {
         renderStatsTable(); 
     } else if (currentCategory === 'Tutor') {
-        renderTutorIncome(); // 新增家教可能影響收入
+        renderTutorIncome(); 
     }
 }
 </script>
