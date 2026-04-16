@@ -964,7 +964,24 @@ function saveBooks(b) {
     syncToCloud();
 }
 
-function calcMeta(book) {
+function renderBooks(forceBookId = null) {
+    const books = loadBooks();
+    const container = document.getElementById('books-container');
+    container.innerHTML = '';
+    
+    // 找出尚未完成的，或是這次強制要顯示編輯的那本書（即使已完成）
+    let active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
+    
+    // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
+    if (active.length === 0) {
+        const tempId = 'new_' + Date.now();
+        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
+    } else {
+        active.forEach(b => renderBookRow(container, b, false));
+    }
+}
+
+function renderBookRow(container, book, isTemp) {
     let actualStartDate = null;
     let actualEndDate = null;
     const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -986,28 +1003,7 @@ function calcMeta(book) {
         const end = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
         daysRead = Math.max(1, Math.round((end - start) / 86400000) + 1); // 包含第一天
     }
-    return { pct, daysRead, actualStartDate, actualEndDate };
-}
 
-function renderBooks(forceBookId = null) {
-    const books = loadBooks();
-    const container = document.getElementById('books-container');
-    container.innerHTML = '';
-    
-    // 找出尚未完成的，或是這次強制要顯示編輯的那本書（即使已完成）
-    const active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
-    
-    // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
-    if (active.length === 0) {
-        const tempId = 'new_' + Date.now();
-        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
-    } else {
-        active.forEach(b => renderBookRow(container, b, false));
-    }
-}
-
-function renderBookRow(container, book, isTemp) {
-    const meta = calcMeta(book);
     const row = document.createElement('div');
     row.className = 'book-row';
     row.dataset.id = book.id;
@@ -1021,8 +1017,8 @@ function renderBookRow(container, book, isTemp) {
                 <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" onchange="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${book.logDate || meta.actualStartDate || today()}" onchange="updateField(this,'logDate')" />
-                <span class="days-count">已讀 ${meta.daysRead} 天</span>
+                <input type="date" class="start-date-input" value="${book.logDate || actualStartDate || today()}" onchange="updateField(this,'logDate')" />
+                <span class="days-count">已讀 ${daysRead} 天</span>
             </div>
             <div class="page-row">
                 <div class="page-input-group">
@@ -1031,12 +1027,12 @@ function renderBookRow(container, book, isTemp) {
                     <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}" onchange="updateField(this,'totalPages')" />
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="meta-chip pct">${meta.pct}% 完成</span>
+                    <span class="meta-chip pct">${pct}% 完成</span>
                     <input type="checkbox" class="book-done-cb" title="完成閱讀" ${book.done ? 'checked' : ''} onchange="toggleDone(this)" />
                 </div>
             </div>
             <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width:${meta.pct}%"></div>
+                <div class="progress-bar-fill" style="width:${pct}%"></div>
             </div>
         </div>
     `;
@@ -1079,11 +1075,12 @@ function updateField(el, field) {
     book[field] = (field === 'title' || field === 'logDate') ? el.value : (parseInt(el.value) || 0);
     lastEditedBookId = book.id;
     saveBooks(books);
-    const meta = calcMeta(book);
+    
+    const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
     const fill = row.querySelector('.progress-bar-fill');
-    if (fill) fill.style.width = meta.pct + '%';
+    if (fill) fill.style.width = pct + '%';
     const chipsEl = row.querySelector('.pct');
-    if (chipsEl) chipsEl.innerText = `${meta.pct}% 完成`;
+    if (chipsEl) chipsEl.innerText = `${pct}% 完成`;
 }
 
 function toggleDone(el) {
@@ -1114,6 +1111,7 @@ function addBookRow() {
 
 function renderMonthlyStats() {
     const books = loadBooks();
+    const calendarEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const currentYear = new Date().getFullYear();
     let yearlyTotal = 0;
     
@@ -1121,8 +1119,16 @@ function renderMonthlyStats() {
 
     books.forEach(b => {
         if (b.done && !b.isToRead) {
-            const meta = calcMeta(b);
-            let finalDateStr = meta.actualEndDate || b.completedAt || b.logDate;
+            let actualEndDate = null;
+            const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(b.id));
+            if (bookEvents.length > 0) {
+                const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+                if (sortedEvents[sortedEvents.length - 1].start) {
+                    actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
+                }
+            }
+
+            let finalDateStr = actualEndDate || b.completedAt || b.logDate;
             if (finalDateStr) {
                 const date = new Date(finalDateStr);
                 if (date.getFullYear() === currentYear) {
@@ -1348,6 +1354,8 @@ function renderStatsTable() {
     const tbody = document.getElementById('stats-table-body');
     tbody.innerHTML = '';
 
+    const validBooks = [];
+
     books.forEach(book => {
         if (!book.title && !book.cover && book.currentPage === 0 && !book.isToRead) return;
 
@@ -1366,19 +1374,49 @@ function renderStatsTable() {
             }
         }
 
-        let periodText = book.isToRead ? '待讀中' : (actualStartDate || '-');
-        if (book.done && (actualEndDate || book.completedAt)) {
-            periodText += ` ~ ${(actualEndDate || book.completedAt).split('T')[0]}`;
-        } else if (!book.isToRead && actualStartDate) {
+        let finalEndDate = actualEndDate || book.completedAt || book.logDate || '1970-01-01';
+
+        validBooks.push({
+            ...book,
+            bookEvents,
+            sessions,
+            actualStartDate,
+            actualEndDate,
+            finalEndDate
+        });
+    });
+
+    const ongoing = validBooks.filter(b => !b.done && !b.isToRead);
+    const toread = validBooks.filter(b => b.isToRead);
+    const completed = validBooks.filter(b => b.done && !b.isToRead);
+
+    completed.sort((a, b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
+
+    const sortedBooks = [...ongoing, ...toread, ...completed];
+
+    sortedBooks.forEach(book => {
+        let periodText = book.isToRead ? '待讀中' : (book.actualStartDate || '-');
+        if (book.done && (book.actualEndDate || book.completedAt)) {
+            periodText += ` ~ ${(book.actualEndDate || book.completedAt).split('T')[0]}`;
+        } else if (!book.isToRead && book.actualStartDate) {
             periodText += ' ~ 至今';
         }
 
         const readHours = book.readHours || 0;
-        const calcMins = (sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / sessions) * 10) / 10 : 0;
+        const calcMins = (book.sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / book.sessions) * 10) / 10 : 0;
         const calcPages = (readHours > 0) ? Math.round(((book.currentPage || 0) / (readHours * 60)) * 10) / 10 : 0;
         
         const displayMins = book.manualAvgMins !== undefined ? book.manualAvgMins : calcMins;
         const displayPages = book.manualAvgPages !== undefined ? book.manualAvgPages : calcPages;
+
+        let progressDisplay = '';
+        if (!book.isToRead) {
+            if (book.done) {
+                progressDisplay = '進度: 已完成';
+            } else {
+                progressDisplay = `進度: ${book.currentPage}/${book.totalPages}`;
+            }
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1389,16 +1427,16 @@ function renderStatsTable() {
             </td>
             <td>
                 <div class="font-bold text-morandi-dark-gray">${book.title || '未命名'}</div>
-                <div class="text-xs text-gray-400 font-normal mt-0.5">
-                    平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span> 
-                    ${!book.isToRead ? `<span class="ml-1">| 進度: ${book.currentPage}/${book.totalPages}</span>` : ''}
+                <div class="text-xs text-gray-400 font-normal mt-0.5 flex items-center gap-2">
+                    <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
+                    ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
             <td class="w-44 whitespace-nowrap min-w-[150px]">
                 <div class="text-[11px] text-gray-400">${periodText}</div>
             </td>
             <td class="w-24 whitespace-nowrap">
-                ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500">打卡 ${sessions} 次</div>`}
+                ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500">打卡 ${book.sessions} 次</div>`}
             </td>
             <td class="whitespace-nowrap">
                 ${book.isToRead ? '-' : `
@@ -1418,12 +1456,12 @@ function renderStatsTable() {
                 </div>
                 `}
             </td>
-            <td class="w-40 relative whitespace-nowrap">
-                <div class="flex items-center justify-between gap-2">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+            <td class="relative whitespace-nowrap">
+                <div class="flex items-center justify-end gap-3 pr-2">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
                         <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
                     </button>
-                    <button class="delete-table-btn ml-auto" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -1432,7 +1470,7 @@ function renderStatsTable() {
         tbody.appendChild(tr);
     });
 
-    if (books.length === 0) {
+    if (sortedBooks.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">尚無閱讀或待讀紀錄。</td></tr>';
     }
 }
@@ -1955,19 +1993,6 @@ function deleteTrx() {
 function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
-    
-    // 若傳入 forceBookId，代表是從分析表格點擊進來的編輯需求
-    if (forceBookId) {
-        editingId = null; 
-        deleteBtn.classList.add('hidden'); // 因為這只用來編輯書籍資訊，不影響單一行事曆事件
-        let currentBooks = loadBooks();
-        let actBook = currentBooks.find(b => String(b.id) === String(forceBookId));
-        if (actBook) {
-            lastEditedBookId = actBook.id;
-        }
-        switchType('reading', forceBookId);
-        return;
-    }
 
     if (ev && ev.id) {
         editingId = String(ev.id); 
