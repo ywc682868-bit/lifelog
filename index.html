@@ -922,7 +922,7 @@ function initCalendars() {
             }
             
             if (arg.event.extendedProps.isReading) {
-                container.style.backgroundColor = '#A69EBB'; 
+                container.style.backgroundColor = '#DCD7ED'; 
                 if (arg.event.extendedProps.cover) {
                     const img = document.createElement('img');
                     img.src = arg.event.extendedProps.cover;
@@ -945,7 +945,6 @@ function initCalendars() {
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
     
-    // Bookworm Calendar 只顯示閱讀紀錄
     const bwOptions = Object.assign({}, calendarOptions, {
         events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
     });
@@ -2066,7 +2065,7 @@ function handleSave() {
         const active = loadBooks().filter(b => !b.done && !b.isToRead);
         const b = active[0]; if (!b) return;
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#A69EBB'; priority = 99; isReading = true; cover = b.cover; 
+        bgColor = '#DCD7ED'; priority = 99; isReading = true; cover = b.cover; 
         startStr = b.startDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
