@@ -9,12 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ======= Firebase 設定 (使用您提供的金鑰) =======
+        // ======= Firebase 設定 =======
         const firebaseConfig = {
             apiKey: "AIzaSyDpUQi1tIdk40h1YKiTFoAK6Y_nnoO7cIo",
             authDomain: "optimization-30a4f.firebaseapp.com",
@@ -22,16 +21,16 @@
             storageBucket: "optimization-30a4f.firebasestorage.app",
             messagingSenderId: "817567132664",
             appId: "1:817567132664:web:b918b2342d71446841840d",
-            measurementId: "G-MF7GKK6WXT",
-            // 補充 Realtime Database 網址以確保連線正確
-            databaseURL: "https://optimization-30a4f-default-rtdb.firebaseio.com"
+            measurementId: "G-MF7GKK6WXT"
         };
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const analytics = firebase.analytics();
+        // 確保使用您申請的地區 URL
+        firebaseConfig.databaseURL = "https://optimization-30a4f-default-rtdb.firebaseio.com";
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        // ==============================================
+        // ===========================
 
         tailwind.config = {
             theme: {
@@ -217,22 +216,43 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         @media (max-width: 768px) {
+            /* 導覽列改為側邊隱藏，預留上方空間給漢堡選單 */
+            main { padding-top: 4rem !important; }
+            
             .category-grid { grid-template-columns: repeat(3, 1fr); }
-            .bw-tab-container { overflow-x: auto; padding-bottom: 5px; -ms-overflow-style: none; scrollbar-width: none; margin-left: -4px;}
-            .bw-tab-container::-webkit-scrollbar { display: none; }
-            .bw-folder-tab { min-width: 130px; flex-shrink: 0; }
             .modal-fixed-card { height: 90vh !important; max-height: 700px !important; }
             .fc .fc-toolbar-title { font-size: 1.2rem !important; }
             .fc-header-toolbar { flex-direction: column; gap: 8px; }
             .fc-toolbar-chunk { display: flex; justify-content: center; width: 100%; }
+
+            /* 行事曆：強迫撐開，一次顯示三欄 (約233%寬度) 並支援滑動 */
+            .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
+            #main-calendar, #bw-calendar, #acad-calendar { min-width: 233%; min-height: 800px; }
+
+            /* Bookworm 與 Academic 區塊等比例縮小與滑動 */
+            .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block; }
+            .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; }
+
+            /* 標籤變小 */
+            .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
+            .bw-folder-tab.active { height: 36px !important; }
+            .bw-tab-container { overflow-x: visible; }
         }
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
 
-<div class="flex flex-col md:flex-row h-screen overflow-hidden">
-    <nav class="w-full md:w-52 bg-morandi-dark-gray text-morandi-gray p-4 md:p-5 flex flex-col rounded-b-[20px] md:rounded-b-none md:rounded-r-[30px] shadow-2xl shrink-0 z-20">
-        <button onclick="showSection('main')" class="mb-3 md:mb-8 text-left group">
+<button onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-40 bg-white/80 backdrop-blur p-2 rounded-lg shadow-sm text-morandi-dark-gray border border-gray-100">
+    <i class="fa-solid fa-bars text-xl px-1"></i>
+</button>
+
+<div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity"></div>
+
+<div class="flex flex-row h-screen overflow-hidden">
+    <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
+        <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+        
+        <button onclick="showSection('main'); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
                 <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
@@ -241,11 +261,12 @@
                 <i class="fa-solid fa-cloud"></i> <span>Ready</span>
             </div>
         </button>
-        <ul class="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0 w-full flex-grow">
-            <li><button onclick="showSection('bookworm')" class="whitespace-nowrap shrink-0 md:w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-book-open text-xs"></i> Bookworm</button></li>
-            <li><button onclick="window.open('您的TIGPS網頁網址', '_blank')" class="whitespace-nowrap shrink-0 md:w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-desktop text-xs"></i> TIGPS</button></li>
-            <li><button onclick="showSection('dissertation')" class="whitespace-nowrap shrink-0 md:w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-building-columns text-xs"></i> Dissertation</button></li>
-            <li><button onclick="showSection('finance')" class="whitespace-nowrap shrink-0 md:w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-wallet text-xs"></i> Finance</button></li>
+        
+        <ul class="flex flex-col space-y-2 w-full flex-grow">
+            <li><button onclick="showSection('bookworm'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-book-open text-xs"></i> Bookworm</button></li>
+            <li><button onclick="window.open('您的TIGPS網頁網址', '_blank'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-desktop text-xs"></i> TIGPS</button></li>
+            <li><button onclick="showSection('academic'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-building-columns text-xs"></i> Academic</button></li>
+            <li><button onclick="showSection('finance'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-wallet text-xs"></i> Finance</button></li>
         </ul>
     </nav>
 
@@ -253,79 +274,93 @@
         <div class="p-4 h-full flex flex-col">
             
             <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div id="main-calendar" class="flex-1 min-h-0"></div>
+                <div class="calendar-scroll-wrapper flex-1">
+                    <div id="main-calendar" class="w-full h-full"></div>
+                </div>
             </section>
 
             <section id="bookworm-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="bw-tab-container shrink-0 z-10 relative">
-                    <button id="btn-tab-calendar" onclick="switchBwTab('calendar')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Calendar</button>
-                    <button id="btn-tab-toread" onclick="switchBwTab('toread')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">To-Read List</button>
-                    <button id="btn-tab-stats" onclick="switchBwTab('stats')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Analysis</button>
-                </div>
-                
-                <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
-                    <div id="bw-calendar" class="min-h-[450px] shrink-0"></div>
-                    <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
-                        <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
-                        <div id="monthly-stats-container" class="space-y-4"></div>
-                    </div>
-                </div>
-
-                <div id="bw-tab-toread" class="bw-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
-                    <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
-                        <i class="fa-solid fa-plus text-sm"></i>
-                    </button>
-                    <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6">
+                <div class="pan-wrapper flex-1 relative">
+                    <div class="pan-inner flex flex-col h-full">
+                        <div class="bw-tab-container shrink-0 z-10 relative">
+                            <button id="btn-tab-calendar" onclick="switchBwTab('calendar')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Calendar</button>
+                            <button id="btn-tab-toread" onclick="switchBwTab('toread')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">To-Read List</button>
+                            <button id="btn-tab-stats" onclick="switchBwTab('stats')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Analysis</button>
                         </div>
-                </div>
+                        
+                        <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
+                            <div class="calendar-scroll-wrapper shrink-0">
+                                <div id="bw-calendar" class="w-full h-[450px]"></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
+                                <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
+                                <div id="monthly-stats-container" class="space-y-4"></div>
+                            </div>
+                        </div>
 
-                <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto">
-                    <div class="overflow-x-auto shadow-sm rounded-xl">
-                        <table class="stats-table min-w-full">
-                            <tbody id="stats-table-body">
-                                </tbody>
-                        </table>
+                        <div id="bw-tab-toread" class="bw-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
+                            <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                            <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6">
+                                </div>
+                        </div>
+
+                        <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto">
+                            <div class="overflow-x-auto shadow-sm rounded-xl">
+                                <table class="stats-table min-w-full">
+                                    <tbody id="stats-table-body">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section id="dissertation-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="bw-tab-container shrink-0 z-10 relative">
-                    <button id="btn-diss-timeline" onclick="switchDissTab('timeline')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">PhD Timeline</button>
-                    <button id="btn-diss-lit" onclick="switchDissTab('lit')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Literature Review</button>
-                    <button id="btn-diss-pub" onclick="switchDissTab('pub')" class="bw-folder-tab" style="background-color: #E8D1D1; color: #3A4750; z-index: 1;">Publication Pipeline</button>
-                </div>
-                
-                <div id="diss-tab-timeline" class="diss-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
-                    <div id="diss-calendar" class="flex-1 min-h-[500px]"></div>
-                </div>
-
-                <div id="diss-tab-lit" class="diss-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
-                    <button onclick="openLitModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增文獻">
-                        <i class="fa-solid fa-plus text-sm"></i>
-                    </button>
-                    <div id="lit-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 mt-6"></div>
-                </div>
-
-                <div id="diss-tab-pub" class="diss-tab-content hidden flex-1 overflow-y-auto">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-morandi-dark-gray">Manuscript Status Tracker</h3>
-                            <button onclick="addSubmissionRow()" class="text-xs bg-morandi-dark-gray text-white px-4 py-2 rounded-full">Add Paper</button>
+            <section id="academic-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
+                <div class="pan-wrapper flex-1 relative">
+                    <div class="pan-inner flex flex-col h-full">
+                        <div class="bw-tab-container shrink-0 z-10 relative">
+                            <button id="btn-acad-timeline" onclick="switchAcadTab('timeline')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">PhD Timeline</button>
+                            <button id="btn-acad-lit" onclick="switchAcadTab('lit')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Literature Review</button>
+                            <button id="btn-acad-pub" onclick="switchAcadTab('pub')" class="bw-folder-tab" style="background-color: #E8D1D1; color: #3A4750; z-index: 1;">Publication Pipeline</button>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="stats-table min-w-full">
-                                <thead class="bg-gray-50 text-[11px] text-gray-400 uppercase tracking-wider">
-                                    <tr>
-                                        <th class="px-4 py-3">Paper Title</th>
-                                        <th>Target Journal / Conference</th>
-                                        <th>Status</th>
-                                        <th>Deadline / Submit Date</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pub-table-body"></tbody>
-                            </table>
+                        
+                        <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto flex flex-col gap-4">
+                            <div class="calendar-scroll-wrapper flex-1">
+                                <div id="acad-calendar" class="w-full min-h-[500px]"></div>
+                            </div>
+                        </div>
+
+                        <div id="acad-tab-lit" class="acad-tab-content hidden flex-1 overflow-y-auto bg-white p-5 rounded-[20px] shadow-sm relative">
+                            <button onclick="openLitModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增文獻">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                            <div id="lit-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 mt-6"></div>
+                        </div>
+
+                        <div id="acad-tab-pub" class="acad-tab-content hidden flex-1 overflow-y-auto">
+                            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="font-bold text-morandi-dark-gray">Manuscript Status Tracker</h3>
+                                    <button onclick="addSubmissionRow()" class="text-xs bg-morandi-dark-gray text-white px-4 py-2 rounded-full">Add Paper</button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="stats-table min-w-full">
+                                        <thead class="bg-gray-50 text-[11px] text-gray-400 uppercase tracking-wider">
+                                            <tr>
+                                                <th class="px-4 py-3">Paper Title</th>
+                                                <th>Target Journal / Conference</th>
+                                                <th>Status</th>
+                                                <th>Deadline / Submit Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pub-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -585,11 +620,11 @@
 // LocalStorage Keys
 const STORAGE_KEY = 'ashley_events_v8_reorder';
 const BOOKS_KEY = 'ashley_books_v3';
-const DISS_LIT_KEY = 'ashley_diss_lit_v1';
-const DISS_PUB_KEY = 'ashley_diss_pub_v1';
+const ACAD_LIT_KEY = 'ashley_acad_lit_v1';
+const ACAD_PUB_KEY = 'ashley_acad_pub_v1';
 const WALLET_KEY = 'ashley_wallet_v1';
 
-let mainCalendar, bwCalendar, dissCalendar;
+let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
 
@@ -599,8 +634,8 @@ function syncToCloud() {
     const data = {
         events: localStorage.getItem(STORAGE_KEY) || '[]',
         books: localStorage.getItem(BOOKS_KEY) || '[]',
-        lit: localStorage.getItem(DISS_LIT_KEY) || '[]',
-        pub: localStorage.getItem(DISS_PUB_KEY) || '[]',
+        lit: localStorage.getItem(ACAD_LIT_KEY) || '[]',
+        pub: localStorage.getItem(ACAD_PUB_KEY) || '[]',
         wallet: localStorage.getItem(WALLET_KEY) || '[]'
     };
     
@@ -624,8 +659,8 @@ function listenToCloud() {
         if (data) {
             localStorage.setItem(STORAGE_KEY, data.events || '[]');
             localStorage.setItem(BOOKS_KEY, data.books || '[]');
-            localStorage.setItem(DISS_LIT_KEY, data.lit || '[]');
-            localStorage.setItem(DISS_PUB_KEY, data.pub || '[]');
+            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
+            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
             localStorage.setItem(WALLET_KEY, data.wallet || '[]');
             
             if (!isDataLoaded) {
@@ -654,9 +689,9 @@ function refreshAllUI() {
         bwCalendar.removeAllEvents();
         bwCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
     }
-    if (dissCalendar) {
-        dissCalendar.removeAllEvents();
-        dissCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    if (acadCalendar) {
+        acadCalendar.removeAllEvents();
+        acadCalendar.addEventSource(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
     }
     renderBooks();
     renderMonthlyStats();
@@ -679,11 +714,24 @@ document.addEventListener('DOMContentLoaded', () => {
     listenToCloud(); // 啟動雲端監聽並初始化
 });
 
+// 手機版側邊欄切換
+function toggleSidebar() {
+    const sidebar = document.getElementById('mobile-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+}
+
 // ── UI NAVIGATION & TAB LOGIC ──────────────────────────────────
 function showSection(id) { 
     document.getElementById('main-section').classList.add('hidden');
     document.getElementById('bookworm-section').classList.add('hidden');
-    document.getElementById('dissertation-section').classList.add('hidden');
+    document.getElementById('academic-section').classList.add('hidden');
     document.getElementById('finance-section').classList.add('hidden');
     
     if (id === 'main') {
@@ -692,9 +740,9 @@ function showSection(id) {
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
         switchBwTab('calendar'); 
-    } else if (id === 'dissertation') {
-        document.getElementById('dissertation-section').classList.remove('hidden');
-        switchDissTab('timeline');
+    } else if (id === 'academic') {
+        document.getElementById('academic-section').classList.remove('hidden');
+        switchAcadTab('timeline');
     } else if (id === 'finance') {
         document.getElementById('finance-section').classList.remove('hidden');
         switchFinTab('wallet');
@@ -726,23 +774,23 @@ function switchBwTab(tab) {
     }
 }
 
-function switchDissTab(tab) {
-    document.querySelectorAll('#dissertation-section .diss-tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById(`diss-tab-${tab}`).classList.remove('hidden');
+function switchAcadTab(tab) {
+    document.querySelectorAll('#academic-section .acad-tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`acad-tab-${tab}`).classList.remove('hidden');
     
-    document.querySelectorAll('#dissertation-section .bw-folder-tab').forEach(el => {
+    document.querySelectorAll('#academic-section .bw-folder-tab').forEach(el => {
         el.classList.remove('active');
-        if (el.id === 'btn-diss-timeline') el.style.zIndex = '3';
-        if (el.id === 'btn-diss-lit') el.style.zIndex = '2';
-        if (el.id === 'btn-diss-pub') el.style.zIndex = '1';
+        if (el.id === 'btn-acad-timeline') el.style.zIndex = '3';
+        if (el.id === 'btn-acad-lit') el.style.zIndex = '2';
+        if (el.id === 'btn-acad-pub') el.style.zIndex = '1';
     });
     
-    const activeBtn = document.getElementById(`btn-diss-${tab}`);
+    const activeBtn = document.getElementById(`btn-acad-${tab}`);
     activeBtn.classList.add('active');
     activeBtn.style.zIndex = '10';
 
     if (tab === 'timeline') { 
-        setTimeout(() => { if (dissCalendar) dissCalendar.render(); }, 10); 
+        setTimeout(() => { if (acadCalendar) acadCalendar.render(); }, 10); 
     } else if (tab === 'lit') { 
         renderLitGrid(); 
     } else if (tab === 'pub') { 
@@ -835,13 +883,14 @@ function initCalendars() {
 
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
     bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), calendarOptions);
-    dissCalendar = new FullCalendar.Calendar(document.getElementById('diss-calendar'), calendarOptions);
+    acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
     
     mainCalendar.render();
 }
 
 // ── BOOKWORM LOGIC (Reading & ToRead) ──────────────────────────────
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
+
 function saveBooks(b) { 
     localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); 
     syncToCloud();
@@ -1018,7 +1067,6 @@ function renderMonthlyStats() {
     }
 }
 
-// ── TO-READ LIST LOGIC ──────────────────────────────────────
 let tempTrCover = null;
 let editingToReadId = null;
 
@@ -1335,7 +1383,8 @@ function deleteBookRecord(bookId) {
     if (storage.length !== initialLength) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
         syncToCloud();
-        [mainCalendar, bwCalendar, dissCalendar].forEach(cal => {
+        
+        [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
             if (cal) {
                 cal.removeAllEvents();
                 cal.addEventSource(storage);
@@ -1349,9 +1398,9 @@ function deleteBookRecord(bookId) {
     renderMonthlyStats();
 }
 
-// ── DISSERTATION LOGIC ──────────────────────────────────────
+// ── ACADEMIC LOGIC ──────────────────────────────────────
 function renderLitGrid() {
-    const papers = JSON.parse(localStorage.getItem(DISS_LIT_KEY) || '[]');
+    const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
     const grid = document.getElementById('lit-grid');
     grid.innerHTML = papers.map(p => `
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-2 relative">
@@ -1372,7 +1421,7 @@ function openLitModal() {
 }
 
 function saveLitPaper() {
-    const papers = JSON.parse(localStorage.getItem(DISS_LIT_KEY) || '[]');
+    const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
     papers.push({
         id: Date.now().toString(),
         title: document.getElementById('lit-title').value,
@@ -1380,22 +1429,22 @@ function saveLitPaper() {
         year: document.getElementById('lit-year').value,
         impact: document.getElementById('lit-impact').value
     });
-    localStorage.setItem(DISS_LIT_KEY, JSON.stringify(papers));
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers));
     syncToCloud();
     document.getElementById('litModal').classList.add('hidden');
     renderLitGrid();
 }
 
 function deleteLit(id) {
-    let papers = JSON.parse(localStorage.getItem(DISS_LIT_KEY) || '[]');
+    let papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
     papers = papers.filter(p => p.id !== id);
-    localStorage.setItem(DISS_LIT_KEY, JSON.stringify(papers));
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers));
     syncToCloud();
     renderLitGrid();
 }
 
 function renderPubTable() {
-    const subs = JSON.parse(localStorage.getItem(DISS_PUB_KEY) || '[]');
+    const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
     const body = document.getElementById('pub-table-body');
     body.innerHTML = subs.map(s => `
         <tr>
@@ -1416,24 +1465,24 @@ function renderPubTable() {
 function addSubmissionRow() {
     const title = prompt("Enter Manuscript Title:"); if(!title) return;
     const journal = prompt("Enter Target Journal:");
-    const subs = JSON.parse(localStorage.getItem(DISS_PUB_KEY) || '[]');
+    const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
     subs.push({ id: Date.now().toString(), title, journal, status: 'Drafting', deadline: today() });
-    localStorage.setItem(DISS_PUB_KEY, JSON.stringify(subs));
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
     syncToCloud();
     renderPubTable();
 }
 
 function updatePubStatus(id, val) {
-    let subs = JSON.parse(localStorage.getItem(DISS_PUB_KEY) || '[]');
+    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
     const s = subs.find(x => x.id === id); if(s) s.status = val;
-    localStorage.setItem(DISS_PUB_KEY, JSON.stringify(subs));
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
     syncToCloud();
 }
 
 function deletePub(id) {
-    let subs = JSON.parse(localStorage.getItem(DISS_PUB_KEY) || '[]');
+    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
     subs = subs.filter(x => x.id !== id);
-    localStorage.setItem(DISS_PUB_KEY, JSON.stringify(subs));
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
     syncToCloud();
     renderPubTable();
 }
@@ -1462,12 +1511,10 @@ function renderWallet() {
     grid.innerHTML = items.map(item => {
         if (item.type === 'link') {
             return `
-            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm cursor-pointer hover:bg-gray-100 transition relative" onclick="window.open('${item.linkUrl}', '_blank')">
+            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
                 <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
-                    <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
-                </div>
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
+                <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
             </div>`;
         } else {
             return `
@@ -1701,7 +1748,7 @@ function handleDelete() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
     
-    [mainCalendar, bwCalendar, dissCalendar].forEach(cal => {
+    [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
         if (cal) {
             const ev = cal.getEventById(editingId);
             if (ev) ev.remove();
@@ -1763,7 +1810,7 @@ function handleSave() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
     
-    [mainCalendar, bwCalendar, dissCalendar].forEach(cal => {
+    [mainCalendar, bwCalendar, acadCalendar].forEach(cal => {
         if (cal) {
             cal.removeAllEvents();
             cal.addEventSource(storage);
