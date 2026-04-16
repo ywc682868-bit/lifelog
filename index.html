@@ -964,15 +964,52 @@ function saveBooks(b) {
     syncToCloud();
 }
 
+function calcMeta(book) {
+    let actualStartDate = null;
+    let actualEndDate = null;
+    let maxPage = book.currentPage || 0;
+    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
+    
+    if (bookEvents.length > 0) {
+        const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+        if (sortedEvents[0].start) {
+            actualStartDate = sortedEvents[0].start.split('T')[0];
+        }
+        if (sortedEvents[sortedEvents.length - 1].start) {
+            actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
+        }
+        bookEvents.forEach(e => {
+            if (e.title) {
+                const match = e.title.match(/\(p\.(\d+)\//);
+                if (match && match[1]) {
+                    const p = parseInt(match[1], 10);
+                    if (p > maxPage) maxPage = p;
+                }
+            }
+        });
+    }
+
+    const effectivePage = Math.max(book.currentPage || 0, maxPage);
+    const pct = book.totalPages > 0 ? Math.min(100, Math.round((effectivePage / book.totalPages) * 100)) : 0;
+    let daysRead = 0;
+    
+    if (actualStartDate && !book.isToRead) {
+        const start = new Date(actualStartDate);
+        const end = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
+        daysRead = Math.max(1, Math.round((end - start) / 86400000) + 1); 
+    }
+    
+    return { pct, daysRead, actualStartDate, actualEndDate, maxPage: effectivePage };
+}
+
 function renderBooks(forceBookId = null) {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
     
-    // 找出尚未完成的，或是這次強制要顯示編輯的那本書（即使已完成）
     let active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
     
-    // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
     if (active.length === 0) {
         const tempId = 'new_' + Date.now();
         renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
@@ -982,28 +1019,7 @@ function renderBooks(forceBookId = null) {
 }
 
 function renderBookRow(container, book, isTemp) {
-    let actualStartDate = null;
-    let actualEndDate = null;
-    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
-    if (bookEvents.length > 0) {
-        const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-        if (sortedEvents[0].start) {
-            actualStartDate = sortedEvents[0].start.split('T')[0];
-        }
-        if (sortedEvents[sortedEvents.length - 1].start) {
-            actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
-        }
-    }
-
-    const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
-    let daysRead = 0;
-    if (actualStartDate && !book.isToRead) {
-        const start = new Date(actualStartDate);
-        const end = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
-        daysRead = Math.max(1, Math.round((end - start) / 86400000) + 1); // 包含第一天
-    }
-
+    const meta = calcMeta(book);
     const row = document.createElement('div');
     row.className = 'book-row';
     row.dataset.id = book.id;
@@ -1017,22 +1033,22 @@ function renderBookRow(container, book, isTemp) {
                 <input class="book-title-input" type="text" placeholder="Book Title" value="${book.title || ''}" onchange="updateField(this,'title')" />
             </div>
             <div class="book-start-row">
-                <input type="date" class="start-date-input" value="${book.logDate || actualStartDate || today()}" onchange="updateField(this,'logDate')" />
-                <span class="days-count">已讀 ${daysRead} 天</span>
+                <input type="date" class="start-date-input" value="${book.logDate || meta.actualStartDate || today()}" onchange="updateField(this,'logDate')" />
+                <span class="days-count">已讀 ${meta.daysRead} 天</span>
             </div>
             <div class="page-row">
                 <div class="page-input-group">
-                    <input type="number" class="page-input" placeholder="0" min="0" value="${book.currentPage || ''}" onchange="updateField(this,'currentPage')" />
+                    <input type="number" class="page-input" placeholder="0" min="0" value="${meta.maxPage}" onchange="updateField(this,'currentPage')" />
                     <span class="page-sep">/</span>
                     <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}" onchange="updateField(this,'totalPages')" />
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="meta-chip pct">${pct}% 完成</span>
+                    <span class="meta-chip pct">${meta.pct}% 完成</span>
                     <input type="checkbox" class="book-done-cb" title="完成閱讀" ${book.done ? 'checked' : ''} onchange="toggleDone(this)" />
                 </div>
             </div>
             <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width:${pct}%"></div>
+                <div class="progress-bar-fill" style="width:${meta.pct}%"></div>
             </div>
         </div>
     `;
@@ -1075,12 +1091,11 @@ function updateField(el, field) {
     book[field] = (field === 'title' || field === 'logDate') ? el.value : (parseInt(el.value) || 0);
     lastEditedBookId = book.id;
     saveBooks(books);
-    
-    const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
+    const meta = calcMeta(book);
     const fill = row.querySelector('.progress-bar-fill');
-    if (fill) fill.style.width = pct + '%';
+    if (fill) fill.style.width = meta.pct + '%';
     const chipsEl = row.querySelector('.pct');
-    if (chipsEl) chipsEl.innerText = `${pct}% 完成`;
+    if (chipsEl) chipsEl.innerText = `${meta.pct}% 完成`;
 }
 
 function toggleDone(el) {
@@ -1099,7 +1114,6 @@ function toggleDone(el) {
     saveBooks(books);
     renderMonthlyStats(); 
     renderStatsTable();   
-    // 注意：這裡不呼叫 renderBooks()，讓它保留在畫面上以便使用者點擊 Save
 }
 
 function addBookRow() {
@@ -1252,6 +1266,7 @@ function saveToReadBook() {
     closeToReadModal();
     renderToRead();
     renderStatsTable(); 
+    renderBooks(); 
 }
 
 function deleteToReadBook() {
@@ -1359,29 +1374,17 @@ function renderStatsTable() {
     books.forEach(book => {
         if (!book.title && !book.cover && book.currentPage === 0 && !book.isToRead) return;
 
+        const meta = calcMeta(book);
         const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
         const sessions = bookEvents.length || (book.isToRead ? 0 : 1); 
 
-        let actualStartDate = null;
-        let actualEndDate = null;
-        if (bookEvents.length > 0) {
-            const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-            if (sortedEvents[0].start) {
-                actualStartDate = sortedEvents[0].start.split('T')[0];
-            }
-            if (sortedEvents[sortedEvents.length - 1].start) {
-                actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
-            }
-        }
-
-        let finalEndDate = actualEndDate || book.completedAt || book.logDate || '1970-01-01';
+        let finalEndDate = meta.actualEndDate || book.completedAt || book.logDate || '1970-01-01';
 
         validBooks.push({
             ...book,
             bookEvents,
             sessions,
-            actualStartDate,
-            actualEndDate,
+            meta,
             finalEndDate
         });
     });
@@ -1390,21 +1393,22 @@ function renderStatsTable() {
     const toread = validBooks.filter(b => b.isToRead);
     const completed = validBooks.filter(b => b.done && !b.isToRead);
 
+    // 依照完成時間降冪排序（越晚完成的在越上面，越早完成的沉到下面）
     completed.sort((a, b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
 
     const sortedBooks = [...ongoing, ...toread, ...completed];
 
     sortedBooks.forEach(book => {
-        let periodText = book.isToRead ? '待讀中' : (book.actualStartDate || '-');
-        if (book.done && (book.actualEndDate || book.completedAt)) {
-            periodText += ` ~ ${(book.actualEndDate || book.completedAt).split('T')[0]}`;
-        } else if (!book.isToRead && book.actualStartDate) {
+        let periodText = book.isToRead ? '待讀中' : (book.meta.actualStartDate || '-');
+        if (book.done && (book.meta.actualEndDate || book.completedAt)) {
+            periodText += ` ~ ${(book.meta.actualEndDate || book.completedAt).split('T')[0]}`;
+        } else if (!book.isToRead && book.meta.actualStartDate) {
             periodText += ' ~ 至今';
         }
 
         const readHours = book.readHours || 0;
         const calcMins = (book.sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / book.sessions) * 10) / 10 : 0;
-        const calcPages = (readHours > 0) ? Math.round(((book.currentPage || 0) / (readHours * 60)) * 10) / 10 : 0;
+        const calcPages = (readHours > 0) ? Math.round(((book.meta.maxPage || 0) / (readHours * 60)) * 10) / 10 : 0;
         
         const displayMins = book.manualAvgMins !== undefined ? book.manualAvgMins : calcMins;
         const displayPages = book.manualAvgPages !== undefined ? book.manualAvgPages : calcPages;
@@ -1412,66 +1416,71 @@ function renderStatsTable() {
         let progressDisplay = '';
         if (!book.isToRead) {
             if (book.done) {
-                progressDisplay = '進度: 已完成';
+                progressDisplay = '| 進度: <span class="text-morandi-green-dark font-bold">已完成</span>';
             } else {
-                progressDisplay = `進度: ${book.currentPage}/${book.totalPages}`;
+                progressDisplay = `| 進度: ${book.meta.maxPage}/${book.totalPages}`;
             }
         }
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="w-16">
+        const trTitle = document.createElement('tr');
+        trTitle.className = "border-none";
+        trTitle.innerHTML = `<td colspan="5" class="px-4 pt-5 pb-1 font-bold text-morandi-dark-gray text-[15px] border-none">${book.title || '未命名'}</td>`;
+        tbody.appendChild(trTitle);
+
+        const trData = document.createElement('tr');
+        trData.className = "border-b border-gray-100 hover:bg-gray-50/50 transition-colors";
+        trData.innerHTML = `
+            <td class="w-16 px-4 pt-1 pb-5 align-top border-none">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
-                    ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
+                    ${book.cover ? `<img src="${book.cover}" class="w-12 h-16 object-cover rounded shadow-sm">` : `<div class="w-12 h-16 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無封面</div>`}
                 </div>
             </td>
-            <td>
-                <div class="font-bold text-morandi-dark-gray">${book.title || '未命名'}</div>
-                <div class="text-xs text-gray-400 font-normal mt-0.5 flex items-center gap-2">
+            <td class="pt-1 pb-5 align-top border-none">
+                <div class="text-xs text-gray-400 font-normal flex items-center gap-2 mt-1 whitespace-nowrap">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
-                    ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
+                    ${progressDisplay ? `<span class="text-gray-500">${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="w-44 whitespace-nowrap min-w-[150px]">
+            <td class="w-48 whitespace-nowrap pt-1 pb-5 align-middle border-none">
                 <div class="text-[11px] text-gray-400">${periodText}</div>
             </td>
-            <td class="w-24 whitespace-nowrap">
+            <td class="w-24 whitespace-nowrap pt-1 pb-5 align-middle border-none">
                 ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500">打卡 ${book.sessions} 次</div>`}
             </td>
-            <td class="whitespace-nowrap">
-                ${book.isToRead ? '-' : `
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
-                        <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
+            <td class="whitespace-nowrap pt-1 pb-5 align-middle border-none w-full">
+                <div class="flex items-center justify-between w-full">
+                    ${book.isToRead ? '<span></span>' : `
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1">
+                            <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50"> 
+                            <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
+                            <span class="text-xs text-gray-500 whitespace-nowrap">分鐘/次</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
+                            <span class="text-xs text-gray-500 whitespace-nowrap">頁/分鐘</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">分鐘/次</span>
+                    `}
+                    <div class="flex items-center gap-2 pr-4 ml-auto">
+                        <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.meta.maxPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                            <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
+                        </button>
+                        <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-0.5 px-1 text-xs outline-none text-center bg-gray-50">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">頁/分鐘</span>
-                    </div>
-                </div>
-                `}
-            </td>
-            <td class="relative whitespace-nowrap">
-                <div class="flex items-center justify-end gap-3 pr-2">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
                 </div>
             </td>
         `;
-        tbody.appendChild(tr);
+        tbody.appendChild(trData);
     });
 
     if (sortedBooks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">尚無閱讀或待讀紀錄。</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400 border-none">尚無閱讀或待讀紀錄。</td></tr>';
     }
 }
 
@@ -1993,12 +2002,11 @@ function deleteTrx() {
 function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
-
+    
     if (ev && ev.id) {
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 點擊既有的閱讀紀錄，把書籍卡片的日期改成事件日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
             if (actBook) {
