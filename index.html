@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ======= 您的 Firebase 真實設定 =======
+        // ======= Firebase 設定 =======
         const firebaseConfig = {
             apiKey: "AIzaSyDpUQi1tIdk40h1YKiTFoAK6Y_nnoO7cIo",
             authDomain: "optimization-30a4f.firebaseapp.com",
@@ -903,7 +903,14 @@ function initCalendars() {
         eventContent: (arg) => {
             let container = document.createElement('div');
             container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;width:100%;';
-            container.style.backgroundColor = arg.event.extendedProps.bgColor || '#E5E5E5';
+            
+            // 動態校正顏色：確保畫面上顯示的與按鈕顏色完全一致，修復舊資料儲存的顏色問題
+            const catMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
+            let bgColor = arg.event.extendedProps.bgColor || '#E5E5E5';
+            if (arg.event.extendedProps.category && catMap[arg.event.extendedProps.category]) {
+                bgColor = catMap[arg.event.extendedProps.category];
+            }
+            container.style.backgroundColor = bgColor;
 
             if (arg.event.extendedProps.isReading) {
                 if (arg.event.extendedProps.cover) {
@@ -1972,7 +1979,7 @@ function handleSave() {
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
         notes = document.getElementById('inputNotes').value;
-        const colorMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Tutor:'#EEDFD2', Personal:'#E5E5E5' };
+        const colorMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
         bgColor = colorMap[currentCategory] || '#E5E5E5';
         
         if (currentCategory === 'Travel') {
