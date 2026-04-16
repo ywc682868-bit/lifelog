@@ -23,21 +23,32 @@
             appId: "1:817567132664:web:b918b2342d71446841840d",
             measurementId: "G-MF7GKK6WXT"
         };
+
+        // 確保使用您申請的地區 URL
         firebaseConfig.databaseURL = "https://optimization-30a4f-default-rtdb.firebaseio.com";
 
+        // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        // ===================================
+        // ===========================
 
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         morandi: {
-                            'dark-gray': '#3A4750', 'blue-light': '#E2EBF0', 'blue-dark': '#8DAAB9',
-                            'green-light': '#E2E8E8', 'green-dark': '#7F9F9F', 'pink': '#EBC4B9',
-                            'soft-red': '#E8D1D1', 'soft-orange': '#EEDFD2', 'soft-yellow': '#EBE5D1',
-                            'soft-green': '#D5E0D5', 'soft-gray': '#E5E5E5', 'soft-lavender': '#D1D1E8' 
+                            'dark-gray': '#3A4750',
+                            'blue-light': '#E2EBF0',
+                            'blue-dark': '#8DAAB9',
+                            'green-light': '#E2E8E8',
+                            'green-dark': '#7F9F9F',
+                            'pink': '#EBC4B9',
+                            'soft-red': '#E8D1D1',
+                            'soft-orange': '#EEDFD2',
+                            'soft-yellow': '#EBE5D1',
+                            'soft-green': '#D5E0D5',
+                            'soft-gray': '#E5E5E5',
+                            'soft-lavender': '#D1D1E8' 
                         }
                     }
                 }
@@ -355,7 +366,13 @@
                 </div>
 
                 <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto bg-white p-6 rounded-[20px] shadow-sm">
-                    <h3 class="text-lg font-bold text-morandi-dark-gray mb-6 font-zh">Monthly Budget Plan</h3>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-morandi-dark-gray font-zh">Monthly Budget Plan <span id="budget-month-display" class="text-sm text-gray-500 font-mono ml-2"></span></h3>
+                        <div class="flex gap-2">
+                            <button onclick="prevBudgetMonth()" class="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-500 rounded hover:bg-gray-50 transition shadow-sm text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button onclick="nextBudgetMonth()" class="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-500 rounded hover:bg-gray-50 transition shadow-sm text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
                     
                     <div class="flex flex-col md:flex-row gap-8 mb-8 items-center bg-gray-50 p-6 rounded-2xl border border-gray-100">
                         <div id="budget-pie-chart" class="pie-chart shrink-0 relative"><div class="absolute inset-0 m-auto w-20 h-20 bg-gray-50 rounded-full"></div></div>
@@ -663,6 +680,10 @@ let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
 let editingTrxId = null;
+
+// Finance Budget 月份切換變數
+let currentBudgetMonth = new Date().getMonth();
+let currentBudgetYear = new Date().getFullYear();
 
 // ======= 雲端同步邏輯 =======
 
@@ -1703,6 +1724,24 @@ function deleteWalletItem() {
     closeWalletModal();
 }
 
+function prevBudgetMonth() {
+    currentBudgetMonth--;
+    if (currentBudgetMonth < 0) {
+        currentBudgetMonth = 11;
+        currentBudgetYear--;
+    }
+    renderTransactions();
+}
+
+function nextBudgetMonth() {
+    currentBudgetMonth++;
+    if (currentBudgetMonth > 11) {
+        currentBudgetMonth = 0;
+        currentBudgetYear++;
+    }
+    renderTransactions();
+}
+
 // ── FINANCE: INCOME & EXPENDITURE LOGIC ─────────────────────
 function saveTutorRate(val) {
     let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
@@ -1721,16 +1760,14 @@ function renderTutorIncome() {
     }
 
     const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
     let totalHours = 0;
+    
     events.forEach(ev => {
         if (ev.extendedProps && ev.extendedProps.category === 'Tutor') {
             if (ev.start) {
                 const evDate = new Date(ev.start);
-                if (evDate.getMonth() === currentMonth && evDate.getFullYear() === currentYear) {
+                // 修改：讀取「目前選擇的」年份與月份
+                if (evDate.getMonth() === currentBudgetMonth && evDate.getFullYear() === currentBudgetYear) {
                     totalHours += parseFloat(ev.extendedProps.workHours) || 0;
                 }
             }
@@ -1748,7 +1785,15 @@ function renderTransactions() {
     const tutorIncome = renderTutorIncome();
 
     const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
-    trxs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // 修改：只篩選出「目前選擇的」年份與月份的記帳資料
+    const filteredTrxs = trxs.filter(trx => {
+        if(!trx.date) return false;
+        const tDate = new Date(trx.date);
+        return tDate.getMonth() === currentBudgetMonth && tDate.getFullYear() === currentBudgetYear;
+    });
+    
+    filteredTrxs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const incList = document.getElementById('income-list');
     const expList = document.getElementById('expenditure-list');
@@ -1758,7 +1803,7 @@ function renderTransactions() {
     let manualIncome = 0;
     let totalExpense = 0;
 
-    trxs.forEach(trx => {
+    filteredTrxs.forEach(trx => {
         const el = document.createElement('div');
         el.className = "flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-b border-gray-50 last:border-0 transition-colors";
         el.onclick = () => openTrxModal(trx.id);
@@ -1800,6 +1845,13 @@ function renderTransactions() {
     document.getElementById('summary-income').innerText = '$' + totalIncome.toLocaleString();
     document.getElementById('summary-expense').innerText = '$' + totalExpense.toLocaleString();
     document.getElementById('summary-balance').innerText = '$' + balance.toLocaleString();
+
+    // 更新標題月份顯示
+    const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const displayEl = document.getElementById('budget-month-display');
+    if(displayEl) {
+        displayEl.innerText = `- ${monthNamesEn[currentBudgetMonth]} ${currentBudgetYear}`;
+    }
 }
 
 function openTrxModal(id = null) {
@@ -1929,7 +1981,7 @@ function switchType(type) {
 
 function setCategory(cat) {
     currentCategory = cat;
-    ['Tutor','Work','Exercise','Travel','Tutor','Personal'].forEach(c => {
+    ['Tutor','Work','Exercise','Travel','Personal'].forEach(c => {
         const b = document.getElementById(`cat-${c}`);
         if (b) b.classList.toggle('selected', c === cat);
     });
