@@ -1419,6 +1419,21 @@ function renderStatsTable() {
     const toread = validBooks.filter(b => b.isToRead);
     const completed = validBooks.filter(b => b.done && !b.isToRead);
 
+    // 針對「閱讀中」書籍，依照開始日期遞減排序（越早的越往下）
+    ongoing.sort((a, b) => {
+        const startA = a.actualStartDate || a.logDate || '1970-01-01';
+        const startB = b.actualStartDate || b.logDate || '1970-01-01';
+        return new Date(startB) - new Date(startA);
+    });
+
+    // 針對「已完成」書籍，依照開始日期遞減排序（越早的越往下）
+    completed.sort((a, b) => {
+        const startA = a.actualStartDate || a.logDate || '1970-01-01';
+        const startB = b.actualStartDate || b.logDate || '1970-01-01';
+        return new Date(startB) - new Date(startA);
+    });
+
+    const sortedBooks = [...ongoing, ...toread, ...completed];
     completed.sort((a, b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
 
     const sortedBooks = [...ongoing, ...toread, ...completed];
