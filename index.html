@@ -733,42 +733,41 @@ function syncToCloud() {
 }
 
 function listenToCloud() {
-    // 👇 這裡修改為 ashley_private_db_2026
+    // 確保路徑與您 Firebase 規則中的 ashley_private_db_2026 一致
     db.ref('ashley_private_db_2026').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            localStorage.setItem(STORAGE_KEY, data.events || '[]');
-            localStorage.setItem(BOOKS_KEY, data.books || '[]');
-            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-            localStorage.setItem(TRX_KEY, data.trx || '[]');
-            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
-            
-            if (!isDataLoaded) {
+        try {
+            const data = snapshot.val();
+            if (data) {
+                localStorage.setItem(STORAGE_KEY, data.events || '[]');
+                localStorage.setItem(BOOKS_KEY, data.books || '[]');
+                localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
+                localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
+                localStorage.setItem(WALLET_KEY, data.wallet || '[]');
+                localStorage.setItem(TRX_KEY, data.trx || '[]');
+                localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
+                
+                if (!isDataLoaded) {
+                    isDataLoaded = true;
+                    initCalendars();
+                    renderMonthlyStats();
+                    initWallet();
+                    renderTransactions();
+                } else {
+                    refreshAllUI();
+                }
+            } else if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
-                renderMonthlyStats();
-                initWallet();
-                renderTransactions();
-            } else {
-                refreshAllUI();
             }
-        } else if (!isDataLoaded) {
-            isDataLoaded = true;
-            initCalendars();
-            renderMonthlyStats();
-            initWallet();
-            renderTransactions();
+        } catch (e) {
+            console.error("資料解析失敗，改用本地模式", e);
         }
     }, (error) => {
-        console.error("Firebase 連線或讀取失敗: ", error);
+        console.error("Firebase 連線被阻擋: ", error);
+        // 即使失敗也要初始化日曆，否則側邊欄會點不動
         if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
-            renderMonthlyStats();
-            initWallet();
-            renderTransactions();
         }
     });
 }
@@ -2222,18 +2221,18 @@ function handleSave() {
         if (currentCategory === 'Travel') {
             isAllDay = true;
             title = main;
-            startStr = date;
+            startStr = date; // 這是 yyyy-mm-dd 格式
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                // 手動解析日期，避開 Safari 時區轉換倒退一天的 Bug
-                let [y, m, d] = ed.split('-');
-                let endObj = new Date(y, m - 1, d);
-                endObj.setDate(endObj.getDate() + 1);
+                // 直接拆解字串計算，完全避開 Safari 的時區 Bug
+                let parts = ed.split('-');
+                let endObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                endObj.setDate(endObj.getDate() + 1); // 結束日需加一，FullCalendar 才能顯示到當天
                 
-                let ny = endObj.getFullYear();
-                let nm = String(endObj.getMonth() + 1).padStart(2, '0');
-                let nd = String(endObj.getDate()).padStart(2, '0');
-                endStr = `${ny}-${nm}-${nd}`;
+                let ey = endObj.getFullYear();
+                let em = String(endObj.getMonth() + 1).padStart(2, '0');
+                let edd = String(endObj.getDate()).padStart(2, '0');
+                endStr = `${ey}-${em}-${edd}`; 
             }
         } else {
         const allBooks = loadBooks();
