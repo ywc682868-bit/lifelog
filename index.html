@@ -1426,18 +1426,8 @@ function renderStatsTable() {
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="4" class="align-bottom" style="padding-top: 16px; padding-bottom: 6px; border-bottom: none;">
+            <td colspan="5" class="align-bottom" style="padding-top: 16px; padding-bottom: 6px; border-bottom: none;">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
-            </td>
-            <td rowspan="2" class="relative align-middle text-right pr-2" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
-                <div class="flex items-center justify-end gap-3">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
             </td>
         `;
 
@@ -1475,6 +1465,16 @@ function renderStatsTable() {
                     </div>
                 </div>
                 `}
+            </td>
+            <td class="align-top text-right pr-2" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="flex items-center justify-end gap-3">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
+                    </button>
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </td>
         `;
 
