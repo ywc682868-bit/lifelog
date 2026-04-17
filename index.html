@@ -242,6 +242,11 @@
             <li><button onclick="showSection('academic'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-building-columns text-xs"></i> Academic</button></li>
             <li><button onclick="showSection('finance'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-wallet text-xs"></i> Finance</button></li>
         </ul>
+        <div class="mt-auto pt-4 border-t border-white/10">
+            <button onclick="openImportModal()" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-sm transition-colors opacity-70 hover:opacity-100">
+                <i class="fa-solid fa-file-import text-xs"></i> Import Data
+            </button>
+        </div>
     </nav>
 
     <main class="flex-1 overflow-hidden relative">
@@ -468,6 +473,25 @@
             <button onclick="saveTrx()" class="flex-1 py-2.5 rounded-full bg-morandi-green-dark text-white font-bold text-sm hover:opacity-90 transition shadow-sm">Save</button>
         </div>
         <button onclick="closeTrxModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
+    </div>
+</div>
+
+<!-- Import Data Modal -->
+<div id="importModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+    <div class="bg-white rounded-[28px] shadow-2xl relative w-full max-w-lg flex flex-col" style="max-height:90vh;">
+        <div class="p-6 pb-3 shrink-0">
+            <h3 class="text-lg font-bold text-morandi-dark-gray font-cursive mb-1">Import Data</h3>
+            <p class="text-xs text-gray-400 font-zh">將先前匯出的 localStorage JSON 資料貼入下方，點擊「還原」即可覆蓋現有資料並同步至雲端。</p>
+        </div>
+        <div class="px-6 flex-1 overflow-y-auto min-h-0 flex flex-col gap-3">
+            <textarea id="import-json-input" placeholder='貼上 JSON 資料，例如：&#10;{&#10;  "ashley_events_v8_reorder": "[...]",&#10;  "ashley_books_v3": "[...]",&#10;  ...&#10;}' class="custom-input font-mono text-xs" style="min-height:260px; height:260px; resize:vertical; white-space:pre;"></textarea>
+            <div id="import-status" class="hidden text-xs px-3 py-2 rounded-xl font-zh"></div>
+        </div>
+        <div class="p-6 pt-3 flex gap-3 shrink-0">
+            <button onclick="closeImportModal()" class="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 font-bold text-sm hover:bg-gray-200 transition">Cancel</button>
+            <button onclick="doImport()" class="flex-1 py-2.5 rounded-full font-bold text-sm text-white transition hover:opacity-90 shadow-sm" style="background-color:#8DAAB9;">還原資料</button>
+        </div>
+        <button onclick="closeImportModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
     </div>
 </div>
 
@@ -1651,7 +1675,71 @@ function openUnifiedModal(ev = null, clickedDateStr = null) {
         setCategory('Personal'); switchType('schedule');
     }
 }
-function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); editingId = null; }
+function openImportModal() {
+    document.getElementById('import-json-input').value = '';
+    const st = document.getElementById('import-status');
+    st.className = 'hidden text-xs px-3 py-2 rounded-xl font-zh';
+    st.textContent = '';
+    document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+}
+
+function doImport() {
+    const raw = document.getElementById('import-json-input').value.trim();
+    const st  = document.getElementById('import-status');
+
+    if (!raw) {
+        st.className = 'text-xs px-3 py-2 rounded-xl font-zh bg-red-50 text-red-500';
+        st.textContent = '⚠️ 請先貼上 JSON 資料。';
+        return;
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(raw);
+    } catch (e) {
+        st.className = 'text-xs px-3 py-2 rounded-xl font-zh bg-red-50 text-red-500';
+        st.textContent = '❌ JSON 格式錯誤，請確認資料完整性：' + e.message;
+        return;
+    }
+
+    const VALID_KEYS = [STORAGE_KEY, BOOKS_KEY, ACAD_LIT_KEY, ACAD_PUB_KEY, WALLET_KEY, TRX_KEY, SETTINGS_KEY];
+    const applied = [];
+
+    VALID_KEYS.forEach(key => {
+        if (parsed[key] !== undefined) {
+            // 驗證每個值是合法的 JSON string 或 object
+            let val = parsed[key];
+            if (typeof val === 'object') val = JSON.stringify(val);
+            try {
+                JSON.parse(val); // 確認能被解析
+                localStorage.setItem(key, val);
+                applied.push(key);
+            } catch (e) {
+                console.warn('跳過無效欄位:', key);
+            }
+        }
+    });
+
+    if (applied.length === 0) {
+        st.className = 'text-xs px-3 py-2 rounded-xl font-zh bg-yellow-50 text-yellow-600';
+        st.textContent = '⚠️ 未找到任何可識別的資料欄位，請確認 JSON 格式正確。';
+        return;
+    }
+
+    // 同步到雲端並刷新 UI
+    syncToCloud();
+    refreshAllUI();
+
+    st.className = 'text-xs px-3 py-2 rounded-xl font-zh bg-green-50 text-green-600';
+    st.textContent = `✅ 成功還原 ${applied.length} 個資料欄位，並已同步至雲端！`;
+
+    setTimeout(() => closeImportModal(), 2000);
+}
+
 
 function switchType(type, forceBookId = null) {
     currentType = type;
