@@ -362,10 +362,7 @@
                 </div>
                 
                 <div id="fin-tab-wallet" class="fin-tab-content flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm relative">
-                    <button onclick="openWalletEditModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增會員或支付">
-                        <i class="fa-solid fa-plus text-sm"></i>
-                    </button>
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full"></div>
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"></div>
                 </div>
 
                 <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
@@ -1488,13 +1485,11 @@ function initWallet() {
 function renderWallet() {
     const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
     document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
-        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
-            <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
             <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
             <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
         </div>` : `
-        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
-            <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm text-center">
             <h4 class="font-bold text-gray-700 mb-2 text-sm">${item.title}</h4>
             ${item.img ? `<img src="${item.img}" class="w-full max-w-[200px] h-16 object-contain mb-2">` : `<div class="w-full max-w-[200px] mock-barcode mb-2 opacity-30"></div>`}
             <p class="text-xs text-gray-500 font-mono tracking-widest">${item.subtitle}</p>
