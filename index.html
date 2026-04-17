@@ -1468,15 +1468,20 @@ function deletePub(id) {
 let editingWalletId = null, tempWalletImg = null;
 
 function initWallet() {
-    if (!localStorage.getItem(WALLET_KEY)) {
-        const def = [
-            { id:'w1', title:'LINE Pay', subtitle:'Tap to open wallet', type:'link', linkUrl:'line://pay/', img:null, bgColor:'#06C755', icon:'fa-brands fa-line' },
-            { id:'w2', title:'雲端發票載具', subtitle:'/AB12C34', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
-            { id:'w3', title:'7-11 OpenPoint 會員', subtitle:'0912-345-678', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
-            { id:'w4', title:'全家 FamilyMart 會員', subtitle:'0912-345-678', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' }
-        ];
-        localStorage.setItem(WALLET_KEY, JSON.stringify(def)); syncToCloud();
-    }
+    const def = [
+        { id:'w1', title:'LINE Pay', subtitle:'點擊開啟', type:'link', linkUrl:'line://pay/', img:null, bgColor:'#06C755', icon:'fa-brands fa-line' },
+        { id:'w2', title:'雲端發票載具', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w3', title:'全家 FamilyMart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w4', title:'7-ELEVEN OpenPoint', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w5', title:'全聯 PX Mart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' }
+    ];
+    // 保留已有圖片/條碼資料，只補齊缺少的項目
+    const existing = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
+    const merged = def.map(d => {
+        const found = existing.find(e => e.id === d.id);
+        return found ? { ...d, ...found, id: d.id, title: d.title } : d;
+    });
+    localStorage.setItem(WALLET_KEY, JSON.stringify(merged)); syncToCloud();
     renderWallet();
 }
 
