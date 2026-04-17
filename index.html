@@ -211,7 +211,6 @@
 
             .pan-wrapper { overflow-y: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: flex !important; flex-direction: column !important; }
             .pan-inner { width: 100% !important; min-height: unset !important; transform: none !important; padding-bottom: 20px; display: flex !important; flex-direction: column !important; flex: 1; }
-            #bw-calendar, #acad-calendar { min-width: unset !important; min-height: 350px !important; }
             #main-calendar { min-width: 233%; min-height: 800px; }
             .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
             #bw-tab-calendar .calendar-scroll-wrapper { height: 350px !important; min-height: 350px; flex-shrink: 0; }
@@ -281,8 +280,8 @@
                         </div>
                         
                         <div id="bw-tab-calendar" class="bw-tab-content overflow-y-auto flex flex-col gap-4" style="flex:1; min-height:0; -webkit-overflow-scrolling:touch;">
-                            <div style="width:100%; height:480px; min-height:480px; flex-shrink:0; border-radius:12px; overflow:hidden; background:white;">
-                                <div id="bw-calendar" style="width:100%; height:480px; background:white;"></div>
+                            <div style="width:100%; height:480px; min-height:480px; flex-shrink:0; border-radius:12px; overflow:auto; background:white; -webkit-overflow-scrolling:touch;">
+                                <div id="bw-calendar" style="min-width:233%; height:480px; background:white;"></div>
                             </div>
                             <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
                                 <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
