@@ -706,6 +706,7 @@ let currentBudgetMonth = new Date().getMonth();
 let currentBudgetYear = new Date().getFullYear();
 
 // ======= 雲端同步邏輯 =======
+
 function syncToCloud() {
     // 【安全鎖】如果雲端資料還沒確認載入完成，禁止執行同步（防止把空白資料推上去覆蓋雲端）
     if (!isDataLoaded) {
@@ -726,6 +727,7 @@ function syncToCloud() {
     const statusEl = document.getElementById('cloud-status');
     if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Saving...</span>';
     
+    // 👇 確保這裡為 ashley_private_db_2026
     db.ref('ashley_private_db_2026').set(data).then(() => {
         if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced</span>';
         setTimeout(() => {
@@ -752,7 +754,7 @@ function listenToCloud() {
                 
                 if (!isDataLoaded) {
                     isDataLoaded = true;
-                    // 確保初次載入時，所有模組的畫面都會被繪製
+                    // 補齊所有畫面的初始渲染
                     initCalendars();
                     renderBooks();
                     renderMonthlyStats();
@@ -795,7 +797,8 @@ function listenToCloud() {
             renderTransactions();
         }
     });
-}function refreshAllUI() {
+}
+function refreshAllUI() {
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     if (mainCalendar) {
         mainCalendar.removeAllEvents();
@@ -828,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('ashley_cleanup_2026_v1', 'done');
     }
     initTimeDropdowns(); 
-    listenToCloud();
+    listenToCloud(); // 啟動雲端監聽並初始化
 });
 
 // 手機版側邊欄切換
@@ -853,6 +856,7 @@ function showSection(id) {
     
     if (id === 'main') {
         document.getElementById('main-section').classList.remove('hidden');
+        // 延遲改為 300 毫秒
         setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 300);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
@@ -882,6 +886,7 @@ function switchBwTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'calendar') { 
+        // 延遲改為 300 毫秒
         setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 300); 
         renderMonthlyStats(); 
     } else if (tab === 'toread') { 
@@ -907,6 +912,7 @@ function switchAcadTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'timeline') { 
+        // 延遲改為 300 毫秒
         setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 300); 
     } else if (tab === 'lit') { 
         renderLitGrid(); 
@@ -962,7 +968,7 @@ function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const calendarOptions = {
         initialView: 'dayGridMonth', locale: 'en', height: 'auto',
-        fixedWeekCount: false,
+        fixedWeekCount: false, // <--- 新增此行參數，取消強制 6 週顯示
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
@@ -1169,11 +1175,11 @@ function toggleDone(el) {
     renderMonthlyStats(); 
     renderStatsTable();   
     
-    // 如果勾選已完成，延遲 0.4 秒後自動更新畫面，讓該筆紀錄從預設清單中消失
+    // 【新增修改處】如果勾選已完成，延遲 0.4 秒後自動更新畫面，讓該筆紀錄從預設清單中消失
     if (book.done) {
         setTimeout(() => {
             renderBooks();
-        }, 400); 
+        }, 400); // 400毫秒的延遲是為了讓您能看到打勾的視覺回饋，再讓它消失
     }
 }
 
@@ -1201,13 +1207,13 @@ function renderMonthlyStats() {
             if (bookEvents.length > 0) {
                 // 依照時間先後排序打卡紀錄
                 const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-                // 抓取「最後一次」打卡的時間（陣列的最後一筆），作為實際結束日
+                // 【修正處】抓取「最後一次」打卡的時間（陣列的最後一筆），作為實際結束日
                 if (sortedEvents[sortedEvents.length - 1].start) {
                     actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
                 }
             }
 
-            // 決定月份歸屬的優先順序：
+            // 【修正處】決定月份歸屬的優先順序：
             // 1. b.completedAt (使用者勾選「已完成」當下系統記錄的精確時間)
             // 2. actualEndDate (這本書在行事曆上的最後一次打卡日)
             // 3. b.logDate (如果都沒有，才使用卡片建立日作為防錯退路)
