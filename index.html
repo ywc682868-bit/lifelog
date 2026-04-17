@@ -70,16 +70,17 @@
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 15px !important; }
         /* 強制日曆單元格為 1:1 正方形 */
         .fc-theme-standard td.fc-daygrid-day {
-        aspect-ratio: 1 / 1 !important;
-        }
-        /* 確保行程過多時可在單格內滑動，不破壞正方形比例 */
-        .fc-daygrid-day-frame {
-        overflow-y: auto !important;
-        }
-        /* 隱藏單元格內的預設滾動條以保持美觀 */
-        .fc-daygrid-day-frame::-webkit-scrollbar {
-        display: none;
-        }
+    aspect-ratio: auto !important; 
+}
+
+.fc-daygrid-day-frame {
+    min-height: 140px !important; /* 您可以修改 140px 這個數字，數字越大格子越長 */
+    overflow-y: auto !important;
+}
+
+.fc-daygrid-day-frame::-webkit-scrollbar {
+    display: none;
+}
         .fc-event { border: none !important; background: transparent !important; margin-bottom: 1px !important; }
         .fc-h-event { border-radius: 4px !important; }
 
@@ -1121,7 +1122,13 @@ function toggleDone(el) {
     saveBooks(books);
     renderMonthlyStats(); 
     renderStatsTable();   
-    // 注意：這裡不呼叫 renderBooks()，讓它保留在畫面上以便使用者點擊 Save
+    
+    // 【新增修改處】如果勾選已完成，延遲 0.4 秒後自動更新畫面，讓該筆紀錄從預設清單中消失
+    if (book.done) {
+        setTimeout(() => {
+            renderBooks();
+        }, 400); // 400毫秒的延遲是為了讓您能看到打勾的視覺回饋，再讓它消失
+    }
 }
 
 function addBookRow() {
