@@ -733,7 +733,6 @@ function syncToCloud() {
 }
 
 function listenToCloud() {
-    // 確保路徑與您 Firebase 規則中的 ashley_private_db_2026 一致
     db.ref('ashley_private_db_2026').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -758,9 +757,12 @@ function listenToCloud() {
             } else if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
+                renderMonthlyStats();
+                initWallet();
+                renderTransactions();
             }
         } catch (e) {
-            console.error("資料解析失敗，改用本地模式", e);
+            console.error("資料解析失敗", e);
         }
     }, (error) => {
         console.error("Firebase 連線被阻擋: ", error);
@@ -768,6 +770,9 @@ function listenToCloud() {
         if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
+            renderMonthlyStats();
+            initWallet();
+            renderTransactions();
         }
     });
 }
@@ -2221,29 +2226,35 @@ function handleSave() {
         if (currentCategory === 'Travel') {
             isAllDay = true;
             title = main;
-            startStr = date; // 這是 yyyy-mm-dd 格式
+            startStr = date;
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
                 // 直接拆解字串計算，完全避開 Safari 的時區 Bug
                 let parts = ed.split('-');
                 let endObj = new Date(parts[0], parts[1] - 1, parts[2]);
-                endObj.setDate(endObj.getDate() + 1); // 結束日需加一，FullCalendar 才能顯示到當天
+                endObj.setDate(endObj.getDate() + 1);
                 
                 let ey = endObj.getFullYear();
                 let em = String(endObj.getMonth() + 1).padStart(2, '0');
                 let edd = String(endObj.getDate()).padStart(2, '0');
-                endStr = `${ey}-${em}-${edd}`; 
+                endStr = `${ey}-${em}-${edd}`;
             }
+        } else if (currentCategory === 'Tutor') {
+            whVal = document.getElementById('workHours').value;
+            title = `${hour}:${min} ${main}${whVal ? ' (' + whVal + 'h)' : ''}`;
+            startStr = `${date}T${hour}:${min}:00`;
         } else {
+            title = `${hour}:${min} ${main}`;
+            startStr = `${date}T${hour}:${min}:00`;
+        }
+    } else {
         const allBooks = loadBooks();
         let b = null;
 
-        // 優先找剛剛正在編輯的書
         if (lastEditedBookId) {
             b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
         }
 
-        // 如果沒有鎖定目標，就找畫面上第一個渲染出來的書
         if (!b) {
             const firstRow = document.querySelector('#books-container .book-row');
             if (firstRow) {
@@ -2251,7 +2262,6 @@ function handleSave() {
             }
         }
 
-        // 若是完全空白的未編輯卡片就不存行事曆
         if (!b || (!b.title && b.currentPage === 0 && !b.cover)) {
             closeUnifiedModal();
             return;
@@ -2259,8 +2269,6 @@ function handleSave() {
 
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
-        
-        // 抓取書籍卡片上的日期作為打卡日期 (b.logDate 是透過 onchange 同步的)
         startStr = b.logDate || today(); 
         isAllDay = true;
         activeBookId = b.id; 
@@ -2288,7 +2296,7 @@ function handleSave() {
     if (isReading) {
         renderStatsTable(); 
     } else if (currentCategory === 'Tutor') {
-        renderTransactions(); // <--- 改成這個
+        renderTransactions(); 
     }
 }
 </script>
