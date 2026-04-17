@@ -1680,6 +1680,8 @@ function deleteTrx() {
 }
 
 // ── UNIFIED MODAL ─────────────────────────────────────────────
+function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); editingId = null; }
+
 function openUnifiedModal(ev = null, clickedDateStr = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
