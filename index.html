@@ -2238,17 +2238,18 @@ function handleSave() {
         if (currentCategory === 'Travel') {
             isAllDay = true;
             title = main;
-            startStr = date; // YYYY-MM-DD
+            startStr = date;
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                // 強制採用字串解析，解決跨日方塊斷掉的問題
+                // 直接拆解字串計算，完全避開 Safari 的時區 Bug，修復跨日失敗
                 let [y, m, d] = ed.split('-').map(Number);
                 let endObj = new Date(y, m - 1, d);
                 endObj.setDate(endObj.getDate() + 1);
-                let ny = endObj.getFullYear();
-                let nm = String(endObj.getMonth() + 1).padStart(2, '0');
-                let nd = String(endObj.getDate()).padStart(2, '0');
-                endStr = `${ny}-${nm}-${nd}`; 
+                
+                let ey = endObj.getFullYear();
+                let em = String(endObj.getMonth() + 1).padStart(2, '0');
+                let edd = String(endObj.getDate()).padStart(2, '0');
+                endStr = `${ey}-${em}-${edd}`;
             }
         } else if (currentCategory === 'Tutor') {
             whVal = document.getElementById('workHours').value;
@@ -2283,10 +2284,7 @@ function handleSave() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
-    refreshAllUI(); // 強制觸發全局刷新
-    closeUnifiedModal();
-    if (currentCategory === 'Tutor') renderTransactions();
-}
+    
     if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
     if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
     if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
