@@ -50,7 +50,7 @@
         body { font-family: var(--font-zh); overflow: hidden; background-color: #F8F8F8; margin: 0; }
         .font-cursive { font-family: var(--font-en); }
 
-        .fc { font-family: var(--font-zh) !important; height: 100% !important; border: none !important; }
+        .fc { font-family: var(--font-zh) !important; border: none !important; }
         .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #EEEEEE !important; }
         .fc-scrollgrid { border: none !important; }
         .fc .fc-view-harness { border-radius: 20px; overflow: hidden; background-color: #fff; }
@@ -68,7 +68,18 @@
         .fc-day-sat, .fc-day-sun { background-color: rgba(232,209,209,0.08) !important; }
         th.fc-day-sat a, th.fc-day-sun a { color: #D19A9A !important; }
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 15px !important; }
-        
+        /* 強制日曆單元格為 1:1 正方形 */
+        .fc-theme-standard td.fc-daygrid-day {
+        aspect-ratio: 1 / 1 !important;
+        }
+        /* 確保行程過多時可在單格內滑動，不破壞正方形比例 */
+        .fc-daygrid-day-frame {
+        overflow-y: auto !important;
+        }
+        /* 隱藏單元格內的預設滾動條以保持美觀 */
+        .fc-daygrid-day-frame::-webkit-scrollbar {
+        display: none;
+        }
         .fc-event { border: none !important; background: transparent !important; margin-bottom: 1px !important; }
         .fc-h-event { border-radius: 4px !important; }
 
@@ -910,7 +921,7 @@ const TAIWAN_SPECIAL_DAYS = [
 function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const calendarOptions = {
-        initialView: 'dayGridMonth', locale: 'en', height: '100%',
+        initialView: 'dayGridMonth', locale: 'en', height: 'auto',
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
