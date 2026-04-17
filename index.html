@@ -231,26 +231,23 @@
 
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
-        /* === 修正 Safari 高度塌陷與資料不顯示問題 === */
+        /* ==================================================== */
+        /* 針對 Safari iOS 的終極強制高度 (解決畫面塌陷為 0 的 Bug) */
+        /* ==================================================== */
         
-        /* 1. 給予日曆足夠的空間，並允許橫向滑動 (絕對不加 display !important) */
         .calendar-scroll-wrapper {
-            min-height: 600px !important;
+            display: block !important;
+            height: 650px !important;  /* 關鍵：給予絕對高度，不使用 auto 或 min-height */
+            width: 100% !important;
             overflow-x: auto !important;
-            overflow-y: visible !important;
+            overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch;
         }
-        #main-calendar, #bw-calendar, #acad-calendar {
-            min-height: 600px !important;
-            min-width: 700px !important; /* 強制撐開寬度讓手機可橫滑，避免擠成一團崩潰 */
-        }
 
-        /* 2. 針對正在顯示的區塊給予最小高度，且不干擾 hidden 隱藏屬性 */
-        [id$="-section"]:not(.hidden), 
-        .bw-tab-content:not(.hidden), 
-        .acad-tab-content:not(.hidden), 
-        .fin-tab-content:not(.hidden) {
-            min-height: 500px !important;
+        #main-calendar, #bw-calendar, #acad-calendar {
+            display: block !important;
+            height: 650px !important; /* 關鍵：強制行事曆本體高度 */
+            min-width: 700px !important; /* 確保行事曆夠寬，在手機上可以橫向滑動檢視 */
         }
     </style>
 </head>
