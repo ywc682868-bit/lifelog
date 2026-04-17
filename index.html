@@ -233,30 +233,24 @@
         }
         /* === 修正 Safari 高度塌陷與資料不顯示問題 === */
         
-        /* 1. 強制賦予行事曆及其外層容器最小高度，確保 FullCalendar 有空間渲染 */
-        .calendar-scroll-wrapper, 
-        #main-calendar, 
-        #bw-calendar, 
-        #acad-calendar {
-            min-height: 650px !important;
-            display: block !important;
+        /* 1. 給予日曆足夠的空間，並允許橫向滑動 (絕對不加 display !important) */
+        .calendar-scroll-wrapper {
+            min-height: 600px !important;
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        #main-calendar, #bw-calendar, #acad-calendar {
+            min-height: 600px !important;
+            min-width: 700px !important; /* 強制撐開寬度讓手機可橫滑，避免擠成一團崩潰 */
         }
 
-        /* 2. 強制賦予所有功能區塊 (Section) 與分頁內容 (Tab Content) 基本高度 */
-        [id$="-section"], 
-        .bw-tab-content, 
-        .acad-tab-content, 
-        .fin-tab-content {
+        /* 2. 針對正在顯示的區塊給予最小高度，且不干擾 hidden 隱藏屬性 */
+        [id$="-section"]:not(.hidden), 
+        .bw-tab-content:not(.hidden), 
+        .acad-tab-content:not(.hidden), 
+        .fin-tab-content:not(.hidden) {
             min-height: 500px !important;
-            height: auto !important;
-            display: flex !important; /* 維持內部元素的彈性排列 */
-        }
-
-        /* 3. 針對手機版 (小於768px) 強制解除 Flex 壓縮，改用區塊顯示以保證內容可見 */
-        @media (max-width: 768px) {
-            [id$="-section"] {
-                display: block !important;
-            }
         }
     </style>
 </head>
