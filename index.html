@@ -210,7 +210,7 @@
             .bw-folder-tab.active { height: 36px !important; }
             .bw-tab-container { overflow-x: visible; }
             
-            /* Wallet 載具會員手機版直排 */
+            /* 強制手機版 Wallet 區塊直式單列顯示 */
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; }
         }
     </style>
@@ -227,12 +227,12 @@
     <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
         <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
         
-        <button onclick="showSection('main'); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
+        <button onclick="forceSyncPull()" class="mb-8 mt-4 md:mt-0 text-left group">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
                 <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
             </div>
-            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400">
+            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400 transition-opacity">
                 <i class="fa-solid fa-cloud"></i> <span>Ready</span>
             </div>
         </button>
@@ -621,7 +621,7 @@
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">類型</label>
                 <select id="wallet-type" class="custom-input h-[38px] text-sm mt-0 appearance-none bg-white shadow-sm border border-gray-100" onchange="toggleWalletFields()">
                     <option value="barcode">會員條碼 / 載具</option>
-                    <option value="link">行动支付 / 連結</option>
+                    <option value="link">行動支付 / 連結</option>
                 </select>
             </div>
             <div class="field-group">
@@ -668,6 +668,9 @@ const WALLET_KEY = 'ashley_wallet_v1';
 const TRX_KEY = 'ashley_trx_v1';
 const SETTINGS_KEY = 'ashley_settings_v1';
 
+// Firebase Node Key
+const DB_NODE = 'ashley_private_db_2026';
+
 let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
@@ -694,7 +697,7 @@ function syncToCloud() {
     const statusEl = document.getElementById('cloud-status');
     if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Saving...</span>';
     
-    db.ref('user_data').set(data).then(() => {
+    db.ref(DB_NODE).set(data).then(() => {
         if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced</span>';
         setTimeout(() => {
             if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
@@ -706,7 +709,7 @@ function syncToCloud() {
 }
 
 function listenToCloud() {
-    db.ref('user_data').on('value', (snapshot) => {
+    db.ref(DB_NODE).on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             localStorage.setItem(STORAGE_KEY, data.events || '[]');
@@ -759,6 +762,40 @@ function refreshAllUI() {
     renderWallet();
     renderTransactions();
 }
+
+function forceSyncPull(silent = false) {
+    const statusEl = document.getElementById('cloud-status');
+    if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Syncing...</span>';
+    
+    db.ref(DB_NODE).once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            localStorage.setItem(STORAGE_KEY, data.events || '[]');
+            localStorage.setItem(BOOKS_KEY, data.books || '[]');
+            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
+            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
+            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
+            localStorage.setItem(TRX_KEY, data.trx || '[]');
+            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
+            refreshAllUI();
+            
+            if (!silent && statusEl) {
+                statusEl.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> <span class="text-green-500">Updated</span>';
+                setTimeout(() => {
+                    statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
+                }, 2000);
+            }
+        }
+    }).catch(e => {
+        if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> <span class="text-red-500">Fail</span>';
+    });
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        forceSyncPull(true);
+    }
+});
 
 // ===========================
 
