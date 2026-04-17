@@ -731,20 +731,25 @@ function setCloudStatus(state) {
 }
 
 function applyCloudData(data) {
+    // ★ 修復：data 為 null 時完全不覆蓋 localStorage，保留本機資料
     if (!data) return;
-    localStorage.setItem(STORAGE_KEY,   data.events   || '[]');
-    localStorage.setItem(BOOKS_KEY,     data.books    || '[]');
-    localStorage.setItem(ACAD_LIT_KEY,  data.lit      || '[]');
-    localStorage.setItem(ACAD_PUB_KEY,  data.pub      || '[]');
-    localStorage.setItem(WALLET_KEY,    data.wallet   || '[]');
-    localStorage.setItem(TRX_KEY,       data.trx      || '[]');
-    localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
+    // 只在雲端有值時才覆蓋，避免空字串清掉本機資料
+    if (data.events   !== undefined) localStorage.setItem(STORAGE_KEY,   data.events   || '[]');
+    if (data.books    !== undefined) localStorage.setItem(BOOKS_KEY,     data.books    || '[]');
+    if (data.lit      !== undefined) localStorage.setItem(ACAD_LIT_KEY,  data.lit      || '[]');
+    if (data.pub      !== undefined) localStorage.setItem(ACAD_PUB_KEY,  data.pub      || '[]');
+    if (data.wallet   !== undefined) localStorage.setItem(WALLET_KEY,    data.wallet   || '[]');
+    if (data.trx      !== undefined) localStorage.setItem(TRX_KEY,       data.trx      || '[]');
+    if (data.settings !== undefined) localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
 }
 
 function listenToCloud() {
     db.ref(DB_NODE).on('value', (snapshot) => {
         const data = snapshot.val();
-        applyCloudData(data);
+        if (data) {
+            // 有雲端資料才覆蓋本機
+            applyCloudData(data);
+        }
         if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
@@ -769,7 +774,8 @@ function refreshAllUI() {
 function forceSyncPull(silent = false) {
     if (!silent) setCloudStatus('pulling');
     db.ref(DB_NODE).once('value').then((snapshot) => {
-        applyCloudData(snapshot.val());
+        const data = snapshot.val();
+        if (data) applyCloudData(data);
         refreshAllUI();
         if (!silent) {
             setCloudStatus('updated');
