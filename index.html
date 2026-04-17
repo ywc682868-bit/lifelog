@@ -1135,6 +1135,7 @@ function listenToCloud() {
             localStorage.setItem(WALLET_KEY, data.wallet || '[]');
             localStorage.setItem(TRX_KEY, data.trx || '[]');
             localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
+            
             if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
@@ -1145,6 +1146,16 @@ function listenToCloud() {
                 refreshAllUI();
             }
         } else if (!isDataLoaded) {
+            isDataLoaded = true;
+            initCalendars();
+            renderMonthlyStats();
+            initWallet();
+            renderTransactions();
+        }
+    }, (error) => {
+        // 新增錯誤回呼：當 Firebase 讀取失敗（如權限不足或無網路）時，強制以本地資料初始化 UI
+        console.error("Firebase 連線或讀取失敗: ", error);
+        if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
             renderMonthlyStats();
