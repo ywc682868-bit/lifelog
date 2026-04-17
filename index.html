@@ -938,6 +938,7 @@ function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const calendarOptions = {
         initialView: 'dayGridMonth', locale: 'en', height: 'auto',
+        fixedWeekCount: false, // <--- 新增此行參數，取消強制 6 週顯示
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
