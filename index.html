@@ -200,11 +200,12 @@
             .fc-header-toolbar { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 0 4px !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
+            .pan-wrapper { overflow-y: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: flex !important; flex-direction: column !important; }
+            .pan-inner { width: 100% !important; min-height: unset !important; transform: none !important; padding-bottom: 20px; display: flex !important; flex-direction: column !important; flex: 1; }
+            #bw-calendar, #acad-calendar { min-width: unset !important; min-height: 350px !important; }
+            #main-calendar { min-width: 233%; min-height: 800px; }
             .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
-            #main-calendar, #bw-calendar, #acad-calendar { min-width: 233%; min-height: 800px; }
-
-            .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block !important; }
-            .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; display: block !important; }
+            #bw-tab-calendar .calendar-scroll-wrapper { height: 350px !important; min-height: 350px; flex-shrink: 0; }
 
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
