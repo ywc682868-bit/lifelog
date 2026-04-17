@@ -224,20 +224,32 @@
 
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
-        .calendar-scroll-wrapper {
+        /* 修改此處，確保在手機上也能顯示內容 */
+.calendar-scroll-wrapper {
     height: auto !important;
+    min-height: 500px; /* 給予最小高度，防止 Safari 塌陷 */
     overflow: visible !important;
+    flex: 1 0 auto; /* 確保在 flex 容器中不會被壓縮 */
 }
 
-/* 2. 讓裡面的日曆容器也跟著自動長高 */
 .calendar-scroll-wrapper > div {
     height: auto !important;
+    min-height: 500px;
 }
 
-/* 3. 取消 FullCalendar 內部的滾動條，強制整個月的格子全部展開 */
 .fc .fc-scroller {
     overflow: visible !important;
     height: auto !important;
+}
+
+/* 針對行動裝置的額外修正 */
+@media (max-width: 768px) {
+    main {
+        overflow-y: auto !important; /* 讓手機版改用網頁外層滾動 */
+    }
+    .calendar-scroll-wrapper {
+        min-width: 100%; /* 手機版不強制超寬，避免橫向滾動 */
+    }
 }
     </style>
 </head>
@@ -2226,18 +2238,17 @@ function handleSave() {
         if (currentCategory === 'Travel') {
             isAllDay = true;
             title = main;
-            startStr = date;
+            startStr = date; // YYYY-MM-DD
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                // 直接拆解字串計算，完全避開 Safari 的時區 Bug
-                let parts = ed.split('-');
-                let endObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                // 強制採用字串解析，解決跨日方塊斷掉的問題
+                let [y, m, d] = ed.split('-').map(Number);
+                let endObj = new Date(y, m - 1, d);
                 endObj.setDate(endObj.getDate() + 1);
-                
-                let ey = endObj.getFullYear();
-                let em = String(endObj.getMonth() + 1).padStart(2, '0');
-                let edd = String(endObj.getDate()).padStart(2, '0');
-                endStr = `${ey}-${em}-${edd}`;
+                let ny = endObj.getFullYear();
+                let nm = String(endObj.getMonth() + 1).padStart(2, '0');
+                let nd = String(endObj.getDate()).padStart(2, '0');
+                endStr = `${ny}-${nm}-${nd}`; 
             }
         } else if (currentCategory === 'Tutor') {
             whVal = document.getElementById('workHours').value;
@@ -2249,29 +2260,15 @@ function handleSave() {
         }
     } else {
         const allBooks = loadBooks();
-        let b = null;
-
-        if (lastEditedBookId) {
-            b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
-        }
-
+        let b = (lastEditedBookId) ? allBooks.find(book => String(book.id) === String(lastEditedBookId)) : null;
         if (!b) {
             const firstRow = document.querySelector('#books-container .book-row');
-            if (firstRow) {
-                b = allBooks.find(book => String(book.id) === String(firstRow.dataset.id));
-            }
+            if (firstRow) b = allBooks.find(book => String(book.id) === String(firstRow.dataset.id));
         }
-
-        if (!b || (!b.title && b.currentPage === 0 && !b.cover)) {
-            closeUnifiedModal();
-            return;
-        }
-
+        if (!b || (!b.title && b.currentPage === 0 && !b.cover)) { closeUnifiedModal(); return; }
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
         bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
-        startStr = b.logDate || today(); 
-        isAllDay = true;
-        activeBookId = b.id; 
+        startStr = b.logDate || today(); isAllDay = true; activeBookId = b.id; 
     }
 
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -2286,7 +2283,10 @@ function handleSave() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
-    
+    refreshAllUI(); // 強制觸發全局刷新
+    closeUnifiedModal();
+    if (currentCategory === 'Tutor') renderTransactions();
+}
     if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
     if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
     if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
