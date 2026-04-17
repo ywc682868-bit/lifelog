@@ -256,6 +256,39 @@
             overflow: visible !important;
             height: auto !important;
         }
+        /* --- 全域排版與高度鎖定強制解除 --- */
+
+/* 1. 確保 HTML 與 Body 根層級允許垂直滾動，並防止橫向位移 */
+html, body {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 2. 強制解除 Tailwind 佈局最外層容器的鎖定 (覆蓋 h-screen 與 overflow-hidden) */
+body > div {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+}
+
+/* 3. 解除主內容區塊 (main) 的高度限制，允許其根據內部資料量自然向下延展 */
+main {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 4. 修復待讀清單與各分頁切換時的高度塌陷問題 */
+/* 給予容器明確的最小高度，防止內部元件因 Flexbox 擠壓而消失 */
+.tab-content, [id$="-wrapper"], [id$="-container"] {
+    height: auto !important;
+    min-height: 500px !important;
+    overflow: visible !important;
+}
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
