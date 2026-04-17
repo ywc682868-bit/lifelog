@@ -817,7 +817,7 @@ function refreshAllUI() {
     renderLitGrid(); renderPubTable(); renderWallet(); renderTransactions();
 }
 
-function forceSyncPull(silent = false) {
+function forceSyncPull(silent = false, retryCount = 0) {
     if (!silent) setCloudStatus('pulling');
     db.ref(DB_NODE).once('value').then((snapshot) => {
         const data = snapshot.val();
@@ -827,16 +827,24 @@ function forceSyncPull(silent = false) {
             setCloudStatus('updated');
             setTimeout(() => setCloudStatus('ready'), 2000);
         }
-    }).catch(() => {
-        if (!silent) setCloudStatus('error');
+    }).catch((err) => {
+        console.warn('Sync 失敗 (嘗試 ' + (retryCount + 1) + '):', err);
+        if (retryCount < 2) {
+            setTimeout(() => forceSyncPull(silent, retryCount + 1), 2000);
+        } else {
+            if (!silent) {
+                setCloudStatus('error');
+                setTimeout(() => setCloudStatus('ready'), 3000);
+            }
+            refreshAllUI();
+        }
     });
 }
 
-// ── 自動重新同步（修復：網路恢復 + 切回頁面時自動拉取）───────────
+// ── 切回頁面靜默拉取，不顯示錯誤；網路恢復才顯示
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') forceSyncPull(true);
 });
-// ★ 新增：網路重連時自動同步
 window.addEventListener('online', () => forceSyncPull(false));
 
 // ── 初始化 ────────────────────────────────────────────────────
