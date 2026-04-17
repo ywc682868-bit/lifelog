@@ -198,19 +198,20 @@
         @media (max-width: 768px) {
             main { padding-top: 4rem !important; }
             .category-grid { grid-template-columns: repeat(3, 1fr); }
-            .modal-fixed-card { height: 90vh !important; max-height: 700px !important; }
+            .modal-fixed-card { height: 90% !important; max-height: 700px !important; }
             
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc-header-toolbar { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 0 4px !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
             .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
+            /* 修正手機版日曆與主區塊的寬高，避免縮放造成的白畫面崩潰 */
             #main-calendar, #bw-calendar, #acad-calendar { min-width: 800px; min-height: 600px; }
 
             .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
             .pan-inner { width: 100%; min-height: 100%; padding-bottom: 20px; }
 
-            .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
+            .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; flex-shrink: 0; }
             .bw-folder-tab.active { height: 36px !important; }
             .bw-tab-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 5px; }
         }
@@ -679,7 +680,7 @@ let lastEditedBookId = null;
 let currentBudgetMonth = new Date().getMonth();
 let currentBudgetYear = new Date().getFullYear();
 
-// ======= 雲端同步邏輯 =======
+// ======= 核心修正：防護 JSON 壞檔與同步機制 =======
 
 function syncToCloud() {
     const data = {
@@ -725,13 +726,16 @@ function listenToCloud() {
             clearTimeout(fbTimeout); 
             const data = snapshot.val();
             if (data) {
-                localStorage.setItem(STORAGE_KEY, data.events || '[]');
-                localStorage.setItem(BOOKS_KEY, data.books || '[]');
-                localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-                localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-                localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-                localStorage.setItem(TRX_KEY, data.trx || '[]');
-                localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
+                // 安全防護機制：如果 Firebase 把 JSON 字串變成了物件，強制將它轉換回字串，防堵 [object Object] 破壞本地資料庫
+                const safeStringify = (val, fallback) => (typeof val === 'string') ? val : JSON.stringify(val || fallback);
+
+                localStorage.setItem(STORAGE_KEY, safeStringify(data.events, []));
+                localStorage.setItem(BOOKS_KEY, safeStringify(data.books, []));
+                localStorage.setItem(ACAD_LIT_KEY, safeStringify(data.lit, []));
+                localStorage.setItem(ACAD_PUB_KEY, safeStringify(data.pub, []));
+                localStorage.setItem(WALLET_KEY, safeStringify(data.wallet, []));
+                localStorage.setItem(TRX_KEY, safeStringify(data.trx, []));
+                localStorage.setItem(SETTINGS_KEY, safeStringify(data.settings, {}));
                 
                 if (!isDataLoaded) {
                     isDataLoaded = true;
@@ -766,27 +770,31 @@ function listenToCloud() {
 }
 
 function refreshAllUI() {
-    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    if (mainCalendar) {
-        mainCalendar.removeAllEvents();
-        mainCalendar.addEventSource(storage);
+    try {
+        const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (mainCalendar) {
+            mainCalendar.removeAllEvents();
+            mainCalendar.addEventSource(storage);
+        }
+        if (bwCalendar) {
+            bwCalendar.removeAllEvents();
+            bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading));
+        }
+        if (acadCalendar) {
+            acadCalendar.removeAllEvents();
+            acadCalendar.addEventSource(storage);
+        }
+        renderBooks();
+        renderMonthlyStats();
+        renderToRead();
+        renderStatsTable();
+        renderLitGrid();
+        renderPubTable();
+        renderWallet();
+        renderTransactions();
+    } catch (e) {
+        console.error("畫面刷新失敗 (可能資料格式異常):", e);
     }
-    if (bwCalendar) {
-        bwCalendar.removeAllEvents();
-        bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading));
-    }
-    if (acadCalendar) {
-        acadCalendar.removeAllEvents();
-        acadCalendar.addEventSource(storage);
-    }
-    renderBooks();
-    renderMonthlyStats();
-    renderToRead();
-    renderStatsTable();
-    renderLitGrid();
-    renderPubTable();
-    renderWallet();
-    renderTransactions();
 }
 
 // ===========================
@@ -994,7 +1002,15 @@ function initCalendars() {
 }
 
 // ── BOOKWORM LOGIC (Reading & ToRead) ──────────────────────────────
-function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
+function loadBooks() { 
+    try {
+        let val = localStorage.getItem(BOOKS_KEY) || '[]';
+        return typeof val === 'object' ? val : JSON.parse(val); 
+    } catch(e) {
+        console.error("書籍讀取異常", e);
+        return [];
+    }
+}
 
 function saveBooks(b) { 
     localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); 
@@ -2193,7 +2209,10 @@ function handleSave() {
     const date = document.getElementById('inputDate').value; if (!date) return;
     const hour = document.getElementById('selectHour').value;
     const min = document.getElementById('selectMinute').value;
+    
+    // 將變數宣告提至最外層，徹底解決 ReferenceError 致命當機
     let title, bgColor, startStr, endStr, priority = 1, isReading = false, cover = null, isAllDay = false, notes = '', whVal = '', activeBookId = null;
+    let b = null; 
 
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
@@ -2221,7 +2240,6 @@ function handleSave() {
         }
     } else {
         const allBooks = loadBooks();
-        let b = null;
 
         if (lastEditedBookId) {
             b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
