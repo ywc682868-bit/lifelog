@@ -2159,7 +2159,7 @@ function handleDelete() {
     
     closeUnifiedModal();
     renderStatsTable();
-    renderTutorIncome(); 
+    renderTransactions(); // <--- 改成這個，強制重新計算所有預算與圓餅圖
 }
 
 function handleSave() {
@@ -2246,7 +2246,7 @@ function handleSave() {
     if (isReading) {
         renderStatsTable(); 
     } else if (currentCategory === 'Tutor') {
-        renderTutorIncome(); 
+        renderTransactions(); // <--- 改成這個
     }
 }
 </script>
