@@ -187,30 +187,31 @@
             transition: background 0.3s;
         }
 
-        /* Responsive Mobile Specific CSS */
-        .calendar-scroll-wrapper { overflow: hidden; width: 100%; height: 100%; }
+        /* Responsive Mobile Specific CSS (已嚴格還原，保障原本所有版面正常) */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         @media (max-width: 768px) {
             main { padding-top: 4rem !important; }
             .category-grid { grid-template-columns: repeat(3, 1fr); }
-            .modal-fixed-card { height: auto !important; max-height: 90vh !important; overflow-y: auto; }
+            .modal-fixed-card { height: 90vh !important; max-height: 700px !important; }
             
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc-header-toolbar { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 0 4px !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
-            /* 行事曆強制寬高以防在彈性佈局下消失 */
-            .calendar-scroll-wrapper { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; width: 100%; min-height: 550px; }
-            #main-calendar, #bw-calendar, #acad-calendar { min-width: 800px !important; height: 550px !important; }
+            .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
+            #main-calendar, #bw-calendar, #acad-calendar { min-width: 233%; min-height: 800px; }
 
             .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block !important; }
             .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; display: block !important; }
 
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
-            .bw-tab-container { overflow-x: auto; overflow-y: hidden; white-space: nowrap; flex-wrap: nowrap; }
+            .bw-tab-container { overflow-x: visible; }
+            
+            /* 針對您的新需求，強制手機版 Wallet 直式一列一格 */
+            #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
     </style>
 </head>
@@ -226,12 +227,12 @@
     <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
         <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
         
-        <button onclick="forceSyncPull()" class="mb-8 mt-4 md:mt-0 text-left group">
+        <button onclick="showSection('main'); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
                 <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
             </div>
-            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400 transition-opacity">
+            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400">
                 <i class="fa-solid fa-cloud"></i> <span>Ready</span>
             </div>
         </button>
@@ -248,8 +249,8 @@
         <div class="p-4 h-full flex flex-col">
             
             <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
-                    <div id="main-calendar"></div>
+                <div class="calendar-scroll-wrapper flex-1 w-full h-full min-h-0">
+                    <div id="main-calendar" class="w-full h-full"></div>
                 </div>
             </section>
 
@@ -264,7 +265,7 @@
                         
                         <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
                             <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
-                                <div id="bw-calendar"></div>
+                                <div id="bw-calendar" class="w-full h-full"></div>
                             </div>
                             <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
                                 <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
@@ -281,7 +282,7 @@
                         </div>
 
                         <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0">
-                            <div class="overflow-x-auto shadow-sm rounded-xl w-full">
+                            <div class="overflow-x-auto shadow-sm rounded-xl">
                                 <table class="stats-table min-w-full">
                                     <tbody id="stats-table-body">
                                         </tbody>
@@ -303,7 +304,7 @@
                         
                         <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
                             <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
-                                <div id="acad-calendar"></div>
+                                <div id="acad-calendar" class="w-full h-full"></div>
                             </div>
                         </div>
 
@@ -758,42 +759,6 @@ function refreshAllUI() {
     renderWallet();
     renderTransactions();
 }
-
-// 支援手動強制更新機制
-function forceSyncPull(silent = false) {
-    const statusEl = document.getElementById('cloud-status');
-    if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Syncing...</span>';
-    
-    db.ref('user_data').once('value').then((snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            localStorage.setItem(STORAGE_KEY, data.events || '[]');
-            localStorage.setItem(BOOKS_KEY, data.books || '[]');
-            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-            localStorage.setItem(TRX_KEY, data.trx || '[]');
-            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
-            refreshAllUI();
-            
-            if (!silent && statusEl) {
-                statusEl.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> <span class="text-green-500">Updated</span>';
-                setTimeout(() => {
-                    statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
-                }, 2000);
-            }
-        }
-    }).catch(e => {
-        if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> <span class="text-red-500">Fail</span>';
-    });
-}
-
-// 手機喚醒/回到頁面時自動觸發更新
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        forceSyncPull(true);
-    }
-});
 
 // ===========================
 
