@@ -770,22 +770,41 @@ function applyCloudData(data) {
     if (data.settings !== undefined) localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
 }
 
+function initUI() {
+    if (isDataLoaded) return;
+    isDataLoaded = true;
+    initCalendars();
+    renderMonthlyStats();
+    initWallet();
+    renderTransactions();
+}
+
 function listenToCloud() {
-    db.ref(DB_NODE).on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            // 有雲端資料才覆蓋本機
-            applyCloudData(data);
-        }
+    // ★ 保護：3秒內 Firebase 沒回應，直接用 localStorage 資料初始化畫面
+    const fallbackTimer = setTimeout(() => {
         if (!isDataLoaded) {
-            isDataLoaded = true;
-            initCalendars();
-            renderMonthlyStats();
-            initWallet();
-            renderTransactions();
+            console.warn('Firebase 連線逾時，使用本機資料載入');
+            setCloudStatus('error');
+            initUI();
+        }
+    }, 3000);
+
+    db.ref(DB_NODE).on('value', (snapshot) => {
+        clearTimeout(fallbackTimer);
+        const data = snapshot.val();
+        if (data) applyCloudData(data);
+        if (!isDataLoaded) {
+            initUI();
+            setCloudStatus('synced');
+            setTimeout(() => setCloudStatus('ready'), 2000);
         } else {
             refreshAllUI();
         }
+    }, (error) => {
+        clearTimeout(fallbackTimer);
+        console.error('Firebase 錯誤:', error);
+        setCloudStatus('error');
+        initUI();
     });
 }
 
