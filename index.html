@@ -500,9 +500,9 @@
 </div>
 
 <!-- Unified Modal -->
-<div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
-    <div class="modal-fixed-card">
-        <button onclick="closeUnifiedModal()" class="absolute top-5 right-6 z-50 text-gray-300 hover:text-gray-500 transition-colors" style="position:absolute;top:20px;right:24px;z-index:50;"><i class="fa-solid fa-times"></i></button>
+<div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4" onclick="if(event.target===this)closeUnifiedModal()">
+    <div class="modal-fixed-card" style="position:relative;">
+        <button onclick="closeUnifiedModal()" style="position:fixed; z-index:10001; background:white; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15); border:none; cursor:pointer; color:#999;" id="unifiedModalCloseBtn"><i class="fa-solid fa-times text-sm"></i></button>
         <div class="tab-inner-row">
             <button onclick="switchType('schedule')" id="tab-schedule" class="sticker-tab active"><i class="fa-solid fa-calendar-days"></i></button>
             <button onclick="switchType('reading')" id="tab-reading" class="sticker-tab"><i class="fa-solid fa-book"></i></button>
@@ -1681,6 +1681,16 @@ function deleteTrx() {
 // ── UNIFIED MODAL ─────────────────────────────────────────────
 function openUnifiedModal(ev = null, clickedDateStr = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
+    // 定位關閉按鈕到 modal 卡片右上角
+    setTimeout(() => {
+        const card = document.querySelector('.modal-fixed-card');
+        const btn  = document.getElementById('unifiedModalCloseBtn');
+        if (card && btn) {
+            const rect = card.getBoundingClientRect();
+            btn.style.top  = (rect.top  + 12) + 'px';
+            btn.style.left = (rect.right - 44) + 'px';
+        }
+    }, 10);
     const deleteBtn = document.getElementById('deleteBtn');
     if (ev && ev.id) {
         editingId = String(ev.id); deleteBtn.classList.remove('hidden');
