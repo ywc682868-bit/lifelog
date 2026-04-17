@@ -272,7 +272,7 @@
                         </div>
                         
                         <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
+                            <div class="calendar-scroll-wrapper shrink-0 w-full" style="height: 500px;">
                                 <div id="bw-calendar" class="w-full h-full"></div>
                             </div>
                             <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
@@ -889,14 +889,13 @@ function switchBwTab(tab) {
     activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
     if (tab === 'calendar') {
         setTimeout(() => {
-            if (bwCalendar) {
-                bwCalendar.destroy();
-                bwCalendar = null;
-            }
+            if (bwCalendar) { bwCalendar.destroy(); bwCalendar = null; }
             const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             const el = document.getElementById('bw-calendar');
-            const calendarOptions = {
-                initialView: 'dayGridMonth', locale: 'en', height: '100%',
+            const isMobile = window.innerWidth <= 768;
+            const calOpts = {
+                initialView: 'dayGridMonth', locale: 'en',
+                height: isMobile ? 500 : '100%',
                 headerToolbar: { left: 'today', center: 'title', right: 'prev,next' },
                 titleFormat: { month: 'long' },
                 eventOrder: 'priority,start',
@@ -904,7 +903,7 @@ function switchBwTab(tab) {
                 eventContent: mainCalendar ? mainCalendar.getOption('eventContent') : undefined,
                 eventClick: (info) => openUnifiedModal(info.event)
             };
-            bwCalendar = new FullCalendar.Calendar(el, calendarOptions);
+            bwCalendar = new FullCalendar.Calendar(el, calOpts);
             bwCalendar.render();
             renderMonthlyStats();
         }, 200);
@@ -997,13 +996,16 @@ function initCalendars() {
         },
         eventClick: (info) => openUnifiedModal(info.event)
     };
-    mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
+    const isMobile = window.innerWidth <= 768;
+    const mainOpts = { ...calendarOptions, height: isMobile ? (window.innerHeight - 120) : '100%' };
+    mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), mainOpts);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
     const bwOptions = { ...calendarOptions, events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading) };
     bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), bwOptions);
-    mainCalendar.render();
-    bwCalendar.render();
-    acadCalendar.render();
+    setTimeout(() => {
+        mainCalendar.render();
+        acadCalendar.render();
+    }, 100);
 }
 
 // ── BOOKS ─────────────────────────────────────────────────────
