@@ -720,7 +720,8 @@ function syncToCloud() {
     const statusEl = document.getElementById('cloud-status');
     if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Saving...</span>';
     
-    db.ref('user_data').set(data).then(() => {
+    // 👇 這裡修改為 ashley_private_db_2026
+    db.ref('ashley_private_db_2026').set(data).then(() => {
         if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced</span>';
         setTimeout(() => {
             if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
@@ -732,7 +733,8 @@ function syncToCloud() {
 }
 
 function listenToCloud() {
-    db.ref('user_data').on('value', (snapshot) => {
+    // 👇 這裡修改為 ashley_private_db_2026
+    db.ref('ashley_private_db_2026').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             localStorage.setItem(STORAGE_KEY, data.events || '[]');
@@ -760,7 +762,6 @@ function listenToCloud() {
             renderTransactions();
         }
     }, (error) => {
-        // 新增錯誤回呼：當 Firebase 讀取失敗（如權限不足或無網路）時，強制以本地資料初始化 UI
         console.error("Firebase 連線或讀取失敗: ", error);
         if (!isDataLoaded) {
             isDataLoaded = true;
