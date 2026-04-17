@@ -225,17 +225,20 @@
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
         .calendar-scroll-wrapper {
-            overflow-y: auto !important;
-        }
+    height: auto !important;
+    overflow: visible !important;
+}
 
-        .calendar-scroll-wrapper > div {
-            height: auto !important;
-            min-height: 100%;
-        }
+/* 2. 讓裡面的日曆容器也跟著自動長高 */
+.calendar-scroll-wrapper > div {
+    height: auto !important;
+}
 
-        .fc .fc-scroller {
-            overflow-y: auto !important;
-        }
+/* 3. 取消 FullCalendar 內部的滾動條，強制整個月的格子全部展開 */
+.fc .fc-scroller {
+    overflow: visible !important;
+    height: auto !important;
+}
     </style>
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
