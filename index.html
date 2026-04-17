@@ -871,7 +871,7 @@ function showSection(id) {
         setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 150);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
-        switchBwTab('calendar');
+        setTimeout(() => switchBwTab('calendar'), 50);
     } else if (id === 'academic') {
         document.getElementById('academic-section').classList.remove('hidden');
         switchAcadTab('timeline');
@@ -887,7 +887,28 @@ function switchBwTab(tab) {
     document.querySelectorAll('#bookworm-section .bw-folder-tab').forEach((el,i) => { el.classList.remove('active'); el.style.zIndex = 3-i; });
     const activeBtn = document.getElementById(`btn-tab-${tab}`);
     activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
-    if (tab === 'calendar') { setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 150); renderMonthlyStats(); }
+    if (tab === 'calendar') {
+        setTimeout(() => {
+            if (bwCalendar) {
+                bwCalendar.destroy();
+                bwCalendar = null;
+            }
+            const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const el = document.getElementById('bw-calendar');
+            const calendarOptions = {
+                initialView: 'dayGridMonth', locale: 'en', height: '100%',
+                headerToolbar: { left: 'today', center: 'title', right: 'prev,next' },
+                titleFormat: { month: 'long' },
+                eventOrder: 'priority,start',
+                events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading),
+                eventContent: mainCalendar ? mainCalendar.getOption('eventContent') : undefined,
+                eventClick: (info) => openUnifiedModal(info.event)
+            };
+            bwCalendar = new FullCalendar.Calendar(el, calendarOptions);
+            bwCalendar.render();
+            renderMonthlyStats();
+        }, 200);
+    }
     else if (tab === 'toread') renderToRead();
     else if (tab === 'stats')  renderStatsTable();
 }
