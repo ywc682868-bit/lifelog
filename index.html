@@ -209,6 +209,9 @@
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
             .bw-tab-container { overflow-x: visible; }
+            
+            /* Wallet 載具會員手機版直排 */
+            #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; }
         }
     </style>
 </head>
@@ -618,7 +621,7 @@
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">類型</label>
                 <select id="wallet-type" class="custom-input h-[38px] text-sm mt-0 appearance-none bg-white shadow-sm border border-gray-100" onchange="toggleWalletFields()">
                     <option value="barcode">會員條碼 / 載具</option>
-                    <option value="link">行動支付 / 連結</option>
+                    <option value="link">行动支付 / 連結</option>
                 </select>
             </div>
             <div class="field-group">
@@ -1419,61 +1422,61 @@ function renderStatsTable() {
         }
 
         const tr1 = document.createElement('tr');
-        tr1.className = "hover:bg-gray-50/30 transition-colors";
+        tr1.className = "hover:bg-gray-50/50 transition-colors";
         tr1.innerHTML = `
-            <td rowspan="2" class="w-16 align-top pt-4" style="border-bottom: none;">
+            <td rowspan="2" class="w-16 align-top pt-4 border-b border-gray-100">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="2" class="align-bottom pb-1 pt-4" style="border-bottom: none;">
+            <td colspan="5" class="align-bottom pt-4 pb-2 border-none">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
-            </td>
-            <td rowspan="2" class="w-24 align-middle text-center">
-                ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1.5 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
-            </td>
-            <td rowspan="2" class="align-middle">
-                ${book.isToRead ? '-' : `
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
-                        <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">分/次</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">頁/分</span>
-                    </div>
-                </div>
-                `}
-            </td>
-            <td rowspan="2" class="relative align-middle">
-                <div class="flex items-center justify-end gap-3 pr-2">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
             </td>
         `;
 
         const tr2 = document.createElement('tr');
-        tr2.className = "hover:bg-gray-50/30 transition-colors";
+        tr2.className = "hover:bg-gray-50/50 transition-colors";
         tr2.innerHTML = `
-            <td class="align-top pt-1 pb-4">
+            <td class="align-top pb-4 border-b border-gray-100 min-w-[160px]">
                 <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
                     ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="align-top pt-1 pb-4 w-48 whitespace-nowrap min-w-[150px]">
-                <div class="text-[11px] text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
+            <td class="align-top pb-4 border-b border-gray-100 w-48 whitespace-nowrap">
+                <div class="text-xs text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar-days"></i> ${periodText}
+                </div>
+            </td>
+            <td class="align-top pb-4 border-b border-gray-100 text-center w-24">
+                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
+            </td>
+            <td class="align-top pb-4 border-b border-gray-100 whitespace-nowrap">
+                ${book.isToRead ? '-' : `
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span>
+                    </div>
+                </div>
+                `}
+            </td>
+            <td class="align-top pb-4 border-b border-gray-100 text-right pr-2 whitespace-nowrap">
+                <div class="flex items-center justify-end gap-3">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                        Analysis
+                    </button>
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
                 </div>
             </td>
         `;
