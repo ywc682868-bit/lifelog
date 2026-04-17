@@ -205,7 +205,6 @@
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
             .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
-            /* 修正手機版日曆與主區塊的寬高，避免縮放造成的白畫面崩潰 */
             #main-calendar, #bw-calendar, #acad-calendar { min-width: 800px; min-height: 600px; }
 
             .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
@@ -711,16 +710,15 @@ function syncToCloud() {
 function listenToCloud() {
     const statusEl = document.getElementById('cloud-status');
     
-    // 設定 3 秒超時保護機制：如果 Firebase 沒反應或被阻擋，就直接載入本地資料，避免畫面空白
+    // 設定 3 秒超時保護機制：如果 Firebase 沒反應或被阻擋，就直接載入本地資料，並強制刷新所有UI避免畫面空白
     const fbTimeout = setTimeout(() => {
         if (!isDataLoaded) {
             console.warn("Firebase 連線超時，使用本地端資料進行渲染");
             if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-yellow-500"></i> <span class="text-yellow-500">Local Mode</span>';
             isDataLoaded = true;
             initCalendars();
-            renderMonthlyStats();
             initWallet();
-            renderTransactions();
+            refreshAllUI(); // 確保超時後，也呼叫所有渲染函數
         }
     }, 3000);
 
@@ -741,9 +739,8 @@ function listenToCloud() {
                 if (!isDataLoaded) {
                     isDataLoaded = true;
                     initCalendars();
-                    renderMonthlyStats();
                     initWallet();
-                    renderTransactions();
+                    refreshAllUI(); // 第一次載入成功時，確保渲染所有非行事曆分頁
                 } else {
                     refreshAllUI();
                 }
@@ -751,9 +748,8 @@ function listenToCloud() {
             } else if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
-                renderMonthlyStats();
                 initWallet();
-                renderTransactions();
+                refreshAllUI(); // 如果資料庫是空的，依然要渲染空的表格
             }
         }, (error) => {
             // 當 Firebase 讀取被拒絕 (例如測試規則過期)
@@ -761,13 +757,12 @@ function listenToCloud() {
             console.error("Firebase 讀取權限錯誤或連線失敗:", error);
             if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-500"></i> <span class="text-red-500">Sync Error</span>';
             
-            // 即使發生錯誤，也強制初始化畫面，避免白畫面
+            // 即使發生錯誤，也強制初始化畫面與刷新UI，避免白畫面
             if (!isDataLoaded) {
                 isDataLoaded = true;
                 initCalendars();
-                renderMonthlyStats();
                 initWallet();
-                renderTransactions();
+                refreshAllUI();
             }
         });
     } catch(e) {
@@ -1732,7 +1727,8 @@ let editingWalletId = null;
 let tempWalletImg = null;
 
 function initWallet() {
-    if (!localStorage.getItem(WALLET_KEY)) {
+    const currentWallet = localStorage.getItem(WALLET_KEY);
+    if (!currentWallet || currentWallet === '[]') {
         const defaultWallet = [
             { id: 'w1', title: 'LINE Pay', subtitle: 'Tap to open wallet', type: 'link', linkUrl: 'line://pay/', img: null, bgColor: '#06C755', icon: 'fa-brands fa-line' },
             { id: 'w2', title: '雲端發票載具', subtitle: '/AB12C34', type: 'barcode', linkUrl: '', img: null, bgColor: '', icon: '' },
