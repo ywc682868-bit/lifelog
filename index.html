@@ -44,7 +44,20 @@
             }
         }
     </script>
-    
+    .calendar-scroll-wrapper {
+    overflow-y: auto !important;
+}
+
+/* 2. 覆蓋原本 HTML 結構中寫死的 h-full，讓日曆能根據格子內容自動向下延展 */
+.calendar-scroll-wrapper > div {
+    height: auto !important;
+    min-height: 100%;
+}
+
+/* 3. 確保 FullCalendar 主體在極端情況下也能擁有內部滾動條，避免週數被強制隱藏 */
+.fc .fc-scroller {
+    overflow-y: auto !important;
+}
     <style>
         :root { --font-en: 'Dancing Script', cursive; --font-zh: 'Klee One', sans-serif; }
         body { font-family: var(--font-zh); overflow: hidden; background-color: #F8F8F8; margin: 0; }
