@@ -226,10 +226,14 @@
         }
         /* 修改此處，確保在手機上也能顯示內容 */
 .calendar-scroll-wrapper {
+    display: block !important; /* 強制顯示 */
     height: auto !important;
-    min-height: 500px; /* 給予最小高度，防止 Safari 塌陷 */
+    min-height: 600px !important; /* 給予足夠的最小高度 */
     overflow: visible !important;
-    flex: 1 0 auto; /* 確保在 flex 容器中不會被壓縮 */
+}
+
+#main-calendar, #bw-calendar, #acad-calendar {
+    min-height: 600px !important;
 }
 
 .calendar-scroll-wrapper > div {
