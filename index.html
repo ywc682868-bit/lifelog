@@ -1418,30 +1418,47 @@ function renderStatsTable() {
             }
         }
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50/30 transition-colors border-b border-gray-100";
-        tr.innerHTML = `
-            <td class="w-16 py-3 pl-2">
+        const tr1 = document.createElement('tr');
+        tr1.className = "hover:bg-gray-50/30 transition-colors";
+        tr1.innerHTML = `
+            <td rowspan="2" class="w-16 align-top" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td class="py-3 min-w-[180px]">
-                <div class="font-bold text-morandi-dark-gray text-[14px] tracking-wide mb-1">${book.title || '未命名'}</div>
-                <div class="text-[11px] text-gray-400 font-normal flex flex-wrap items-center gap-2 leading-none">
+            <td colspan="4" class="align-bottom" style="padding-top: 16px; padding-bottom: 6px; border-bottom: none;">
+                <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
+            </td>
+            <td rowspan="2" class="relative align-middle text-right pr-2" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="flex items-center justify-end gap-3">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
+                    </button>
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        const tr2 = document.createElement('tr');
+        tr2.className = "hover:bg-gray-50/30 transition-colors";
+        tr2.innerHTML = `
+            <td class="align-top min-w-[180px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
                     ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="py-3 w-40 whitespace-nowrap">
+            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="text-[11px] text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar-days"></i> ${periodText}
                 </div>
             </td>
-            <td class="py-3 w-20 whitespace-nowrap text-center">
-                ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
+            <td class="align-top text-center w-24" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
             </td>
-            <td class="py-3 whitespace-nowrap">
+            <td class="align-top whitespace-nowrap" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 ${book.isToRead ? '-' : `
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-1">
@@ -1459,18 +1476,10 @@ function renderStatsTable() {
                 </div>
                 `}
             </td>
-            <td class="py-3 relative whitespace-nowrap pr-2 text-right">
-                <div class="flex items-center justify-end gap-2">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            </td>
         `;
-        tbody.appendChild(tr);
+
+        tbody.appendChild(tr1);
+        tbody.appendChild(tr2);
     });
 
     if (sortedBooks.length === 0) {
