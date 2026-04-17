@@ -839,7 +839,7 @@ function showSection(id) {
     
     if (id === 'main') {
         document.getElementById('main-section').classList.remove('hidden');
-        setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 50);
+        setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 300);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
         switchBwTab('calendar'); 
@@ -868,7 +868,7 @@ function switchBwTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'calendar') { 
-        setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 50); 
+        setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 300); 
         renderMonthlyStats(); 
     } else if (tab === 'toread') { 
         renderToRead(); 
@@ -893,7 +893,7 @@ function switchAcadTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'timeline') { 
-        setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 50); 
+        setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 300); 
     } else if (tab === 'lit') { 
         renderLitGrid(); 
     } else if (tab === 'pub') { 
