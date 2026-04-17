@@ -2096,17 +2096,13 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
         editingId = String(ev.id); 
         deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 點擊既有的閱讀紀錄，把書籍卡片的日期改成事件日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
-            
-            // 針對舊紀錄缺乏 bookId 的相容處理，透過書名反向尋找
             if (!actBook && ev.title) {
                 const titleMatch = ev.title.match(/^(.*?)\s*\(p\.\d+\/\d+\)$/);
                 const rawTitle = titleMatch ? titleMatch[1].trim() : ev.title.trim();
                 actBook = currentBooks.find(b => b.title === rawTitle);
             }
-
             if (actBook) {
                 actBook.logDate = ev.startStr.split('T')[0];
                 lastEditedBookId = actBook.id;
@@ -2130,10 +2126,15 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
             const cat = ev.extendedProps.category || 'Personal';
             setCategory(cat);
             
-            if (cat === 'Travel' && ev.end) {
-                let d = new Date(ev.end);
-                d.setDate(d.getDate() - 1);
-                document.getElementById('inputEndDate').value = d.toISOString().split('T')[0];
+            // 【修復】徹底避開時區問題的結束日期解析
+            if (cat === 'Travel' && ev.endStr) {
+                let [y, m, d] = ev.endStr.split('T')[0].split('-').map(Number);
+                let endObj = new Date(y, m - 1, d);
+                endObj.setDate(endObj.getDate() - 1);
+                let ey = endObj.getFullYear();
+                let em = String(endObj.getMonth() + 1).padStart(2, '0');
+                let edd = String(endObj.getDate()).padStart(2, '0');
+                document.getElementById('inputEndDate').value = `${ey}-${em}-${edd}`;
             }
             
             if (cat === 'Tutor') {
@@ -2141,7 +2142,6 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
             }
         }
     } else {
-        // 新增紀錄
         editingId = null;
         deleteBtn.classList.add('hidden');
         document.getElementById('inputMain').value = '';
@@ -2151,7 +2151,6 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
         document.getElementById('inputDate').value = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
         
-        // 把所有正在閱讀的書的預設日期變成點選的那一天
         let currentBooks = loadBooks();
         currentBooks.forEach(b => {
             if (!b.done && !b.isToRead) {
@@ -2241,7 +2240,7 @@ function handleSave() {
             startStr = date;
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                // 直接拆解字串計算，完全避開 Safari 的時區 Bug，修復跨日失敗
+                // 直接拆解字串計算，完全避開 Safari 的時區 Bug
                 let [y, m, d] = ed.split('-').map(Number);
                 let endObj = new Date(y, m - 1, d);
                 endObj.setDate(endObj.getDate() + 1);
@@ -2284,11 +2283,7 @@ function handleSave() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
-    
-    if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
-    if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
-    if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
-
+    refreshAllUI(); // <--- 強制畫面重繪
     closeUnifiedModal();
     
     if (isReading) {
