@@ -1459,36 +1459,34 @@ function renderStatsTable() {
         }
 
         const tr1 = document.createElement('tr');
-        tr1.className = "hover:bg-gray-50/50 transition-colors";
         tr1.innerHTML = `
-            <td rowspan="2" class="w-16 align-top pt-4 border-b border-gray-100">
+            <td rowspan="2" class="w-16 align-top" style="padding-top: 16px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important;">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="5" class="align-bottom pt-4 pb-2 border-none">
+            <td colspan="5" class="align-bottom" style="padding-top: 16px !important; padding-bottom: 2px !important; border-bottom: none !important;">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
             </td>
         `;
 
         const tr2 = document.createElement('tr');
-        tr2.className = "hover:bg-gray-50/50 transition-colors";
         tr2.innerHTML = `
-            <td class="align-top pb-4 border-b border-gray-100 min-w-[160px]">
+            <td class="align-top min-w-[180px]" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
                     ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="align-top pb-4 border-b border-gray-100 w-48 whitespace-nowrap">
+            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 <div class="text-xs text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar-days"></i> ${periodText}
                 </div>
             </td>
-            <td class="align-top pb-4 border-b border-gray-100 text-center w-24">
+            <td class="align-top text-center w-24" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                  ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
             </td>
-            <td class="align-top pb-4 border-b border-gray-100 whitespace-nowrap">
+            <td class="align-top whitespace-nowrap" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 ${book.isToRead ? '-' : `
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-1">
@@ -1506,7 +1504,7 @@ function renderStatsTable() {
                 </div>
                 `}
             </td>
-            <td class="align-top pb-4 border-b border-gray-100 text-right pr-2 whitespace-nowrap">
+            <td class="align-top text-right pr-2 whitespace-nowrap" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 <div class="flex items-center justify-end gap-3">
                     <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
                         Analysis
