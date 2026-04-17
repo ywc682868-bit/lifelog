@@ -231,13 +231,8 @@
 
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
-        /* ==================================================== */
-        /* 針對 Safari iOS 的終極強制高度 (解決畫面塌陷為 0 的 Bug) */
-        /* ==================================================== */
-        
-        .calendar-scroll-wrapper {
+            .calendar-scroll-wrapper {
             display: block !important;
-            height: 650px !important;  /* 關鍵：給予絕對高度，不使用 auto 或 min-height */
             width: 100% !important;
             overflow-x: auto !important;
             overflow-y: hidden !important;
@@ -246,8 +241,15 @@
 
         #main-calendar, #bw-calendar, #acad-calendar {
             display: block !important;
-            height: 650px !important; /* 關鍵：強制行事曆本體高度 */
             min-width: 700px !important; /* 確保行事曆夠寬，在手機上可以橫向滑動檢視 */
+        }
+
+        /* 關鍵核心：強制 FullCalendar 內部繪製引擎的視圖高度 */
+        .fc .fc-view-harness, 
+        .fc .fc-view-harness-auto {
+            height: 650px !important;
+            min-height: 650px !important;
+            flex-grow: 1 !important;
         }
     </style>
 </head>
@@ -853,8 +855,7 @@ function showSection(id) {
     
     if (id === 'main') {
         document.getElementById('main-section').classList.remove('hidden');
-        // 延遲改為 300 毫秒
-        setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 300);
+        setTimeout(() => { if (mainCalendar) { mainCalendar.render(); mainCalendar.updateSize(); } }, 300);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
         switchBwTab('calendar'); 
@@ -883,8 +884,7 @@ function switchBwTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'calendar') { 
-        // 延遲改為 300 毫秒
-        setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 300); 
+        setTimeout(() => { if (bwCalendar) { bwCalendar.render(); bwCalendar.updateSize(); } }, 300); 
         renderMonthlyStats(); 
     } else if (tab === 'toread') { 
         renderToRead(); 
@@ -909,8 +909,7 @@ function switchAcadTab(tab) {
     activeBtn.style.zIndex = '10';
 
     if (tab === 'timeline') { 
-        // 延遲改為 300 毫秒
-        setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 300); 
+        setTimeout(() => { if (acadCalendar) { acadCalendar.render(); acadCalendar.updateSize(); } }, 300); 
     } else if (tab === 'lit') { 
         renderLitGrid(); 
     } else if (tab === 'pub') { 
@@ -963,9 +962,14 @@ const TAIWAN_SPECIAL_DAYS = [
 
 function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    
+    // 取得當前螢幕寬度，若為手機尺寸則強制給予數值高度 650，否則維持 auto
+    const calHeight = window.innerWidth < 768 ? 650 : 'auto';
+
     const calendarOptions = {
-        initialView: 'dayGridMonth', locale: 'en', height: 'auto',
-        fixedWeekCount: false, // <--- 新增此行參數，取消強制 6 週顯示
+        initialView: 'dayGridMonth', locale: 'en', 
+        height: calHeight, // <--- 直接從 JS 底層注入絕對高度
+        fixedWeekCount: false,
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
@@ -1010,22 +1014,21 @@ function initCalendars() {
         eventClick: (info) => openUnifiedModal(info.event)
     };
 
-    mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
-    acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
-    
-    // Bookworm Calendar 只顯示閱讀紀錄
-    const bwOptions = Object.assign({}, calendarOptions, {
-        events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
-    });
-    bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), bwOptions);
-    
-    mainCalendar.render();
-    bwCalendar.render();
-    acadCalendar.render();
-    
-    setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-    }, 500);
+    if (document.getElementById('main-calendar')) {
+        mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
+        mainCalendar.render();
+    }
+    if (document.getElementById('acad-calendar')) {
+        acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
+        acadCalendar.render();
+    }
+    if (document.getElementById('bw-calendar')) {
+        const bwOptions = Object.assign({}, calendarOptions, {
+            events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
+        });
+        bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), bwOptions);
+        bwCalendar.render();
+    }
 }
     
 // ── BOOKWORM LOGIC (Reading & ToRead) ──────────────────────────────
