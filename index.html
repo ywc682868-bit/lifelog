@@ -47,15 +47,17 @@
     
     <style>
         :root { --font-en: 'Dancing Script', cursive; --font-zh: 'Klee One', sans-serif; }
+        
+        /* 1. 讓整個網頁自然滾動，不強制鎖死高度 */
         body { 
-    font-family: var(--font-zh); 
-    overflow-y: auto !important; /* 允許整個網頁垂直滾動 */
-    overflow-x: hidden; /* 防止左右橫向亂跑 */
-    background-color: #F8F8F8; 
-    margin: 0; 
-}
+            font-family: var(--font-zh); 
+            background-color: #F8F8F8; 
+            margin: 0;
+            overflow-x: hidden; 
+        }
         .font-cursive { font-family: var(--font-en); }
 
+        /* FullCalendar 樣式設定 */
         .fc { font-family: var(--font-zh) !important; border: none !important; }
         .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #EEEEEE !important; }
         .fc-scrollgrid { border: none !important; }
@@ -74,18 +76,24 @@
         .fc-day-sat, .fc-day-sun { background-color: rgba(232,209,209,0.08) !important; }
         th.fc-day-sat a, th.fc-day-sun a { color: #D19A9A !important; }
         .fc .fc-day-today { background-color: #F2F2F2 !important; border-radius: 15px !important; }
-        /* 強制日曆單元格為 1:1 正方形 */
-        .fc-theme-standard td.fc-daygrid-day {
-    aspect-ratio: auto !important; 
-}
 
-.fc-daygrid-day-frame {
-    min-height: 140px !important; 
-    /* 絕對不要加 overflow 屬性，讓行事曆自然往右延伸與向下長高 */
-}
+        /* 2. 行事曆高度釋放，讓它隨意向下長高 */
+        .fc-theme-standard td.fc-daygrid-day { aspect-ratio: auto !important; }
+        .fc-daygrid-day-frame { min-height: 140px !important; }
+        .fc .fc-scroller { overflow: visible !important; height: auto !important; }
+        
         .fc-event { border: none !important; background: transparent !important; margin-bottom: 1px !important; }
         .fc-h-event { border-radius: 4px !important; }
 
+        /* 3. 滾動容器設定：允許在手機上橫滑日曆 */
+        .calendar-scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 共通 UI 樣式 */
         .modal-fixed-card { background-color: #FFFFFF !important; border-radius: 40px !important; width: 100%; max-width: 460px; height: 680px !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .tab-inner-row { display: flex; padding-left: 32px; margin-top: 20px; height: 32px; align-items: flex-end; flex-shrink: 0; }
         .sticker-tab { transition: all 0.2s; font-size: 1.1rem; border: none; outline: none; border-top-left-radius: 12px !important; border-top-right-radius: 12px !important; min-width: 75px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: -12px; }
@@ -138,7 +146,7 @@
         .meta-chip.pct { background: #D5E0D5; color: #3A6B3A; font-size: 12px; }
 
         /* Shared Folder Tabs styles */
-        .bw-tab-container { display: flex; align-items: flex-end; margin-bottom: 12px; padding-left: 10px; }
+        .bw-tab-container { display: flex; align-items: flex-end; margin-bottom: 16px; padding-left: 10px; }
         .bw-folder-tab { 
             padding: 6px 20px 6px 40px; 
             min-width: 160px; 
@@ -201,15 +209,12 @@
             transition: background 0.3s;
         }
 
-        /* Responsive Mobile Specific CSS */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* 手機版專屬修正 */
         @media (max-width: 768px) {
-            main { 
-                padding-top: 4rem !important; 
-                overflow-y: auto !important; /* 讓手機版改用網頁外層滾動 */
-            }
+            main { padding-top: 4rem !important; }
             .category-grid { grid-template-columns: repeat(3, 1fr); }
             .modal-fixed-card { height: 90vh !important; max-height: 700px !important; }
             
@@ -217,23 +222,8 @@
             .fc-header-toolbar { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 0 4px !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
-            .calendar-scroll-wrapper {
-                display: block !important;
-                width: 100% !important;
-                height: auto !important;
-                min-height: 600px !important;
-                overflow-x: auto !important;
-                overflow-y: visible !important;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            #main-calendar, #bw-calendar, #acad-calendar {
-                min-height: 600px !important;
-                min-width: 700px !important;
-            }
-            
-            .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block !important; }
-            .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; display: block !important; }
+            /* 確保行事曆在手機上不會擠成一團，允許橫向滑動 */
+            #main-calendar, #bw-calendar, #acad-calendar { min-width: 700px; }
 
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
@@ -241,57 +231,9 @@
 
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100%; }
         }
-        
-        /* 以下為全域設定 (不分手機或電腦) */
-        #main-calendar, #bw-calendar, #acad-calendar {
-            min-height: 600px !important;
-        }
-
-        .calendar-scroll-wrapper > div {
-            height: auto !important;
-            min-height: 500px;
-        }
-
-        .fc .fc-scroller {
-            overflow: visible !important;
-            height: auto !important;
-        }
-        /* --- 全域排版與高度鎖定強制解除 --- */
-
-/* 1. 確保 HTML 與 Body 根層級允許垂直滾動，並防止橫向位移 */
-html, body {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-
-/* 2. 強制解除 Tailwind 佈局最外層容器的鎖定 (覆蓋 h-screen 與 overflow-hidden) */
-body > div {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow-y: auto !important;
-}
-
-/* 3. 解除主內容區塊 (main) 的高度限制，允許其根據內部資料量自然向下延展 */
-main {
-    flex: 1 1 auto !important;
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-
-/* 4. 修復待讀清單與各分頁切換時的高度塌陷問題 */
-/* 給予容器明確的最小高度，防止內部元件因 Flexbox 擠壓而消失 */
-.tab-content, [id$="-wrapper"], [id$="-container"] {
-    height: auto !important;
-    min-height: 500px !important;
-    overflow: visible !important;
-}
     </style>
 </head>
-<body class="bg-morandi-white text-gray-700 antialiased">
+<body class="bg-morandi-white text-gray-700 antialiased overflow-x-hidden">
 
 <button onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-40 bg-white/80 backdrop-blur p-2 rounded-lg shadow-sm text-morandi-dark-gray border border-gray-100">
     <i class="fa-solid fa-bars text-xl px-1"></i>
@@ -299,8 +241,9 @@ main {
 
 <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity"></div>
 
-<div class="flex flex-row h-screen overflow-hidden">
-    <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
+<div class="flex flex-row min-h-screen w-full">
+    
+    <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:sticky md:top-0 md:h-screen md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] md:rounded-none md:rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300 overflow-y-auto hide-scrollbar">
         <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
         
         <button onclick="showSection('main'); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
@@ -321,119 +264,106 @@ main {
         </ul>
     </nav>
 
-    <main class="flex-1 overflow-hidden relative">
-        <div class="p-4 h-full flex flex-col">
+    <main class="flex-1 relative min-w-0 w-full flex flex-col">
+        <div class="p-4 md:p-6 flex-1 flex flex-col gap-4">
             
-            <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div class="calendar-scroll-wrapper flex-1 w-full h-full min-h-0">
-                    <div id="main-calendar" class="w-full h-full"></div>
+            <section id="main-section" class="bg-morandi-gray/5 p-4 md:p-6 rounded-[20px] border border-white/30 shadow-sm flex flex-col">
+                <div class="calendar-scroll-wrapper w-full">
+                    <div id="main-calendar" class="w-full"></div>
                 </div>
             </section>
 
-            <section id="bookworm-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="pan-wrapper flex-1 relative flex flex-col min-h-0">
-                    <div class="pan-inner flex flex-col flex-1 min-h-0">
-                        <div class="bw-tab-container shrink-0 z-10 relative">
-                            <button id="btn-tab-calendar" onclick="switchBwTab('calendar')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Calendar</button>
-                            <button id="btn-tab-toread" onclick="switchBwTab('toread')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">To-Read List</button>
-                            <button id="btn-tab-stats" onclick="switchBwTab('stats')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Analysis</button>
-                        </div>
-                        
-                        <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
-                                <div id="bw-calendar" class="w-full h-full"></div>
-                            </div>
-                            <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
-                                <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
-                                <div id="monthly-stats-container" class="space-y-4"></div>
-                            </div>
-                        </div>
+            <section id="bookworm-section" class="hidden bg-morandi-gray/5 p-4 md:p-6 rounded-[20px] border border-white/30 shadow-sm flex flex-col relative">
+                <div class="bw-tab-container shrink-0 z-10 relative mb-4">
+                    <button id="btn-tab-calendar" onclick="switchBwTab('calendar')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Calendar</button>
+                    <button id="btn-tab-toread" onclick="switchBwTab('toread')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">To-Read List</button>
+                    <button id="btn-tab-stats" onclick="switchBwTab('stats')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Analysis</button>
+                </div>
+                
+                <div id="bw-tab-calendar" class="bw-tab-content flex flex-col gap-6">
+                    <div class="calendar-scroll-wrapper w-full">
+                        <div id="bw-calendar" class="w-full"></div>
+                    </div>
+                    <div class="bg-white p-5 md:p-6 rounded-[20px] shadow-sm w-full">
+                        <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
+                        <div id="monthly-stats-container" class="space-y-4"></div>
+                    </div>
+                </div>
 
-                        <div id="bw-tab-toread" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-5 rounded-[20px] shadow-sm relative">
-                            <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
-                                <i class="fa-solid fa-plus text-sm"></i>
-                            </button>
-                            <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6">
-                                </div>
-                        </div>
+                <div id="bw-tab-toread" class="bw-tab-content hidden bg-white p-5 md:p-6 rounded-[20px] shadow-sm relative">
+                    <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                    </button>
+                    <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6"></div>
+                </div>
 
-                        <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0">
-                            <div class="overflow-x-auto shadow-sm rounded-xl">
-                                <table class="stats-table min-w-full">
-                                    <tbody id="stats-table-body">
-                                        </tbody>
-                                </table>
-                            </div>
-                        </div>
+                <div id="bw-tab-stats" class="bw-tab-content hidden">
+                    <div class="overflow-x-auto shadow-sm rounded-xl bg-white">
+                        <table class="stats-table min-w-full">
+                            <tbody id="stats-table-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <section id="academic-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="pan-wrapper flex-1 relative flex flex-col min-h-0">
-                    <div class="pan-inner flex flex-col flex-1 min-h-0">
-                        <div class="bw-tab-container shrink-0 z-10 relative">
-                            <button id="btn-acad-timeline" onclick="switchAcadTab('timeline')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">PhD Timeline</button>
-                            <button id="btn-acad-lit" onclick="switchAcadTab('lit')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Literature Review</button>
-                            <button id="btn-acad-pub" onclick="switchAcadTab('pub')" class="bw-folder-tab" style="background-color: #E8D1D1; color: #3A4750; z-index: 1;">Publication Pipeline</button>
-                        </div>
-                        
-                        <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
-                            <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
-                                <div id="acad-calendar" class="w-full h-full"></div>
-                            </div>
-                        </div>
+            <section id="academic-section" class="hidden bg-morandi-gray/5 p-4 md:p-6 rounded-[20px] border border-white/30 shadow-sm flex flex-col relative">
+                <div class="bw-tab-container shrink-0 z-10 relative mb-4">
+                    <button id="btn-acad-timeline" onclick="switchAcadTab('timeline')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">PhD Timeline</button>
+                    <button id="btn-acad-lit" onclick="switchAcadTab('lit')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Literature Review</button>
+                    <button id="btn-acad-pub" onclick="switchAcadTab('pub')" class="bw-folder-tab" style="background-color: #E8D1D1; color: #3A4750; z-index: 1;">Publication Pipeline</button>
+                </div>
+                
+                <div id="acad-tab-timeline" class="acad-tab-content flex flex-col gap-4">
+                    <div class="calendar-scroll-wrapper w-full">
+                        <div id="acad-calendar" class="w-full"></div>
+                    </div>
+                </div>
 
-                        <div id="acad-tab-lit" class="acad-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-5 rounded-[20px] shadow-sm relative">
-                            <button onclick="openLitModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增文獻">
-                                <i class="fa-solid fa-plus text-sm"></i>
-                            </button>
-                            <div id="lit-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 mt-6"></div>
-                        </div>
+                <div id="acad-tab-lit" class="acad-tab-content hidden bg-white p-5 md:p-6 rounded-[20px] shadow-sm relative">
+                    <button onclick="openLitModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增文獻">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                    </button>
+                    <div id="lit-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 mt-6"></div>
+                </div>
 
-                        <div id="acad-tab-pub" class="acad-tab-content hidden flex-1 overflow-y-auto min-h-0">
-                            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="font-bold text-morandi-dark-gray">Manuscript Status Tracker</h3>
-                                    <button onclick="addSubmissionRow()" class="text-xs bg-morandi-dark-gray text-white px-4 py-2 rounded-full">Add Paper</button>
-                                </div>
-                                <div class="overflow-x-auto">
-                                    <table class="stats-table min-w-full">
-                                        <thead class="bg-gray-50 text-[11px] text-gray-400 uppercase tracking-wider">
-                                            <tr>
-                                                <th class="px-4 py-3">Paper Title</th>
-                                                <th>Target Journal / Conference</th>
-                                                <th>Status</th>
-                                                <th>Deadline / Submit Date</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="pub-table-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                <div id="acad-tab-pub" class="acad-tab-content hidden bg-white p-6 rounded-[20px] shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-morandi-dark-gray">Manuscript Status Tracker</h3>
+                        <button onclick="addSubmissionRow()" class="text-xs bg-morandi-dark-gray text-white px-4 py-2 rounded-full">Add Paper</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="stats-table min-w-full">
+                            <thead class="bg-gray-50 text-[11px] text-gray-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3">Paper Title</th>
+                                    <th>Target Journal / Conference</th>
+                                    <th>Status</th>
+                                    <th>Deadline / Submit Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pub-table-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <section id="finance-section" class="hidden flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden relative">
-                <div class="bw-tab-container shrink-0 z-10 relative">
+            <section id="finance-section" class="hidden bg-morandi-gray/5 p-4 md:p-6 rounded-[20px] border border-white/30 shadow-sm flex flex-col relative">
+                <div class="bw-tab-container shrink-0 z-10 relative mb-4">
                     <button id="btn-fin-wallet" onclick="switchFinTab('wallet')" class="bw-folder-tab active" style="background-color: #8DAAB9; color: white; z-index: 3;">Wallet</button>
                     <button id="btn-fin-budget" onclick="switchFinTab('budget')" class="bw-folder-tab" style="background-color: #7F9F9F; color: white; z-index: 2;">Budget</button>
                     <button id="btn-fin-invest" onclick="switchFinTab('invest')" class="bw-folder-tab" style="background-color: #EBC4B9; color: #3A4750; z-index: 1;">Investments</button>
                 </div>
                 
-                <div id="fin-tab-wallet" class="fin-tab-content flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm relative">
+                <div id="fin-tab-wallet" class="fin-tab-content bg-white p-6 rounded-[20px] shadow-sm relative">
                     <button onclick="openWalletEditModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增會員或支付">
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
                     
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                        </div>
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>
                 </div>
 
-                <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
+                <div id="fin-tab-budget" class="fin-tab-content hidden bg-white p-6 rounded-[20px] shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-morandi-dark-gray font-zh">Monthly Budget Plan <span id="budget-month-display" class="text-sm text-gray-500 font-mono ml-2"></span></h3>
                         <div class="flex gap-2">
@@ -486,7 +416,7 @@ main {
                     </div>
                 </div>
 
-                <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
+                <div id="fin-tab-invest" class="fin-tab-content hidden bg-white p-6 rounded-[20px] shadow-sm">
                     <h3 class="text-lg font-bold text-morandi-dark-gray mb-6 font-zh">Savings & Investments</h3>
                     <div class="space-y-6 mb-8">
                         <h4 class="font-bold text-gray-700 text-sm border-b border-gray-100 pb-2">Savings Goals</h4>
@@ -755,7 +685,6 @@ let currentBudgetMonth = new Date().getMonth();
 let currentBudgetYear = new Date().getFullYear();
 
 // ======= 雲端同步邏輯 =======
-
 function syncToCloud() {
     const data = {
         events: localStorage.getItem(STORAGE_KEY) || '[]',
@@ -770,7 +699,6 @@ function syncToCloud() {
     const statusEl = document.getElementById('cloud-status');
     if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Saving...</span>';
     
-    // 👇 這裡修改為 ashley_private_db_2026
     db.ref('ashley_private_db_2026').set(data).then(() => {
         if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced</span>';
         setTimeout(() => {
@@ -816,7 +744,6 @@ function listenToCloud() {
         }
     }, (error) => {
         console.error("Firebase 連線被阻擋: ", error);
-        // 即使失敗也要初始化日曆，否則側邊欄會點不動
         if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
@@ -826,6 +753,7 @@ function listenToCloud() {
         }
     });
 }
+
 function refreshAllUI() {
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     if (mainCalendar) {
@@ -859,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('ashley_cleanup_2026_v1', 'done');
     }
     initTimeDropdowns(); 
-    listenToCloud(); // 啟動雲端監聽並初始化
+    listenToCloud();
 });
 
 // 手機版側邊欄切換
@@ -993,7 +921,7 @@ function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const calendarOptions = {
         initialView: 'dayGridMonth', locale: 'en', height: 'auto',
-        fixedWeekCount: false, // <--- 新增此行參數，取消強制 6 週顯示
+        fixedWeekCount: false,
         headerToolbar: { left: 'today yearDisplay', center: 'title', right: 'prev,next' },
         customButtons: { yearDisplay: { text: '2026' } },
         titleFormat: { month: 'long' },
@@ -1200,11 +1128,11 @@ function toggleDone(el) {
     renderMonthlyStats(); 
     renderStatsTable();   
     
-    // 【新增修改處】如果勾選已完成，延遲 0.4 秒後自動更新畫面，讓該筆紀錄從預設清單中消失
+    // 如果勾選已完成，延遲 0.4 秒後自動更新畫面，讓該筆紀錄從預設清單中消失
     if (book.done) {
         setTimeout(() => {
             renderBooks();
-        }, 400); // 400毫秒的延遲是為了讓您能看到打勾的視覺回饋，再讓它消失
+        }, 400); 
     }
 }
 
@@ -1232,13 +1160,13 @@ function renderMonthlyStats() {
             if (bookEvents.length > 0) {
                 // 依照時間先後排序打卡紀錄
                 const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-                // 【修正處】抓取「最後一次」打卡的時間（陣列的最後一筆），作為實際結束日
+                // 抓取「最後一次」打卡的時間（陣列的最後一筆），作為實際結束日
                 if (sortedEvents[sortedEvents.length - 1].start) {
                     actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
                 }
             }
 
-            // 【修正處】決定月份歸屬的優先順序：
+            // 決定月份歸屬的優先順序：
             // 1. b.completedAt (使用者勾選「已完成」當下系統記錄的精確時間)
             // 2. actualEndDate (這本書在行事曆上的最後一次打卡日)
             // 3. b.logDate (如果都沒有，才使用卡片建立日作為防錯退路)
@@ -2170,7 +2098,6 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
             const cat = ev.extendedProps.category || 'Personal';
             setCategory(cat);
             
-            // 【修復】徹底避開時區問題的結束日期解析
             if (cat === 'Travel' && ev.endStr) {
                 let [y, m, d] = ev.endStr.split('T')[0].split('-').map(Number);
                 let endObj = new Date(y, m - 1, d);
@@ -2263,7 +2190,7 @@ function handleDelete() {
     
     closeUnifiedModal();
     renderStatsTable();
-    renderTransactions(); // <--- 改成這個，強制重新計算所有預算與圓餅圖
+    renderTransactions(); 
 }
 
 function handleSave() {
@@ -2284,7 +2211,6 @@ function handleSave() {
             startStr = date;
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                // 直接拆解字串計算，完全避開 Safari 的時區 Bug
                 let [y, m, d] = ed.split('-').map(Number);
                 let endObj = new Date(y, m - 1, d);
                 endObj.setDate(endObj.getDate() + 1);
@@ -2327,7 +2253,7 @@ function handleSave() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     syncToCloud();
-    refreshAllUI(); // <--- 強制畫面重繪
+    refreshAllUI(); 
     closeUnifiedModal();
     
     if (isReading) {
