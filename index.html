@@ -2225,19 +2225,17 @@ function handleSave() {
             startStr = date;
             const ed = document.getElementById('inputEndDate').value;
             if (ed) {
-                let d = new Date(ed);
-                d.setDate(d.getDate() + 1);
-                endStr = d.toISOString().split('T')[0];
+                // 手動解析日期，避開 Safari 時區轉換倒退一天的 Bug
+                let [y, m, d] = ed.split('-');
+                let endObj = new Date(y, m - 1, d);
+                endObj.setDate(endObj.getDate() + 1);
+                
+                let ny = endObj.getFullYear();
+                let nm = String(endObj.getMonth() + 1).padStart(2, '0');
+                let nd = String(endObj.getDate()).padStart(2, '0');
+                endStr = `${ny}-${nm}-${nd}`;
             }
-        } else if (currentCategory === 'Tutor') {
-            whVal = document.getElementById('workHours').value;
-            title = `${hour}:${min} ${main}${whVal ? ' (' + whVal + 'h)' : ''}`;
-            startStr = `${date}T${hour}:${min}:00`;
         } else {
-            title = `${hour}:${min} ${main}`;
-            startStr = `${date}T${hour}:${min}:00`;
-        }
-    } else {
         const allBooks = loadBooks();
         let b = null;
 
