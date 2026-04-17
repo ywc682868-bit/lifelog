@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ======= 您的 Firebase 真實設定 =======
         const firebaseConfig = {
             apiKey: "AIzaSyDpUQi1tIdk40h1YKiTFoAK6Y_nnoO7cIo",
             authDomain: "optimization-30a4f.firebaseapp.com",
@@ -27,7 +26,6 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        // ===================================
 
         tailwind.config = {
             theme: {
@@ -123,7 +121,6 @@
         .meta-chip { font-size: 10px; color: #888; background: #EEEEEE; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
         .meta-chip.pct { background: #D5E0D5; color: #3A6B3A; font-size: 12px; }
 
-        /* Shared Folder Tabs styles */
         .bw-tab-container { display: flex; align-items: flex-end; margin-bottom: 12px; padding-left: 10px; }
         .bw-folder-tab { 
             padding: 6px 20px 6px 40px; 
@@ -169,7 +166,6 @@
         .delete-table-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #FDE8E8; border: none; border-radius: 8px; cursor: pointer; color: #C87A7A; flex-shrink: 0; transition: all 0.2s; }
         .delete-table-btn:hover { background: #F9D8D8; color: #A64444; }
 
-        /* Finance CSS */
         .mock-barcode {
             height: 50px;
             background: repeating-linear-gradient(
@@ -187,7 +183,11 @@
             transition: background 0.3s;
         }
 
-        /* Responsive Mobile Specific CSS */
+        /* ── 同步狀態指示器 ── */
+        #cloud-status { transition: all 0.3s; }
+        .sync-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -210,7 +210,6 @@
             .bw-folder-tab.active { height: 36px !important; }
             .bw-tab-container { overflow-x: visible; }
             
-            /* 強制手機版 Wallet 區塊直式單列顯示 */
             #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; }
         }
     </style>
@@ -277,15 +276,13 @@
                             <button onclick="openToReadModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增待讀書籍">
                                 <i class="fa-solid fa-plus text-sm"></i>
                             </button>
-                            <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6">
-                                </div>
+                            <div id="toread-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-5 mt-6"></div>
                         </div>
 
                         <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0">
                             <div class="overflow-x-auto shadow-sm rounded-xl">
                                 <table class="stats-table min-w-full">
-                                    <tbody id="stats-table-body">
-                                        </tbody>
+                                    <tbody id="stats-table-body"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -352,9 +349,7 @@
                     <button onclick="openWalletEditModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm z-10" title="新增會員或支付">
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
-                    
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full">
-                        </div>
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full"></div>
                 </div>
 
                 <div id="fin-tab-budget" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
@@ -444,6 +439,7 @@
     <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-xl"></i></button>
 </div>
 
+<!-- Transaction Modal -->
 <div id="trxModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative pt-10">
         <div class="space-y-3">
@@ -475,6 +471,7 @@
     </div>
 </div>
 
+<!-- Unified Modal -->
 <div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="modal-fixed-card">
         <div class="tab-inner-row">
@@ -543,6 +540,7 @@
     </div>
 </div>
 
+<!-- ToRead Modal -->
 <div id="toreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <div class="flex gap-5 items-center">
@@ -579,6 +577,7 @@
     </div>
 </div>
 
+<!-- Lit Modal -->
 <div id="litModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-md rounded-[28px] shadow-2xl">
         <h4 class="font-bold mb-4 font-zh text-morandi-dark-gray">Add Research Paper</h4>
@@ -613,6 +612,7 @@
     </div>
 </div>
 
+<!-- Wallet Modal -->
 <div id="walletModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh" id="wallet-modal-title">新增會員或支付</h3>
@@ -659,270 +659,211 @@
 </div>
 
 <script>
-// LocalStorage Keys
-const STORAGE_KEY = 'ashley_events_v8_reorder';
-const BOOKS_KEY = 'ashley_books_v3';
+// ── Storage Keys ──────────────────────────────────────────────
+const STORAGE_KEY  = 'ashley_events_v8_reorder';
+const BOOKS_KEY    = 'ashley_books_v3';
 const ACAD_LIT_KEY = 'ashley_acad_lit_v1';
 const ACAD_PUB_KEY = 'ashley_acad_pub_v1';
-const WALLET_KEY = 'ashley_wallet_v1';
-const TRX_KEY = 'ashley_trx_v1';
+const WALLET_KEY   = 'ashley_wallet_v1';
+const TRX_KEY      = 'ashley_trx_v1';
 const SETTINGS_KEY = 'ashley_settings_v1';
-
-// Firebase Node Key
-const DB_NODE = 'ashley_private_db_2026';
+const DB_NODE      = 'ashley_private_db_2026';
 
 let mainCalendar, bwCalendar, acadCalendar;
 let currentType = 'schedule', currentCategory = 'Personal', editingId = null;
 let isDataLoaded = false;
 let editingTrxId = null;
 let lastEditedBookId = null;
-
-// Finance Budget 月份切換變數
 let currentBudgetMonth = new Date().getMonth();
-let currentBudgetYear = new Date().getFullYear();
+let currentBudgetYear  = new Date().getFullYear();
 
-// ======= 雲端同步邏輯 =======
+// ── 圖片壓縮工具（修復：防止 Firebase 10MB 超限）─────────────────
+function compressImage(dataUrl, maxW, maxH, quality, cb) {
+    const img = new Image();
+    img.onload = () => {
+        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        cb(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+}
 
+// ── 雲端同步（修復：改用 update() 防止多裝置覆蓋）───────────────
 function syncToCloud() {
     const data = {
-        events: localStorage.getItem(STORAGE_KEY) || '[]',
-        books: localStorage.getItem(BOOKS_KEY) || '[]',
-        lit: localStorage.getItem(ACAD_LIT_KEY) || '[]',
-        pub: localStorage.getItem(ACAD_PUB_KEY) || '[]',
-        wallet: localStorage.getItem(WALLET_KEY) || '[]',
-        trx: localStorage.getItem(TRX_KEY) || '[]',
-        settings: localStorage.getItem(SETTINGS_KEY) || '{}'
+        events:   localStorage.getItem(STORAGE_KEY)   || '[]',
+        books:    localStorage.getItem(BOOKS_KEY)      || '[]',
+        lit:      localStorage.getItem(ACAD_LIT_KEY)  || '[]',
+        pub:      localStorage.getItem(ACAD_PUB_KEY)  || '[]',
+        wallet:   localStorage.getItem(WALLET_KEY)    || '[]',
+        trx:      localStorage.getItem(TRX_KEY)       || '[]',
+        settings: localStorage.getItem(SETTINGS_KEY)  || '{}'
     };
     
-    const statusEl = document.getElementById('cloud-status');
-    if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Saving...</span>';
-    
-    db.ref(DB_NODE).set(data).then(() => {
-        if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced</span>';
-        setTimeout(() => {
-            if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
-        }, 2000);
-    }).catch(error => {
-        console.error("同步失敗: ", error);
-        if(statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-500"></i> <span class="text-red-500">Error</span>';
-    });
+    setCloudStatus('saving');
+    // ★ 使用 update() 而非 set()：各欄位獨立更新，不會覆蓋其他裝置的並行修改
+    db.ref(DB_NODE).update(data)
+        .then(() => {
+            setCloudStatus('synced');
+            setTimeout(() => setCloudStatus('ready'), 2000);
+        })
+        .catch(err => {
+            console.error('同步失敗:', err);
+            setCloudStatus('error');
+        });
+}
+
+function setCloudStatus(state) {
+    const el = document.getElementById('cloud-status');
+    if (!el) return;
+    const states = {
+        ready:  '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>',
+        saving: '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark sync-pulse"></i> <span class="text-morandi-blue-dark">Saving...</span>',
+        synced: '<i class="fa-solid fa-cloud-check text-green-500"></i> <span class="text-green-500">Synced ✓</span>',
+        error:  '<i class="fa-solid fa-circle-exclamation text-red-400"></i> <span class="text-red-400">Sync failed</span>',
+        pulling:'<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark sync-pulse"></i> <span class="text-morandi-blue-dark">Updating...</span>',
+        updated:'<i class="fa-solid fa-check text-green-500"></i> <span class="text-green-500">Updated ✓</span>'
+    };
+    el.innerHTML = states[state] || states.ready;
+}
+
+function applyCloudData(data) {
+    if (!data) return;
+    localStorage.setItem(STORAGE_KEY,   data.events   || '[]');
+    localStorage.setItem(BOOKS_KEY,     data.books    || '[]');
+    localStorage.setItem(ACAD_LIT_KEY,  data.lit      || '[]');
+    localStorage.setItem(ACAD_PUB_KEY,  data.pub      || '[]');
+    localStorage.setItem(WALLET_KEY,    data.wallet   || '[]');
+    localStorage.setItem(TRX_KEY,       data.trx      || '[]');
+    localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
 }
 
 function listenToCloud() {
     db.ref(DB_NODE).on('value', (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-            localStorage.setItem(STORAGE_KEY, data.events || '[]');
-            localStorage.setItem(BOOKS_KEY, data.books || '[]');
-            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-            localStorage.setItem(TRX_KEY, data.trx || '[]');
-            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
-            
-            if (!isDataLoaded) {
-                isDataLoaded = true;
-                initCalendars();
-                renderMonthlyStats();
-                initWallet();
-                renderTransactions();
-            } else {
-                refreshAllUI();
-            }
-        } else if (!isDataLoaded) {
+        applyCloudData(data);
+        if (!isDataLoaded) {
             isDataLoaded = true;
             initCalendars();
             renderMonthlyStats();
             initWallet();
             renderTransactions();
+        } else {
+            refreshAllUI();
         }
     });
 }
 
 function refreshAllUI() {
     const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    if (mainCalendar) {
-        mainCalendar.removeAllEvents();
-        mainCalendar.addEventSource(storage);
-    }
-    if (bwCalendar) {
-        bwCalendar.removeAllEvents();
-        bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading));
-    }
-    if (acadCalendar) {
-        acadCalendar.removeAllEvents();
-        acadCalendar.addEventSource(storage);
-    }
-    renderBooks();
-    renderMonthlyStats();
-    renderToRead();
-    renderStatsTable();
-    renderLitGrid();
-    renderPubTable();
-    renderWallet();
-    renderTransactions();
+    if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
+    if (bwCalendar)   { bwCalendar.removeAllEvents();   bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
+    renderBooks(); renderMonthlyStats(); renderToRead(); renderStatsTable();
+    renderLitGrid(); renderPubTable(); renderWallet(); renderTransactions();
 }
 
 function forceSyncPull(silent = false) {
-    const statusEl = document.getElementById('cloud-status');
-    if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Syncing...</span>';
-    
+    if (!silent) setCloudStatus('pulling');
     db.ref(DB_NODE).once('value').then((snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            localStorage.setItem(STORAGE_KEY, data.events || '[]');
-            localStorage.setItem(BOOKS_KEY, data.books || '[]');
-            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-            localStorage.setItem(TRX_KEY, data.trx || '[]');
-            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
-            refreshAllUI();
-            
-            if (!silent && statusEl) {
-                statusEl.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> <span class="text-green-500">Updated</span>';
-                setTimeout(() => {
-                    statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
-                }, 2000);
-            }
+        applyCloudData(snapshot.val());
+        refreshAllUI();
+        if (!silent) {
+            setCloudStatus('updated');
+            setTimeout(() => setCloudStatus('ready'), 2000);
         }
-    }).catch(e => {
-        if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> <span class="text-red-500">Fail</span>';
+    }).catch(() => {
+        if (!silent) setCloudStatus('error');
     });
 }
 
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        forceSyncPull(true);
-    }
+// ── 自動重新同步（修復：網路恢復 + 切回頁面時自動拉取）───────────
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') forceSyncPull(true);
 });
+// ★ 新增：網路重連時自動同步
+window.addEventListener('online', () => forceSyncPull(false));
 
-// ===========================
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => { 
+// ── 初始化 ────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('ashley_cleanup_2026_v1')) {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.setItem('ashley_cleanup_2026_v1', 'done');
     }
-    initTimeDropdowns(); 
-    listenToCloud(); // 啟動雲端監聽並初始化
+    initTimeDropdowns();
+    listenToCloud();
 });
 
-// 手機版側邊欄切換
 function toggleSidebar() {
-    const sidebar = document.getElementById('mobile-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    if (sidebar.classList.contains('-translate-x-full')) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-    } else {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-    }
+    const sidebar  = document.getElementById('mobile-sidebar');
+    const overlay  = document.getElementById('sidebar-overlay');
+    const isHidden = sidebar.classList.contains('-translate-x-full');
+    sidebar.classList.toggle('-translate-x-full', !isHidden);
+    overlay.classList.toggle('hidden', !isHidden);
 }
 
-// ── UI NAVIGATION & TAB LOGIC ──────────────────────────────────
-function showSection(id) { 
-    document.getElementById('main-section').classList.add('hidden');
-    document.getElementById('bookworm-section').classList.add('hidden');
-    document.getElementById('academic-section').classList.add('hidden');
-    document.getElementById('finance-section').classList.add('hidden');
-    
+// ── UI NAVIGATION ─────────────────────────────────────────────
+function showSection(id) {
+    ['main','bookworm','academic','finance'].forEach(s =>
+        document.getElementById(`${s}-section`).classList.add('hidden'));
     if (id === 'main') {
         document.getElementById('main-section').classList.remove('hidden');
         setTimeout(() => { if (mainCalendar) { mainCalendar.updateSize(); mainCalendar.render(); } }, 50);
     } else if (id === 'bookworm') {
         document.getElementById('bookworm-section').classList.remove('hidden');
-        switchBwTab('calendar'); 
+        switchBwTab('calendar');
     } else if (id === 'academic') {
         document.getElementById('academic-section').classList.remove('hidden');
         switchAcadTab('timeline');
     } else if (id === 'finance') {
         document.getElementById('finance-section').classList.remove('hidden');
-        switchFinTab('budget'); 
+        switchFinTab('budget');
     }
 }
 
 function switchBwTab(tab) {
     document.querySelectorAll('#bookworm-section .bw-tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`bw-tab-${tab}`).classList.remove('hidden');
-    
-    document.querySelectorAll('#bookworm-section .bw-folder-tab').forEach(el => {
-        el.classList.remove('active');
-        if (el.id === 'btn-tab-calendar') el.style.zIndex = '3';
-        if (el.id === 'btn-tab-toread') el.style.zIndex = '2';
-        if (el.id === 'btn-tab-stats') el.style.zIndex = '1';
-    });
-    
+    document.querySelectorAll('#bookworm-section .bw-folder-tab').forEach((el,i) => { el.classList.remove('active'); el.style.zIndex = 3-i; });
     const activeBtn = document.getElementById(`btn-tab-${tab}`);
-    activeBtn.classList.add('active');
-    activeBtn.style.zIndex = '10';
-
-    if (tab === 'calendar') { 
-        setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 50); 
-        renderMonthlyStats(); 
-    } else if (tab === 'toread') { 
-        renderToRead(); 
-    } else if (tab === 'stats') { 
-        renderStatsTable(); 
-    }
+    activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
+    if (tab === 'calendar') { setTimeout(() => { if (bwCalendar) { bwCalendar.updateSize(); bwCalendar.render(); } }, 50); renderMonthlyStats(); }
+    else if (tab === 'toread') renderToRead();
+    else if (tab === 'stats')  renderStatsTable();
 }
 
 function switchAcadTab(tab) {
     document.querySelectorAll('#academic-section .acad-tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`acad-tab-${tab}`).classList.remove('hidden');
-    
-    document.querySelectorAll('#academic-section .bw-folder-tab').forEach(el => {
-        el.classList.remove('active');
-        if (el.id === 'btn-acad-timeline') el.style.zIndex = '3';
-        if (el.id === 'btn-acad-lit') el.style.zIndex = '2';
-        if (el.id === 'btn-acad-pub') el.style.zIndex = '1';
-    });
-    
+    document.querySelectorAll('#academic-section .bw-folder-tab').forEach((el,i) => { el.classList.remove('active'); el.style.zIndex = 3-i; });
     const activeBtn = document.getElementById(`btn-acad-${tab}`);
-    activeBtn.classList.add('active');
-    activeBtn.style.zIndex = '10';
-
-    if (tab === 'timeline') { 
-        setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 50); 
-    } else if (tab === 'lit') { 
-        renderLitGrid(); 
-    } else if (tab === 'pub') { 
-        renderPubTable(); 
-    }
+    activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
+    if (tab === 'timeline') setTimeout(() => { if (acadCalendar) { acadCalendar.updateSize(); acadCalendar.render(); } }, 50);
+    else if (tab === 'lit') renderLitGrid();
+    else if (tab === 'pub') renderPubTable();
 }
 
 function switchFinTab(tab) {
     document.querySelectorAll('#finance-section .fin-tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`fin-tab-${tab}`).classList.remove('hidden');
-    
-    document.querySelectorAll('#finance-section .bw-folder-tab').forEach(el => {
-        el.classList.remove('active');
-        if (el.id === 'btn-fin-wallet') el.style.zIndex = '3';
-        if (el.id === 'btn-fin-budget') el.style.zIndex = '2';
-        if (el.id === 'btn-fin-invest') el.style.zIndex = '1';
-    });
-    
+    document.querySelectorAll('#finance-section .bw-folder-tab').forEach((el,i) => { el.classList.remove('active'); el.style.zIndex = 3-i; });
     const activeBtn = document.getElementById(`btn-fin-${tab}`);
-    activeBtn.classList.add('active');
-    activeBtn.style.zIndex = '10';
+    activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
 }
 
-// ── GLOBAL UTILITIES ──────────────────────────────────────────
+// ── UTILITIES ─────────────────────────────────────────────────
 function today() { return new Date().toISOString().split('T')[0]; }
 
 function initTimeDropdowns() {
     const h = document.getElementById('selectHour'), m = document.getElementById('selectMinute');
-    for (let i = 0; i < 24; i++) { 
-        h.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`; 
-    }
-    for (let i = 0; i < 60; i += 5) { 
-        m.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`; 
-    }
+    for (let i = 0; i < 24; i++) h.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
+    for (let i = 0; i < 60; i += 5) m.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
 }
 
-// ── CALENDARS INITIALIZATION ─────────────────────────────────
+// ── CALENDARS ─────────────────────────────────────────────────
 const TAIWAN_SPECIAL_DAYS = [
     { date: '2026-01-01', title: '元旦', type: 'holiday' }, { date: '2026-02-16', title: '除夕', type: 'holiday' },
     { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
@@ -949,22 +890,17 @@ function initCalendars() {
             const dateStr = arg.date.toLocaleDateString('en-CA');
             const special = TAIWAN_SPECIAL_DAYS.find(d => d.date === dateStr);
             const labelHtml = special ? `<span class="special-label ${special.type === 'holiday' ? 'label-holiday' : 'label-solar'}">${special.title}</span>` : `<span></span>`;
-            const dayNumber = arg.dayNumberText.replace('日', '');
-            return { html: `${labelHtml}<a class="fc-daygrid-day-number">${dayNumber}</a>` };
+            return { html: `${labelHtml}<a class="fc-daygrid-day-number">${arg.dayNumberText.replace('日','')}</a>` };
         },
         events: userEvents,
         eventContent: (arg) => {
             let container = document.createElement('div');
             container.style.cssText = 'font-size:9.5px;padding:2px 4px;margin-bottom:2px;border-radius:4px;overflow:hidden;color:#444;box-shadow:1px 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;gap:4px;width:100%;';
-            
-            const catMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
+            const catMap = { Tutor:'#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
             let bgColor = arg.event.extendedProps.bgColor || '#E5E5E5';
-            if (arg.event.extendedProps.category && catMap[arg.event.extendedProps.category]) {
-                bgColor = catMap[arg.event.extendedProps.category];
-            }
-            
+            if (arg.event.extendedProps.category && catMap[arg.event.extendedProps.category]) bgColor = catMap[arg.event.extendedProps.category];
             if (arg.event.extendedProps.isReading) {
-                container.style.backgroundColor = '#E4E1F2'; 
+                container.style.backgroundColor = '#E4E1F2';
                 if (arg.event.extendedProps.cover) {
                     const img = document.createElement('img');
                     img.src = arg.event.extendedProps.cover;
@@ -972,7 +908,7 @@ function initCalendars() {
                     container.appendChild(img);
                 }
                 const text = document.createElement('span');
-                text.innerText = arg.event.title; 
+                text.innerText = arg.event.title;
                 text.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;';
                 container.appendChild(text);
             } else {
@@ -983,70 +919,47 @@ function initCalendars() {
         },
         eventClick: (info) => openUnifiedModal(info.event)
     };
-
     mainCalendar = new FullCalendar.Calendar(document.getElementById('main-calendar'), calendarOptions);
     acadCalendar = new FullCalendar.Calendar(document.getElementById('acad-calendar'), calendarOptions);
-    
-    // Bookworm Calendar 只顯示閱讀紀錄
-    const bwOptions = Object.assign({}, calendarOptions, {
-        events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading)
-    });
+    const bwOptions = { ...calendarOptions, events: userEvents.filter(e => e.extendedProps && e.extendedProps.isReading) };
     bwCalendar = new FullCalendar.Calendar(document.getElementById('bw-calendar'), bwOptions);
-    
     mainCalendar.render();
 }
 
-// ── BOOKWORM LOGIC (Reading & ToRead) ──────────────────────────────
+// ── BOOKS ─────────────────────────────────────────────────────
 function loadBooks() { return JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]'); }
-
-function saveBooks(b) { 
-    localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); 
-    syncToCloud();
-}
+function saveBooks(b) { localStorage.setItem(BOOKS_KEY, JSON.stringify(b)); syncToCloud(); }
 
 function renderBooks(forceBookId = null) {
     const books = loadBooks();
     const container = document.getElementById('books-container');
     container.innerHTML = '';
-    
-    // 找出尚未完成的，或是這次強制要顯示編輯的那本書（即使已完成）
     let active = books.filter(b => (!b.done && !b.isToRead) || (forceBookId && String(b.id) === String(forceBookId)));
-    
-    // 若畫面為空，而且不是在強制編輯某本書，就提供一個預設的空白輸入框
     if (active.length === 0) {
-        const tempId = 'new_' + Date.now();
-        renderBookRow(container, { id: tempId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false }, true);
+        renderBookRow(container, { id: 'new_' + Date.now(), title:'', currentPage:0, totalPages:0, logDate:today(), done:false, cover:null, readHours:0, isToRead:false }, true);
     } else {
         active.forEach(b => renderBookRow(container, b, false));
     }
 }
 
 function renderBookRow(container, book, isTemp) {
-    let actualStartDate = null;
-    let actualEndDate = null;
-    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const bookEvents = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
-    if (bookEvents.length > 0) {
-        const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-        if (sortedEvents[0].start) {
-            actualStartDate = sortedEvents[0].start.split('T')[0];
-        }
-        if (sortedEvents[sortedEvents.length - 1].start) {
-            actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
-        }
+    const events    = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const bookEvts  = events.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
+    let actualStartDate = null, actualEndDate = null;
+    if (bookEvts.length > 0) {
+        const sorted = bookEvts.sort((a,b) => new Date(a.start) - new Date(b.start));
+        actualStartDate = sorted[0].start.split('T')[0];
+        actualEndDate   = sorted[sorted.length-1].start.split('T')[0];
     }
-
-    const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
-    let daysRead = 0;
+    const pct      = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
+    let daysRead   = 0;
     if (actualStartDate && !book.isToRead) {
         const start = new Date(actualStartDate);
-        const end = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
-        daysRead = Math.max(1, Math.round((end - start) / 86400000) + 1); // 包含第一天
+        const end   = (book.done && actualEndDate) ? new Date(actualEndDate) : new Date();
+        daysRead    = Math.max(1, Math.round((end - start) / 86400000) + 1);
     }
-
     const row = document.createElement('div');
-    row.className = 'book-row';
-    row.dataset.id = book.id;
+    row.className = 'book-row'; row.dataset.id = book.id;
     row.innerHTML = `
         <div class="cover-preview-box" onclick="triggerFileUpload(this)" title="上傳封面">
             ${book.cover ? `<img src="${book.cover}">` : '<i class="fa-solid fa-camera text-gray-400 text-xs"></i>'}
@@ -1066,33 +979,32 @@ function renderBookRow(container, book, isTemp) {
                     <span class="page-sep">/</span>
                     <input type="number" class="page-total-input" placeholder="" min="0" value="${book.totalPages || ''}" onchange="updateField(this,'totalPages')" />
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
                     <span class="meta-chip pct">${pct}% 完成</span>
                     <input type="checkbox" class="book-done-cb" title="完成閱讀" ${book.done ? 'checked' : ''} onchange="toggleDone(this)" />
                 </div>
             </div>
-            <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width:${pct}%"></div>
-            </div>
-        </div>
-    `;
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
     container.appendChild(row);
 }
 
 function triggerFileUpload(el) { el.querySelector('input[type="file"]').click(); }
 
 function handleCoverUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
+    const file = input.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        const row = input.closest('.book-row');
-        const preview = row.querySelector('.cover-preview-box');
-        preview.innerHTML = `<img src="${e.target.result}"><input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">`;
-        const { books, book } = getOrCreateBook(row);
-        book.cover = e.target.result;
-        lastEditedBookId = book.id;
-        saveBooks(books);
+        // ★ 壓縮至 200×280px / JPEG 70% 再存入 Firebase
+        compressImage(e.target.result, 200, 280, 0.7, (compressed) => {
+            const row     = input.closest('.book-row');
+            const preview = row.querySelector('.cover-preview-box');
+            preview.innerHTML = `<img src="${compressed}"><input type="file" class="hidden" accept="image/*" onchange="handleCoverUpload(this)">`;
+            const { books, book } = getOrCreateBook(row);
+            book.cover = compressed;
+            lastEditedBookId = book.id;
+            saveBooks(books);
+        });
     };
     reader.readAsDataURL(file);
 }
@@ -1102,7 +1014,7 @@ function getOrCreateBook(row) {
     const rawId = row.dataset.id;
     let book = books.find(b => String(b.id) === String(rawId));
     if (!book) {
-        book = { id: rawId, title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false };
+        book = { id: rawId, title:'', currentPage:0, totalPages:0, logDate:today(), done:false, cover:null, readHours:0, isToRead:false };
         books.push(book);
         saveBooks(books);
     }
@@ -1115,125 +1027,88 @@ function updateField(el, field) {
     book[field] = (field === 'title' || field === 'logDate') ? el.value : (parseInt(el.value) || 0);
     lastEditedBookId = book.id;
     saveBooks(books);
-    
     const pct = book.totalPages > 0 ? Math.min(100, Math.round((book.currentPage / book.totalPages) * 100)) : 0;
     const fill = row.querySelector('.progress-bar-fill');
     if (fill) fill.style.width = pct + '%';
-    const chipsEl = row.querySelector('.pct');
-    if (chipsEl) chipsEl.innerText = `${pct}% 完成`;
+    const chip = row.querySelector('.pct');
+    if (chip) chip.innerText = `${pct}% 完成`;
 }
 
 function toggleDone(el) {
     const row = el.closest('.book-row');
     const { books, book } = getOrCreateBook(row);
     book.done = el.checked;
-    
     const dateInput = row.querySelector('.start-date-input').value;
-    
-    if (book.done) {
-        book.completedAt = dateInput ? new Date(dateInput).toISOString() : new Date().toISOString(); 
-    } else {
-        book.completedAt = null;
-    }
+    book.completedAt = book.done ? (dateInput ? new Date(dateInput).toISOString() : new Date().toISOString()) : null;
     lastEditedBookId = book.id;
     saveBooks(books);
-    renderMonthlyStats(); 
-    renderStatsTable();   
-    // 注意：這裡不呼叫 renderBooks()，讓它保留在畫面上以便使用者點擊 Save
+    renderMonthlyStats(); renderStatsTable();
 }
 
 function addBookRow() {
     const books = loadBooks();
-    books.push({ id: Date.now(), title: '', currentPage: 0, totalPages: 0, logDate: today(), done: false, cover: null, readHours: 0, isToRead: false });
-    saveBooks(books);
-    renderBooks();
+    books.push({ id: Date.now(), title:'', currentPage:0, totalPages:0, logDate:today(), done:false, cover:null, readHours:0, isToRead:false });
+    saveBooks(books); renderBooks();
 }
 
 function renderMonthlyStats() {
     const books = loadBooks();
-    const calendarEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const calEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const currentYear = new Date().getFullYear();
     let yearlyTotal = 0;
-    
-    const monthlyGroups = Array.from({length: 12}, () => []);
+    const monthlyGroups = Array.from({length:12}, () => []);
 
     books.forEach(b => {
-        if (b.done && !b.isToRead) {
-            let actualEndDate = null;
-            const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(b.id));
-            if (bookEvents.length > 0) {
-                const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-                if (sortedEvents[sortedEvents.length - 1].start) {
-                    actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
-                }
-            }
-
-            let finalDateStr = actualEndDate || b.completedAt || b.logDate;
-            if (finalDateStr) {
-                const date = new Date(finalDateStr);
-                if (date.getFullYear() === currentYear) {
-                    monthlyGroups[date.getMonth()].push(b);
-                    yearlyTotal++;
-                }
-            }
+        if (!b.done || b.isToRead) return;
+        const bookEvts = calEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(b.id));
+        let finalDateStr = null;
+        if (bookEvts.length > 0) {
+            const sorted = bookEvts.sort((a,c) => new Date(a.start) - new Date(c.start));
+            finalDateStr = sorted[sorted.length-1].start.split('T')[0];
+        }
+        finalDateStr = finalDateStr || b.completedAt || b.logDate;
+        if (finalDateStr) {
+            const date = new Date(finalDateStr);
+            if (date.getFullYear() === currentYear) { monthlyGroups[date.getMonth()].push(b); yearlyTotal++; }
         }
     });
 
     document.getElementById('yearly-total').innerText = `(共 ${yearlyTotal} 本)`;
     const container = document.getElementById('monthly-stats-container');
     container.innerHTML = '';
-
     const monthNames = ["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
-    
-    monthlyGroups.forEach((monthBooks, index) => {
-        if (monthBooks.length > 0) {
-            const mDiv = document.createElement('div');
-            mDiv.className = 'border-b border-gray-100 pb-3 last:border-0';
-            
-            let coversHtml = monthBooks.map(b => {
-                return b.cover ? `<img src="${b.cover}" class="stats-cover" title="${b.title || '無書名'}">` : 
-                               `<div class="stats-cover flex items-center justify-center bg-gray-200 text-gray-400 text-xs text-center p-1">${b.title || '無封面'}</div>`;
-            }).join('');
-
-            mDiv.innerHTML = `
-                <div class="text-sm font-semibold text-morandi-dark-gray mb-2">${monthNames[index]} 閱讀 ${monthBooks.length} 本</div>
-                <div class="flex flex-wrap gap-2">${coversHtml}</div>
-            `;
-            container.appendChild(mDiv);
-        }
+    monthlyGroups.forEach((mBooks, index) => {
+        if (!mBooks.length) return;
+        const mDiv = document.createElement('div');
+        mDiv.className = 'border-b border-gray-100 pb-3 last:border-0';
+        const coversHtml = mBooks.map(b => b.cover
+            ? `<img src="${b.cover}" class="stats-cover" title="${b.title || '無書名'}">`
+            : `<div class="stats-cover flex items-center justify-center bg-gray-200 text-gray-400 text-xs text-center p-1">${b.title || '無封面'}</div>`
+        ).join('');
+        mDiv.innerHTML = `<div class="text-sm font-semibold text-morandi-dark-gray mb-2">${monthNames[index]} 閱讀 ${mBooks.length} 本</div><div class="flex flex-wrap gap-2">${coversHtml}</div>`;
+        container.appendChild(mDiv);
     });
-
-    if (yearlyTotal === 0) {
-        container.innerHTML = '<div class="text-sm text-gray-400 italic">今年尚未完成任何書籍。繼續保持閱讀習慣！</div>';
-    }
+    if (yearlyTotal === 0) container.innerHTML = '<div class="text-sm text-gray-400 italic">今年尚未完成任何書籍。繼續保持閱讀習慣！</div>';
 }
 
-let tempTrCover = null;
-let editingToReadId = null;
+// ── ToRead ────────────────────────────────────────────────────
+let tempTrCover = null, editingToReadId = null;
 
 function openToReadModal(bookId = null) {
     document.getElementById('toreadModal').classList.remove('hidden');
     editingToReadId = bookId;
-
     if (bookId) {
-        const books = loadBooks();
-        const book = books.find(b => String(b.id) === String(bookId));
+        const book = loadBooks().find(b => String(b.id) === String(bookId));
         if (book) {
-            document.getElementById('tr-title').value = book.title || '';
+            document.getElementById('tr-title').value    = book.title    || '';
             document.getElementById('tr-platform').value = book.platform || 'KOBO';
             tempTrCover = book.cover || null;
-            if (tempTrCover) {
-                document.getElementById('tr-cover-preview').src = tempTrCover;
-                document.getElementById('tr-cover-preview').classList.remove('hidden');
-                document.getElementById('tr-cover-icon').classList.add('hidden');
-            } else {
-                document.getElementById('tr-cover-preview').src = '';
-                document.getElementById('tr-cover-preview').classList.add('hidden');
-                document.getElementById('tr-cover-icon').classList.remove('hidden');
-            }
+            const prev = document.getElementById('tr-cover-preview');
+            if (tempTrCover) { prev.src = tempTrCover; prev.classList.remove('hidden'); document.getElementById('tr-cover-icon').classList.add('hidden'); }
+            else              { prev.src = ''; prev.classList.add('hidden'); document.getElementById('tr-cover-icon').classList.remove('hidden'); }
         }
     } else {
-        document.getElementById('tr-title').value = '';
+        document.getElementById('tr-title').value    = '';
         document.getElementById('tr-platform').value = 'KOBO';
         document.getElementById('tr-cover-preview').src = '';
         document.getElementById('tr-cover-preview').classList.add('hidden');
@@ -1241,102 +1116,65 @@ function openToReadModal(bookId = null) {
         tempTrCover = null;
     }
 }
-
-function closeToReadModal() {
-    document.getElementById('toreadModal').classList.add('hidden');
-    editingToReadId = null;
-}
+function closeToReadModal() { document.getElementById('toreadModal').classList.add('hidden'); editingToReadId = null; }
 
 function previewTrCover(input) {
-    const file = input.files[0];
-    if (!file) return;
+    const file = input.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        tempTrCover = e.target.result;
-        document.getElementById('tr-cover-preview').src = tempTrCover;
-        document.getElementById('tr-cover-preview').classList.remove('hidden');
-        document.getElementById('tr-cover-icon').classList.add('hidden');
+        // ★ 壓縮後再預覽
+        compressImage(e.target.result, 200, 280, 0.7, (compressed) => {
+            tempTrCover = compressed;
+            document.getElementById('tr-cover-preview').src = compressed;
+            document.getElementById('tr-cover-preview').classList.remove('hidden');
+            document.getElementById('tr-cover-icon').classList.add('hidden');
+        });
     };
     reader.readAsDataURL(file);
-    input.value = ''; 
+    input.value = '';
 }
 
 function saveToReadBook() {
     const title = document.getElementById('tr-title').value;
     const platform = document.getElementById('tr-platform').value;
     let books = loadBooks();
-    
     if (editingToReadId) {
         const idx = books.findIndex(b => String(b.id) === String(editingToReadId));
-        if (idx > -1) {
-            books[idx].title = title;
-            books[idx].platform = platform;
-            if (tempTrCover) books[idx].cover = tempTrCover;
-        }
+        if (idx > -1) { books[idx].title = title; books[idx].platform = platform; if (tempTrCover) books[idx].cover = tempTrCover; }
     } else {
-        books.push({
-            id: Date.now(),
-            title: title,
-            cover: tempTrCover,
-            platform: platform,
-            isToRead: true, 
-            currentPage: 0,
-            totalPages: 0,
-            logDate: '',
-            done: false,
-            readHours: 0
-        });
+        books.push({ id:Date.now(), title, cover:tempTrCover, platform, isToRead:true, currentPage:0, totalPages:0, logDate:'', done:false, readHours:0 });
     }
-    
-    saveBooks(books);
-    closeToReadModal();
-    renderToRead();
-    renderStatsTable(); 
+    saveBooks(books); closeToReadModal(); renderToRead(); renderStatsTable();
 }
 
 function deleteToReadBook() {
     if (editingToReadId) {
         if (!confirm('確定要刪除此書籍紀錄嗎？')) return;
-        let books = loadBooks();
-        books = books.filter(b => String(b.id) !== String(editingToReadId));
-        saveBooks(books);
-        renderToRead();
-        renderStatsTable();
+        let books = loadBooks().filter(b => String(b.id) !== String(editingToReadId));
+        saveBooks(books); renderToRead(); renderStatsTable();
     }
     closeToReadModal();
 }
 
 function renderToRead() {
-    const books = loadBooks();
-    const toReadList = books.filter(b => b.isToRead);
+    const toReadList = loadBooks().filter(b => b.isToRead);
     const grid = document.getElementById('toread-grid');
     grid.innerHTML = '';
-    
-    if (toReadList.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-sm text-gray-400 text-center py-8">目前沒有待讀書籍，點擊右上角新增。</div>';
-        return;
-    }
-
+    if (!toReadList.length) { grid.innerHTML = '<div class="col-span-full text-sm text-gray-400 text-center py-8">目前沒有待讀書籍，點擊右上角新增。</div>'; return; }
     toReadList.forEach((item, index) => {
         const el = document.createElement('div');
-        el.className = 'toread-item group';
-        el.draggable = true;
-        el.dataset.index = index;
-        
+        el.className = 'toread-item group'; el.draggable = true; el.dataset.index = index;
         el.innerHTML = `
             <div class="tr-badge-num">${index + 1}</div>
             <button onclick="event.stopPropagation(); startReading('${item.id}')" class="start-read-btn" title="開始閱讀"><i class="fa-solid fa-book-open"></i></button>
             <div class="w-full h-full cursor-pointer" onclick="openToReadModal('${item.id}')">
                 ${item.cover ? `<img src="${item.cover}" title="${item.title || '待讀書'}">` : `<span class="text-xs text-gray-400 p-2 text-center w-full flex items-center justify-center h-full">${item.title || '無封面'}</span>`}
             </div>
-            <div class="tr-badge-platform translate-y-full group-hover:translate-y-0 transition-transform">${item.platform || '-'}</div>
-        `;
-        
+            <div class="tr-badge-platform translate-y-full group-hover:translate-y-0 transition-transform">${item.platform || '-'}</div>`;
         el.addEventListener('dragstart', handleDragStart);
-        el.addEventListener('dragover', handleDragOver);
+        el.addEventListener('dragover',  handleDragOver);
         el.addEventListener('dragleave', handleDragLeave);
-        el.addEventListener('drop', handleDrop);
-        
+        el.addEventListener('drop',      handleDrop);
         grid.appendChild(el);
     });
 }
@@ -1344,259 +1182,148 @@ function renderToRead() {
 function startReading(id) {
     let books = loadBooks();
     let b = books.find(x => String(x.id) === String(id));
-    if(b) {
-        b.isToRead = false; 
-        b.logDate = today();
-        saveBooks(books);
-        renderToRead();
-        renderStatsTable();
-    }
+    if(b) { b.isToRead = false; b.logDate = today(); saveBooks(books); renderToRead(); renderStatsTable(); }
 }
 
 let draggedIndex = null;
-function handleDragStart(e) {
-    draggedIndex = parseInt(this.dataset.index);
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    this.classList.add('drag-over');
-}
-
-function handleDragLeave(e) {
-    this.classList.remove('drag-over');
-}
-
+function handleDragStart(e) { draggedIndex = parseInt(this.dataset.index); e.dataTransfer.effectAllowed = 'move'; }
+function handleDragOver(e)  { e.preventDefault(); this.classList.add('drag-over'); }
+function handleDragLeave()  { this.classList.remove('drag-over'); }
 function handleDrop(e) {
-    e.preventDefault();
-    this.classList.remove('drag-over');
+    e.preventDefault(); this.classList.remove('drag-over');
     const targetIndex = parseInt(this.dataset.index);
-    
     if (draggedIndex !== null && draggedIndex !== targetIndex) {
-        let books = loadBooks();
-        let toReadList = books.filter(b => b.isToRead);
-        let otherBooks = books.filter(b => !b.isToRead);
-        
-        const draggedItem = toReadList.splice(draggedIndex, 1)[0];
-        toReadList.splice(targetIndex, 0, draggedItem);
-        
+        let books       = loadBooks();
+        let toReadList  = books.filter(b => b.isToRead);
+        let otherBooks  = books.filter(b => !b.isToRead);
+        const dragged   = toReadList.splice(draggedIndex, 1)[0];
+        toReadList.splice(targetIndex, 0, dragged);
         saveBooks([...otherBooks, ...toReadList]);
-        renderToRead();
-        renderStatsTable(); 
+        renderToRead(); renderStatsTable();
     }
 }
 
-// ── ANALYSIS TABLE LOGIC ────────────────────────────────────
+// ── STATS TABLE ───────────────────────────────────────────────
 function renderStatsTable() {
-    const books = loadBooks();
-    const calendarEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const tbody = document.getElementById('stats-table-body');
-    tbody.innerHTML = '';
-
+    const books      = loadBooks();
+    const calEvents  = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const tbody      = document.getElementById('stats-table-body');
+    tbody.innerHTML  = '';
     const validBooks = [];
 
     books.forEach(book => {
         if (!book.title && !book.cover && book.currentPage === 0 && !book.isToRead) return;
-
-        const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
-        const sessions = bookEvents.length || (book.isToRead ? 0 : 1); 
-
-        let actualStartDate = null;
-        let actualEndDate = null;
-        if (bookEvents.length > 0) {
-            const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-            if (sortedEvents[0].start) {
-                actualStartDate = sortedEvents[0].start.split('T')[0];
-            }
-            if (sortedEvents[sortedEvents.length - 1].start) {
-                actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
-            }
+        const bookEvts = calEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(book.id));
+        const sessions = bookEvts.length || (book.isToRead ? 0 : 1);
+        let actualStartDate = null, actualEndDate = null;
+        if (bookEvts.length > 0) {
+            const sorted = bookEvts.sort((a,b) => new Date(a.start) - new Date(b.start));
+            actualStartDate = sorted[0].start.split('T')[0];
+            actualEndDate   = sorted[sorted.length-1].start.split('T')[0];
         }
-
-        let finalEndDate = actualEndDate || book.completedAt || book.logDate || '1970-01-01';
-
-        validBooks.push({
-            ...book,
-            bookEvents,
-            sessions,
-            actualStartDate,
-            actualEndDate,
-            finalEndDate
-        });
+        const finalEndDate = actualEndDate || book.completedAt || book.logDate || '1970-01-01';
+        validBooks.push({ ...book, bookEvts, sessions, actualStartDate, actualEndDate, finalEndDate });
     });
 
-    const ongoing = validBooks.filter(b => !b.done && !b.isToRead);
-    const toread = validBooks.filter(b => b.isToRead);
+    const ongoing   = validBooks.filter(b => !b.done && !b.isToRead);
+    const toread    = validBooks.filter(b => b.isToRead);
     const completed = validBooks.filter(b => b.done && !b.isToRead);
+    completed.sort((a,b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
 
-    completed.sort((a, b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
-
-    const sortedBooks = [...ongoing, ...toread, ...completed];
-
-    sortedBooks.forEach(book => {
+    [...ongoing, ...toread, ...completed].forEach(book => {
         let periodText = book.isToRead ? '待讀中' : (book.actualStartDate || '-');
-        if (book.done && (book.actualEndDate || book.completedAt)) {
-            periodText += ` ~ ${(book.actualEndDate || book.completedAt).split('T')[0]}`;
-        } else if (!book.isToRead && book.actualStartDate) {
-            periodText += ' ~ 至今';
-        }
+        if (book.done && (book.actualEndDate || book.completedAt)) periodText += ` ~ ${(book.actualEndDate || book.completedAt).split('T')[0]}`;
+        else if (!book.isToRead && book.actualStartDate) periodText += ' ~ 至今';
 
-        const readHours = book.readHours || 0;
-        const calcMins = (book.sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / book.sessions) * 10) / 10 : 0;
-        const calcPages = (readHours > 0) ? Math.round(((book.currentPage || 0) / (readHours * 60)) * 10) / 10 : 0;
-        
-        const displayMins = book.manualAvgMins !== undefined ? book.manualAvgMins : calcMins;
-        const displayPages = book.manualAvgPages !== undefined ? book.manualAvgPages : calcPages;
-
+        const readHours   = book.readHours || 0;
+        const calcMins    = (book.sessions > 0 && readHours > 0) ? Math.round(((readHours * 60) / book.sessions) * 10) / 10 : 0;
+        const calcPages   = readHours > 0 ? Math.round(((book.currentPage || 0) / (readHours * 60)) * 10) / 10 : 0;
+        const displayMins = book.manualAvgMins  !== undefined ? book.manualAvgMins  : calcMins;
+        const displayPgs  = book.manualAvgPages !== undefined ? book.manualAvgPages : calcPages;
         let progressDisplay = '';
-        if (!book.isToRead) {
-            if (book.done) {
-                progressDisplay = '進度: 已完成';
-            } else {
-                progressDisplay = `進度: ${book.currentPage}/${book.totalPages}`;
-            }
-        }
+        if (!book.isToRead) progressDisplay = book.done ? '進度: 已完成' : `進度: ${book.currentPage}/${book.totalPages}`;
 
         const tr1 = document.createElement('tr');
         tr1.innerHTML = `
-            <td rowspan="2" class="w-16 align-top" style="padding-top: 16px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important;">
-                <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
+            <td rowspan="2" class="w-16 align-top" style="padding-top:16px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;">
+                <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="5" class="align-bottom" style="padding-top: 16px !important; padding-bottom: 2px !important; border-bottom: none !important;">
+            <td colspan="5" class="align-bottom" style="padding-top:16px !important;padding-bottom:2px !important;border-bottom:none !important;">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
-            </td>
-        `;
+            </td>`;
 
         const tr2 = document.createElement('tr');
         tr2.innerHTML = `
-            <td class="align-top min-w-[180px]" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
-                <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
+            <td class="align-top min-w-[180px]" style="padding-top:2px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;border-top:none !important;">
+                <div class="text-xs text-gray-400 flex items-center gap-2">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
                     ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
-                <div class="text-xs text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
-                    <i class="fa-regular fa-calendar-days"></i> ${periodText}
-                </div>
+            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top:2px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;border-top:none !important;">
+                <div class="text-xs text-gray-400 font-mono flex items-center gap-1.5"><i class="fa-regular fa-calendar-days"></i> ${periodText}</div>
             </td>
-            <td class="align-top text-center w-24" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
-                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
+            <td class="align-top text-center w-24" style="padding-top:2px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;border-top:none !important;">
+                ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
             </td>
-            <td class="align-top whitespace-nowrap" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
+            <td class="align-top whitespace-nowrap" style="padding-top:2px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;border-top:none !important;">
                 ${book.isToRead ? '-' : `
                 <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span>
-                    </div>
-                </div>
-                `}
+                    <div class="flex items-center gap-1"><input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"><span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span></div>
+                    <div class="flex items-center gap-1"><input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"><span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span></div>
+                    <div class="flex items-center gap-1"><input type="number" step="0.1" min="0" value="${displayPgs}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"><span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span></div>
+                </div>`}
             </td>
-            <td class="align-top text-right pr-2 whitespace-nowrap" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
+            <td class="align-top text-right pr-2 whitespace-nowrap" style="padding-top:2px !important;padding-bottom:16px !important;border-bottom:1px solid #F0F0F0 !important;border-top:none !important;">
                 <div class="flex items-center justify-end gap-3">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage||0}, ${book.totalPages||0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPgs}, ${book.done}, ${book.isToRead})">Analysis</button>
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
-            </td>
-        `;
-
-        tbody.appendChild(tr1);
-        tbody.appendChild(tr2);
+            </td>`;
+        tbody.appendChild(tr1); tbody.appendChild(tr2);
     });
-
-    if (sortedBooks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">尚無閱讀或待讀紀錄。</td></tr>';
-    }
+    if (!validBooks.length) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">尚無閱讀或待讀紀錄。</td></tr>';
 }
 
 function updateTableHours(bookId, val) {
-    const books = loadBooks();
-    const b = books.find(x => String(x.id) === String(bookId));
-    if (b) {
-        b.readHours = parseFloat(val) || 0;
-        saveBooks(books);
-        renderStatsTable(); 
-    }
+    const books = loadBooks(); const b = books.find(x => String(x.id) === String(bookId));
+    if (b) { b.readHours = parseFloat(val) || 0; saveBooks(books); renderStatsTable(); }
 }
-
 function updateAvgField(bookId, field, val) {
-    const books = loadBooks();
-    const b = books.find(x => String(x.id) === String(bookId));
-    if (b) {
-        b[field] = parseFloat(val) || 0;
-        saveBooks(books);
-        renderStatsTable(); 
-    }
+    const books = loadBooks(); const b = books.find(x => String(x.id) === String(bookId));
+    if (b) { b[field] = parseFloat(val) || 0; saveBooks(books); renderStatsTable(); }
 }
 
 function openGeminiAnalysis(title, current, total, sessions, hours, mins, pages, isDone, isToRead) {
-    let prompt = "";
-    if (isToRead) {
-        prompt = `我有一本待讀書籍《${title}》，請幫我介紹這本書的核心內容，並給我一些閱讀這本書的建議與計畫安排。`;
-    } else {
-        let status = isDone ? "已讀完" : `閱讀中（進度 ${current}/${total} 頁）`;
-        prompt = `我正在進行閱讀追蹤，書名是《${title}》，目前狀態：${status}。我總共打卡了 ${sessions} 次，累積閱讀時數 ${hours} 小時，平均每次閱讀 ${mins} 分鐘、閱讀速度為每分鐘 ${pages} 頁。請根據我的閱讀數據，給我詳細的閱讀分析、效率評估以及後續的學習成長建議。`;
-    }
-    
-    const textArea = document.createElement("textarea");
-    textArea.value = prompt;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-        document.execCommand('copy');
-    } catch (err) {
-        console.error("複製失敗", err);
-    }
-    document.body.removeChild(textArea);
+    let prompt = isToRead
+        ? `我有一本待讀書籍《${title}》，請幫我介紹這本書的核心內容，並給我一些閱讀這本書的建議與計畫安排。`
+        : `我正在進行閱讀追蹤，書名是《${title}》，目前狀態：${isDone ? '已讀完' : `閱讀中（進度 ${current}/${total} 頁）`}。我總共打卡了 ${sessions} 次，累積閱讀時數 ${hours} 小時，平均每次閱讀 ${mins} 分鐘、閱讀速度為每分鐘 ${pages} 頁。請根據我的閱讀數據，給我詳細的閱讀分析、效率評估以及後續的學習成長建議。`;
+    const ta = document.createElement('textarea'); ta.value = prompt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
     window.open('https://gemini.google.com/app', '_blank');
 }
 
 function deleteBookRecord(bookId) {
     if (!confirm('確定要刪除這筆書籍紀錄嗎？\n注意：相關的「行事曆打卡紀錄」也會一併移除！')) return;
-
-    let books = loadBooks();
-    books = books.filter(b => String(b.id) !== String(bookId));
+    let books = loadBooks().filter(b => String(b.id) !== String(bookId));
     saveBooks(books);
-
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const initialLength = storage.length;
     storage = storage.filter(e => !(e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(bookId)));
-
-    if (storage.length !== initialLength) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-        syncToCloud();
-        
-        if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
-        if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
-        if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
-    }
-
-    renderStatsTable();
-    renderToRead();
-    renderBooks();
-    renderMonthlyStats();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+    syncToCloud();
+    if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
+    if (bwCalendar)   { bwCalendar.removeAllEvents();   bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
+    renderStatsTable(); renderToRead(); renderBooks(); renderMonthlyStats();
 }
 
-// ── ACADEMIC LOGIC ──────────────────────────────────────
+// ── ACADEMIC ─────────────────────────────────────────────────
 function renderLitGrid() {
     const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
-    const grid = document.getElementById('lit-grid');
+    const grid   = document.getElementById('lit-grid');
     grid.innerHTML = papers.map(p => `
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-2 relative">
             <div class="text-[10px] font-bold text-morandi-blue-dark uppercase">${p.journal}</div>
@@ -1606,42 +1333,23 @@ function renderLitGrid() {
                 <span class="text-[9px] px-2 py-0.5 rounded-full ${p.impact === 'Critical' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-500'}">${p.impact}</span>
             </div>
             <button onclick="deleteLit('${p.id}')" class="absolute -top-2 -right-2 w-5 h-5 bg-white text-gray-300 rounded-full shadow-sm hover:text-red-400 text-[10px]"><i class="fa-solid fa-times"></i></button>
-        </div>
-    `).join('');
-    if(!papers.length) grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">No research papers added yet.</div>';
+        </div>`).join('');
+    if (!papers.length) grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">No research papers added yet.</div>';
 }
-
-function openLitModal() { 
-    document.getElementById('litModal').classList.remove('hidden'); 
-}
-
+function openLitModal() { document.getElementById('litModal').classList.remove('hidden'); }
 function saveLitPaper() {
     const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
-    papers.push({
-        id: Date.now().toString(),
-        title: document.getElementById('lit-title').value,
-        journal: document.getElementById('lit-journal').value,
-        year: document.getElementById('lit-year').value,
-        impact: document.getElementById('lit-impact').value
-    });
-    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers));
-    syncToCloud();
-    document.getElementById('litModal').classList.add('hidden');
-    renderLitGrid();
+    papers.push({ id:Date.now().toString(), title:document.getElementById('lit-title').value, journal:document.getElementById('lit-journal').value, year:document.getElementById('lit-year').value, impact:document.getElementById('lit-impact').value });
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers)); syncToCloud();
+    document.getElementById('litModal').classList.add('hidden'); renderLitGrid();
 }
-
 function deleteLit(id) {
-    let papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
-    papers = papers.filter(p => p.id !== id);
-    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers));
-    syncToCloud();
-    renderLitGrid();
+    let papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]').filter(p => p.id !== id);
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers)); syncToCloud(); renderLitGrid();
 }
-
 function renderPubTable() {
     const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
-    const body = document.getElementById('pub-table-body');
-    body.innerHTML = subs.map(s => `
+    document.getElementById('pub-table-body').innerHTML = subs.map(s => `
         <tr>
             <td class="px-4 py-4 font-bold text-gray-700">${s.title}</td>
             <td><span class="bg-gray-100 px-2 py-1 rounded text-xs">${s.journal}</span></td>
@@ -1653,281 +1361,172 @@ function renderPubTable() {
             </select></td>
             <td class="text-xs text-gray-400 font-cursive text-base">${s.deadline || '-'}</td>
             <td><button onclick="deletePub('${s.id}')" class="text-gray-300 hover:text-red-400 px-2"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
 }
-
 function addSubmissionRow() {
-    const title = prompt("Enter Manuscript Title:"); if(!title) return;
+    const title = prompt("Enter Manuscript Title:"); if (!title) return;
     const journal = prompt("Enter Target Journal:");
     const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
-    subs.push({ id: Date.now().toString(), title, journal, status: 'Drafting', deadline: today() });
-    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
-    syncToCloud();
-    renderPubTable();
+    subs.push({ id:Date.now().toString(), title, journal, status:'Drafting', deadline:today() });
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud(); renderPubTable();
 }
-
 function updatePubStatus(id, val) {
     let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
-    const s = subs.find(x => x.id === id); if(s) s.status = val;
-    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
-    syncToCloud();
+    const s = subs.find(x => x.id === id); if (s) s.status = val;
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud();
 }
-
 function deletePub(id) {
-    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
-    subs = subs.filter(x => x.id !== id);
-    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs));
-    syncToCloud();
-    renderPubTable();
+    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]').filter(x => x.id !== id);
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud(); renderPubTable();
 }
 
-// ── FINANCE WALLET LOGIC ────────────────────────────────────
-let editingWalletId = null;
-let tempWalletImg = null;
+// ── WALLET ────────────────────────────────────────────────────
+let editingWalletId = null, tempWalletImg = null;
 
 function initWallet() {
     if (!localStorage.getItem(WALLET_KEY)) {
-        const defaultWallet = [
-            { id: 'w1', title: 'LINE Pay', subtitle: 'Tap to open wallet', type: 'link', linkUrl: 'line://pay/', img: null, bgColor: '#06C755', icon: 'fa-brands fa-line' },
-            { id: 'w2', title: '雲端發票載具', subtitle: '/AB12C34', type: 'barcode', linkUrl: '', img: null, bgColor: '', icon: '' },
-            { id: 'w3', title: '7-11 OpenPoint 會員', subtitle: '0912-345-678', type: 'barcode', linkUrl: '', img: null, bgColor: '', icon: '' },
-            { id: 'w4', title: '全家 FamilyMart 會員', subtitle: '0912-345-678', type: 'barcode', linkUrl: '', img: null, bgColor: '', icon: '' }
+        const def = [
+            { id:'w1', title:'LINE Pay', subtitle:'Tap to open wallet', type:'link', linkUrl:'line://pay/', img:null, bgColor:'#06C755', icon:'fa-brands fa-line' },
+            { id:'w2', title:'雲端發票載具', subtitle:'/AB12C34', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+            { id:'w3', title:'7-11 OpenPoint 會員', subtitle:'0912-345-678', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+            { id:'w4', title:'全家 FamilyMart 會員', subtitle:'0912-345-678', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' }
         ];
-        localStorage.setItem(WALLET_KEY, JSON.stringify(defaultWallet));
-        syncToCloud();
+        localStorage.setItem(WALLET_KEY, JSON.stringify(def)); syncToCloud();
     }
     renderWallet();
 }
 
 function renderWallet() {
     const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
-    const grid = document.getElementById('wallet-grid');
-    grid.innerHTML = items.map(item => {
-        if (item.type === 'link') {
-            return `
-            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
-                <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
-                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
-                <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
-            </div>`;
-        } else {
-            return `
-            <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
-                <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
-                <h4 class="font-bold text-gray-700 mb-2 text-sm">${item.title}</h4>
-                ${item.img ? `<img src="${item.img}" class="w-full max-w-[200px] h-16 object-contain mb-2">` : `<div class="w-full max-w-[200px] mock-barcode mb-2 opacity-30 flex items-center justify-center text-xs text-gray-400 font-zh">點擊上傳條碼圖片</div>`}
-                <p class="text-xs text-gray-500 font-mono tracking-widest">${item.subtitle}</p>
-            </div>`;
-        }
-    }).join('');
+    document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-4 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center md:text-left" onclick="window.open('${item.linkUrl}', '_blank')">
+            <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0" style="background-color: ${item.bgColor || '#8DAAB9'}"><i class="${item.icon || 'fa-solid fa-link'}"></i></div>
+            <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
+        </div>` : `
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
+            <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+            <h4 class="font-bold text-gray-700 mb-2 text-sm">${item.title}</h4>
+            ${item.img ? `<img src="${item.img}" class="w-full max-w-[200px] h-16 object-contain mb-2">` : `<div class="w-full max-w-[200px] mock-barcode mb-2 opacity-30"></div>`}
+            <p class="text-xs text-gray-500 font-mono tracking-widest">${item.subtitle}</p>
+        </div>`).join('');
 }
 
 function openWalletEditModal(id = null) {
-    editingWalletId = id;
-    tempWalletImg = null;
+    editingWalletId = id; tempWalletImg = null;
     const modal = document.getElementById('walletModal');
     const deleteBtn = document.getElementById('wallet-delete-btn');
-    const titleEl = document.getElementById('wallet-title');
-    const subtitleEl = document.getElementById('wallet-subtitle');
-    const typeEl = document.getElementById('wallet-type');
-    const linkUrlEl = document.getElementById('wallet-linkUrl');
-    const previewEl = document.getElementById('wallet-img-preview');
-    const iconEl = document.getElementById('wallet-img-icon');
-
     modal.classList.remove('hidden');
-
     if (id) {
         document.getElementById('wallet-modal-title').innerText = '編輯項目';
         deleteBtn.classList.remove('hidden');
-        const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
-        const item = items.find(x => x.id === id);
+        const item = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]').find(x => x.id === id);
         if (item) {
-            typeEl.value = item.type;
-            titleEl.value = item.title;
-            subtitleEl.value = item.subtitle;
-            linkUrlEl.value = item.linkUrl || '';
-            if (item.img) {
-                tempWalletImg = item.img;
-                previewEl.src = item.img;
-                previewEl.classList.remove('hidden');
-                iconEl.classList.add('hidden');
-            } else {
-                previewEl.src = '';
-                previewEl.classList.add('hidden');
-                iconEl.classList.remove('hidden');
-            }
+            document.getElementById('wallet-type').value     = item.type;
+            document.getElementById('wallet-title').value    = item.title;
+            document.getElementById('wallet-subtitle').value = item.subtitle;
+            document.getElementById('wallet-linkUrl').value  = item.linkUrl || '';
+            const prev = document.getElementById('wallet-img-preview');
+            if (item.img) { tempWalletImg = item.img; prev.src = item.img; prev.classList.remove('hidden'); document.getElementById('wallet-img-icon').classList.add('hidden'); }
+            else           { prev.src = ''; prev.classList.add('hidden'); document.getElementById('wallet-img-icon').classList.remove('hidden'); }
         }
     } else {
         document.getElementById('wallet-modal-title').innerText = '新增會員或支付';
         deleteBtn.classList.add('hidden');
-        typeEl.value = 'barcode';
-        titleEl.value = '';
-        subtitleEl.value = '';
-        linkUrlEl.value = '';
-        previewEl.src = '';
-        previewEl.classList.add('hidden');
-        iconEl.classList.remove('hidden');
+        document.getElementById('wallet-type').value     = 'barcode';
+        document.getElementById('wallet-title').value    = '';
+        document.getElementById('wallet-subtitle').value = '';
+        document.getElementById('wallet-linkUrl').value  = '';
+        document.getElementById('wallet-img-preview').src = '';
+        document.getElementById('wallet-img-preview').classList.add('hidden');
+        document.getElementById('wallet-img-icon').classList.remove('hidden');
     }
     toggleWalletFields();
 }
-
-function closeWalletModal() {
-    document.getElementById('walletModal').classList.add('hidden');
-}
-
+function closeWalletModal() { document.getElementById('walletModal').classList.add('hidden'); }
 function toggleWalletFields() {
     const type = document.getElementById('wallet-type').value;
-    if (type === 'link') {
-        document.getElementById('wallet-barcode-fields').classList.add('hidden');
-        document.getElementById('wallet-link-fields').classList.remove('hidden');
-    } else {
-        document.getElementById('wallet-barcode-fields').classList.remove('hidden');
-        document.getElementById('wallet-link-fields').classList.add('hidden');
-    }
+    document.getElementById('wallet-barcode-fields').classList.toggle('hidden', type === 'link');
+    document.getElementById('wallet-link-fields').classList.toggle('hidden',    type !== 'link');
 }
-
 function previewWalletImg(input) {
     const file = input.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        tempWalletImg = e.target.result;
-        document.getElementById('wallet-img-preview').src = tempWalletImg;
-        document.getElementById('wallet-img-preview').classList.remove('hidden');
-        document.getElementById('wallet-img-icon').classList.add('hidden');
+        // ★ 條碼圖片寬保留高解析度但壓縮質量
+        compressImage(e.target.result, 600, 300, 0.8, (compressed) => {
+            tempWalletImg = compressed;
+            document.getElementById('wallet-img-preview').src = compressed;
+            document.getElementById('wallet-img-preview').classList.remove('hidden');
+            document.getElementById('wallet-img-icon').classList.add('hidden');
+        });
     };
-    reader.readAsDataURL(file);
-    input.value = '';
+    reader.readAsDataURL(file); input.value = '';
 }
-
 function saveWalletItem() {
-    const type = document.getElementById('wallet-type').value;
-    const title = document.getElementById('wallet-title').value;
+    const type     = document.getElementById('wallet-type').value;
+    const title    = document.getElementById('wallet-title').value;
     const subtitle = document.getElementById('wallet-subtitle').value;
-    const linkUrl = document.getElementById('wallet-linkUrl').value;
-    
+    const linkUrl  = document.getElementById('wallet-linkUrl').value;
     let items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
-    
     if (editingWalletId) {
         const item = items.find(x => x.id === editingWalletId);
-        if (item) {
-            item.type = type;
-            item.title = title;
-            item.subtitle = subtitle;
-            item.linkUrl = type === 'link' ? linkUrl : '';
-            item.img = type === 'barcode' ? tempWalletImg : null;
-        }
+        if (item) { item.type = type; item.title = title; item.subtitle = subtitle; item.linkUrl = type === 'link' ? linkUrl : ''; item.img = type === 'barcode' ? tempWalletImg : null; }
     } else {
-        items.push({
-            id: 'w_' + Date.now(),
-            type: type,
-            title: title,
-            subtitle: subtitle,
-            linkUrl: type === 'link' ? linkUrl : '',
-            img: type === 'barcode' ? tempWalletImg : null,
-            bgColor: '#8DAAB9',
-            icon: 'fa-solid fa-link'
-        });
+        items.push({ id:'w_'+Date.now(), type, title, subtitle, linkUrl: type === 'link' ? linkUrl : '', img: type === 'barcode' ? tempWalletImg : null, bgColor:'#8DAAB9', icon:'fa-solid fa-link' });
     }
-    
-    localStorage.setItem(WALLET_KEY, JSON.stringify(items));
-    syncToCloud();
-    closeWalletModal();
-    renderWallet();
+    localStorage.setItem(WALLET_KEY, JSON.stringify(items)); syncToCloud(); closeWalletModal(); renderWallet();
 }
-
 function deleteWalletItem() {
-    if (editingWalletId) {
-        if (!confirm('確定要刪除此項目嗎？')) return;
-        let items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
-        items = items.filter(x => x.id !== editingWalletId);
-        localStorage.setItem(WALLET_KEY, JSON.stringify(items));
-        syncToCloud();
-        renderWallet();
+    if (editingWalletId && confirm('確定要刪除此項目嗎？')) {
+        let items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]').filter(x => x.id !== editingWalletId);
+        localStorage.setItem(WALLET_KEY, JSON.stringify(items)); syncToCloud(); renderWallet();
     }
     closeWalletModal();
 }
 
-function prevBudgetMonth() {
-    currentBudgetMonth--;
-    if (currentBudgetMonth < 0) {
-        currentBudgetMonth = 11;
-        currentBudgetYear--;
-    }
-    renderTransactions();
-}
+// ── FINANCE ───────────────────────────────────────────────────
+function prevBudgetMonth() { currentBudgetMonth--; if (currentBudgetMonth < 0) { currentBudgetMonth = 11; currentBudgetYear--; } renderTransactions(); }
+function nextBudgetMonth() { currentBudgetMonth++; if (currentBudgetMonth > 11) { currentBudgetMonth = 0; currentBudgetYear++; } renderTransactions(); }
 
-function nextBudgetMonth() {
-    currentBudgetMonth++;
-    if (currentBudgetMonth > 11) {
-        currentBudgetMonth = 0;
-        currentBudgetYear++;
-    }
-    renderTransactions();
-}
-
-// ── FINANCE: INCOME & EXPENDITURE LOGIC ─────────────────────
 function saveTutorRate(val) {
     let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
     settings.tutorRate = parseFloat(val) || 0;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    syncToCloud();
-    renderTransactions(); 
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); syncToCloud(); renderTransactions();
 }
 
 function renderTutorIncome() {
-    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-    let rate = settings.tutorRate || 0;
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const rate = settings.tutorRate || 0;
     const rateInput = document.getElementById('tutor-rate-input');
-    if(rateInput && document.activeElement !== rateInput) {
-        rateInput.value = rate || '';
-    }
-
+    if (rateInput && document.activeElement !== rateInput) rateInput.value = rate || '';
     const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let totalHours = 0;
-    
     events.forEach(ev => {
-        if (ev.extendedProps && ev.extendedProps.category === 'Tutor') {
-            if (ev.start) {
-                const evDate = new Date(ev.start);
-                // 讀取「目前選擇的」年份與月份
-                if (evDate.getMonth() === currentBudgetMonth && evDate.getFullYear() === currentBudgetYear) {
-                    totalHours += parseFloat(ev.extendedProps.workHours) || 0;
-                }
-            }
+        if (ev.extendedProps && ev.extendedProps.category === 'Tutor' && ev.start) {
+            const d = new Date(ev.start);
+            if (d.getMonth() === currentBudgetMonth && d.getFullYear() === currentBudgetYear)
+                totalHours += parseFloat(ev.extendedProps.workHours) || 0;
         }
     });
-
     const autoIncome = totalHours * rate;
-    document.getElementById('tutor-auto-income').innerText = '+$' + autoIncome.toLocaleString();
+    document.getElementById('tutor-auto-income').innerText  = '+$' + autoIncome.toLocaleString();
     document.getElementById('tutor-hours-display').innerText = `${totalHours} hrs`;
-
     return autoIncome;
 }
 
 function renderTransactions() {
     const tutorIncome = renderTutorIncome();
-
-    const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
-    
-    // 只篩選出「目前選擇的」年份與月份的記帳資料
-    const filteredTrxs = trxs.filter(trx => {
-        if(!trx.date) return false;
-        const tDate = new Date(trx.date);
-        return tDate.getMonth() === currentBudgetMonth && tDate.getFullYear() === currentBudgetYear;
-    });
-    
-    filteredTrxs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]')
+        .filter(t => { if (!t.date) return false; const d = new Date(t.date); return d.getMonth() === currentBudgetMonth && d.getFullYear() === currentBudgetYear; })
+        .sort((a,b) => new Date(b.date) - new Date(a.date));
 
     const incList = document.getElementById('income-list');
     const expList = document.getElementById('expenditure-list');
     incList.innerHTML = ''; expList.innerHTML = '';
+    let manualIncome = 0, totalExpense = 0, hasInc = false, hasExp = false;
 
-    let hasInc = false, hasExp = false;
-    let manualIncome = 0;
-    let totalExpense = 0;
-
-    filteredTrxs.forEach(trx => {
+    trxs.forEach(trx => {
         const el = document.createElement('div');
         el.className = "flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-b border-gray-50 last:border-0 transition-colors";
         el.onclick = () => openTrxModal(trx.id);
@@ -1936,129 +1535,80 @@ function renderTransactions() {
                 <span class="text-sm font-bold text-gray-700">${trx.desc}</span>
                 <span class="text-[10px] text-gray-400 font-mono">${trx.date}</span>
             </div>
-            <span class="font-mono font-bold ${trx.type === 'income' ? 'text-green-600' : 'text-red-400'}">
-                ${trx.type === 'income' ? '+' : '-'}$${parseFloat(trx.amount).toLocaleString()}
-            </span>
-        `;
-        if (trx.type === 'income') { 
-            incList.appendChild(el); hasInc = true; 
-            manualIncome += parseFloat(trx.amount) || 0;
-        } else { 
-            expList.appendChild(el); hasExp = true; 
-            totalExpense += parseFloat(trx.amount) || 0;
-        }
+            <span class="font-mono font-bold ${trx.type === 'income' ? 'text-green-600' : 'text-red-400'}">${trx.type === 'income' ? '+' : '-'}$${parseFloat(trx.amount).toLocaleString()}</span>`;
+        if (trx.type === 'income') { incList.appendChild(el); hasInc = true; manualIncome += parseFloat(trx.amount) || 0; }
+        else                       { expList.appendChild(el); hasExp = true; totalExpense += parseFloat(trx.amount) || 0; }
     });
-
-    if(!hasInc) incList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No income records</div>';
-    if(!hasExp) expList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No expenditure records</div>';
+    if (!hasInc) incList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No income records</div>';
+    if (!hasExp) expList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No expenditure records</div>';
 
     const totalIncome = manualIncome + tutorIncome;
-    const balance = totalIncome - totalExpense;
+    const balance     = totalIncome - totalExpense;
+    const expPercent  = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
+    const pieChart    = document.getElementById('budget-pie-chart');
+    if (totalIncome === 0 && totalExpense === 0)       pieChart.style.background = '#E5E5E5';
+    else if (totalIncome === 0 && totalExpense > 0)    pieChart.style.background = '#E8D1D1';
+    else                                               pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`;
 
-    // 動態更新圓餅圖與統計列表
-    const expPercent = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
-    const pieChart = document.getElementById('budget-pie-chart');
-    if (totalIncome === 0 && totalExpense === 0) {
-        pieChart.style.background = '#E5E5E5'; // 灰色
-    } else if (totalIncome === 0 && totalExpense > 0) {
-        pieChart.style.background = '#E8D1D1'; // 全部紅色
-    } else {
-        pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`; // 紅色(支出) 與 綠色(剩餘)
-    }
-
-    document.getElementById('summary-income').innerText = '$' + totalIncome.toLocaleString();
+    document.getElementById('summary-income').innerText  = '$' + totalIncome.toLocaleString();
     document.getElementById('summary-expense').innerText = '$' + totalExpense.toLocaleString();
     document.getElementById('summary-balance').innerText = '$' + balance.toLocaleString();
 
-    // 更新標題月份顯示
-    const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const displayEl = document.getElementById('budget-month-display');
-    if(displayEl) {
-        displayEl.innerText = `- ${monthNamesEn[currentBudgetMonth]} ${currentBudgetYear}`;
-    }
+    const monthNamesEn = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const dispEl = document.getElementById('budget-month-display');
+    if (dispEl) dispEl.innerText = `- ${monthNamesEn[currentBudgetMonth]} ${currentBudgetYear}`;
 }
 
 function openTrxModal(id = null) {
     editingTrxId = id;
     document.getElementById('trxModal').classList.remove('hidden');
     const delBtn = document.getElementById('trx-delete-btn');
-    
     if (id) {
-        const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
-        const trx = trxs.find(t => t.id === id);
-        if (trx) {
-            document.getElementById('trx-type').value = trx.type;
-            document.getElementById('trx-date').value = trx.date;
-            document.getElementById('trx-desc').value = trx.desc;
-            document.getElementById('trx-amount').value = trx.amount;
-            delBtn.classList.remove('hidden');
-        }
+        const trx = JSON.parse(localStorage.getItem(TRX_KEY) || '[]').find(t => t.id === id);
+        if (trx) { document.getElementById('trx-type').value = trx.type; document.getElementById('trx-date').value = trx.date; document.getElementById('trx-desc').value = trx.desc; document.getElementById('trx-amount').value = trx.amount; delBtn.classList.remove('hidden'); }
     } else {
-        document.getElementById('trx-type').value = 'expense';
-        document.getElementById('trx-date').value = today();
-        document.getElementById('trx-desc').value = '';
+        document.getElementById('trx-type').value   = 'expense';
+        document.getElementById('trx-date').value   = today();
+        document.getElementById('trx-desc').value   = '';
         document.getElementById('trx-amount').value = '';
         delBtn.classList.add('hidden');
     }
 }
-
-function closeTrxModal() {
-    document.getElementById('trxModal').classList.add('hidden');
-    editingTrxId = null;
-}
-
+function closeTrxModal() { document.getElementById('trxModal').classList.add('hidden'); editingTrxId = null; }
 function saveTrx() {
     const type = document.getElementById('trx-type').value;
     const date = document.getElementById('trx-date').value || today();
     const desc = document.getElementById('trx-desc').value || '未命名';
     const amount = document.getElementById('trx-amount').value || 0;
-
     let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
     if (editingTrxId) {
         const idx = trxs.findIndex(t => t.id === editingTrxId);
-        if (idx > -1) {
-            trxs[idx] = { id: editingTrxId, type, date, desc, amount };
-        }
+        if (idx > -1) trxs[idx] = { id:editingTrxId, type, date, desc, amount };
     } else {
-        trxs.push({ id: 'trx_' + Date.now(), type, date, desc, amount });
+        trxs.push({ id:'trx_'+Date.now(), type, date, desc, amount });
     }
-    localStorage.setItem(TRX_KEY, JSON.stringify(trxs));
-    syncToCloud();
-    closeTrxModal();
-    renderTransactions();
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs)); syncToCloud(); closeTrxModal(); renderTransactions();
 }
-
 function deleteTrx() {
-    if (!editingTrxId) return;
-    if (!confirm("確定要刪除這筆紀錄嗎？")) return;
-    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
-    trxs = trxs.filter(t => t.id !== editingTrxId);
-    localStorage.setItem(TRX_KEY, JSON.stringify(trxs));
-    syncToCloud();
-    closeTrxModal();
-    renderTransactions();
+    if (!editingTrxId || !confirm("確定要刪除這筆紀錄嗎？")) return;
+    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]').filter(t => t.id !== editingTrxId);
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs)); syncToCloud(); closeTrxModal(); renderTransactions();
 }
 
-// ── UNIFIED MODAL LOGIC (Calendar & Record Saving) ──────────
-function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) {
+// ── UNIFIED MODAL ─────────────────────────────────────────────
+function openUnifiedModal(ev = null, clickedDateStr = null) {
     document.getElementById('unifiedModal').classList.remove('hidden');
     const deleteBtn = document.getElementById('deleteBtn');
-
     if (ev && ev.id) {
-        editingId = String(ev.id); 
-        deleteBtn.classList.remove('hidden');
+        editingId = String(ev.id); deleteBtn.classList.remove('hidden');
         if (ev.extendedProps.isReading) {
-            // 點擊既有的閱讀紀錄，把書籍卡片的日期改成事件日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
-            
-            // 針對舊紀錄缺乏 bookId 的相容處理，透過書名反向尋找
             if (!actBook) {
                 const titleMatch = ev.title.match(/^(.*?)\s*\(p\.\d+\/\d+\)$/);
                 const rawTitle = titleMatch ? titleMatch[1].trim() : ev.title.trim();
                 actBook = currentBooks.find(b => b.title === rawTitle);
             }
-
             if (actBook) {
                 actBook.logDate = ev.startStr.split('T')[0];
                 lastEditedBookId = actBook.id;
@@ -2069,90 +1619,61 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
             }
         } else {
             switchType('schedule');
-            document.getElementById('inputMain').value = ev.extendedProps.originalTitle || ev.title;
-            document.getElementById('inputDate').value = ev.startStr.split('T')[0];
+            document.getElementById('inputMain').value  = ev.extendedProps.originalTitle || ev.title;
+            document.getElementById('inputDate').value  = ev.startStr.split('T')[0];
             document.getElementById('inputNotes').value = ev.extendedProps.notes || '';
-            
             if (!ev.allDay && ev.startStr.includes('T')) {
                 const time = ev.startStr.split('T')[1].split(':');
-                document.getElementById('selectHour').value = time[0];
+                document.getElementById('selectHour').value   = time[0];
                 document.getElementById('selectMinute').value = time[1];
             }
-            
             const cat = ev.extendedProps.category || 'Personal';
             setCategory(cat);
-            
             if (cat === 'Travel' && ev.end) {
-                let d = new Date(ev.end);
-                d.setDate(d.getDate() - 1);
+                let d = new Date(ev.end); d.setDate(d.getDate() - 1);
                 document.getElementById('inputEndDate').value = d.toISOString().split('T')[0];
             }
-            
-            if (cat === 'Tutor') {
-                document.getElementById('workHours').value = ev.extendedProps.workHours || '';
-            }
+            if (cat === 'Tutor') document.getElementById('workHours').value = ev.extendedProps.workHours || '';
         }
     } else {
-        // 新增紀錄
-        editingId = null;
-        deleteBtn.classList.add('hidden');
-        document.getElementById('inputMain').value = '';
+        editingId = null; deleteBtn.classList.add('hidden');
+        document.getElementById('inputMain').value  = '';
         document.getElementById('inputNotes').value = '';
-        
-        let targetDate = clickedDateStr ? clickedDateStr : today();
-        document.getElementById('inputDate').value = targetDate;
+        let targetDate = clickedDateStr || today();
+        document.getElementById('inputDate').value    = targetDate;
         document.getElementById('inputEndDate').value = targetDate;
-        
-        // 把所有正在閱讀的書的預設日期變成點選的那一天
         let currentBooks = loadBooks();
-        currentBooks.forEach(b => {
-            if (!b.done && !b.isToRead) {
-                b.logDate = targetDate;
-            }
-        });
+        currentBooks.forEach(b => { if (!b.done && !b.isToRead) b.logDate = targetDate; });
         localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
-        lastEditedBookId = null; 
-
-        setCategory('Personal');
-        switchType('schedule');
+        lastEditedBookId = null;
+        setCategory('Personal'); switchType('schedule');
     }
 }
-
-function closeUnifiedModal() {
-    document.getElementById('unifiedModal').classList.add('hidden');
-    editingId = null;
-}
+function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); editingId = null; }
 
 function switchType(type, forceBookId = null) {
     currentType = type;
     const s = document.getElementById('schedule-fields-static'), r = document.getElementById('read-fields'), btn = document.getElementById('saveBtn');
     document.getElementById('tab-schedule').classList.toggle('active', type === 'schedule');
-    document.getElementById('tab-reading').classList.toggle('active', type === 'reading');
-    if (type === 'schedule') {
-        s.style.display = 'block'; r.style.display = 'none'; btn.style.backgroundColor = '#8DAAB9'; setCategory(currentCategory);
-    } else {
-        s.style.display = 'none'; r.style.display = 'block'; btn.style.backgroundColor = '#7F9F9F'; renderBooks(forceBookId);
-    }
+    document.getElementById('tab-reading').classList.toggle('active',  type === 'reading');
+    if (type === 'schedule') { s.style.display = 'block'; r.style.display = 'none'; btn.style.backgroundColor = '#8DAAB9'; setCategory(currentCategory); }
+    else                     { s.style.display = 'none';  r.style.display = 'block'; btn.style.backgroundColor = '#7F9F9F'; renderBooks(forceBookId); }
 }
 
 function setCategory(cat) {
     currentCategory = cat;
     ['Tutor','Work','Exercise','Travel','Personal'].forEach(c => {
-        const b = document.getElementById(`cat-${c}`);
-        if (b) b.classList.toggle('selected', c === cat);
+        const b = document.getElementById(`cat-${c}`); if (b) b.classList.toggle('selected', c === cat);
     });
-    
-    const startTimeBox = document.getElementById('startTimeBox');
+    const startTimeBox       = document.getElementById('startTimeBox');
     const travelEndContainer = document.getElementById('travel-end-container');
     const workHoursContainer = document.getElementById('work-hours-container');
-    
     if (cat === 'Travel') {
-        if(startTimeBox) startTimeBox.style.display = 'none';
-        travelEndContainer.style.display = 'flex';
-        workHoursContainer.style.display = 'none';
+        if (startTimeBox) startTimeBox.style.display = 'none';
+        travelEndContainer.style.display = 'flex'; workHoursContainer.style.display = 'none';
         document.getElementById('dateLabel').innerText = 'Start Date';
     } else {
-        if(startTimeBox) startTimeBox.style.display = 'flex';
+        if (startTimeBox) startTimeBox.style.display = 'flex';
         travelEndContainer.style.display = 'none';
         workHoursContainer.style.display = (cat === 'Tutor') ? 'flex' : 'none';
         document.getElementById('dateLabel').innerText = 'Date & Time';
@@ -2161,106 +1682,63 @@ function setCategory(cat) {
 
 function handleDelete() {
     if (!editingId) return;
-    let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    storage = storage.filter(e => String(e.id) !== String(editingId));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    syncToCloud();
-    
+    let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').filter(e => String(e.id) !== String(editingId));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage)); syncToCloud();
     if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
-    if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (bwCalendar)   { bwCalendar.removeAllEvents();   bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
     if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
-    
-    closeUnifiedModal();
-    renderStatsTable();
-    renderTutorIncome(); 
+    closeUnifiedModal(); renderStatsTable(); renderTutorIncome();
 }
 
 function handleSave() {
     const date = document.getElementById('inputDate').value; if (!date) return;
     const hour = document.getElementById('selectHour').value;
-    const min = document.getElementById('selectMinute').value;
+    const min  = document.getElementById('selectMinute').value;
     let title, bgColor, startStr, endStr, priority = 1, isReading = false, cover = null, isAllDay = false, notes = '', whVal = '', activeBookId = null;
 
     if (currentType === 'schedule') {
         const main = document.getElementById('inputMain').value; if (!main) return;
         notes = document.getElementById('inputNotes').value;
-        const colorMap = { Tutor: '#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
+        const colorMap = { Tutor:'#E2EBF0', Work:'#E8D1D1', Exercise:'#D5E0D5', Travel:'#EBE5D1', Personal:'#E5E5E5' };
         bgColor = colorMap[currentCategory] || '#E5E5E5';
-        
         if (currentCategory === 'Travel') {
-            isAllDay = true;
-            title = main;
-            startStr = date;
+            isAllDay = true; title = main; startStr = date;
             const ed = document.getElementById('inputEndDate').value;
-            if (ed) {
-                let d = new Date(ed);
-                d.setDate(d.getDate() + 1);
-                endStr = d.toISOString().split('T')[0];
-            }
+            if (ed) { let d = new Date(ed); d.setDate(d.getDate() + 1); endStr = d.toISOString().split('T')[0]; }
         } else if (currentCategory === 'Tutor') {
             whVal = document.getElementById('workHours').value;
             title = `${hour}:${min} ${main}${whVal ? ' (' + whVal + 'h)' : ''}`;
             startStr = `${date}T${hour}:${min}:00`;
         } else {
-            title = `${hour}:${min} ${main}`;
+            title    = `${hour}:${min} ${main}`;
             startStr = `${date}T${hour}:${min}:00`;
         }
     } else {
         const allBooks = loadBooks();
         let b = null;
-
-        // 優先找剛剛正在編輯的書
-        if (lastEditedBookId) {
-            b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
-        }
-
-        // 如果沒有鎖定目標，就找畫面上第一個渲染出來的書
-        if (!b) {
-            const firstRow = document.querySelector('#books-container .book-row');
-            if (firstRow) {
-                b = allBooks.find(book => String(book.id) === String(firstRow.dataset.id));
-            }
-        }
-
-        // 若是完全空白的未編輯卡片就不存行事曆
-        if (!b || (!b.title && b.currentPage === 0 && !b.cover)) {
-            closeUnifiedModal();
-            return;
-        }
-
+        if (lastEditedBookId) b = allBooks.find(book => String(book.id) === String(lastEditedBookId));
+        if (!b) { const firstRow = document.querySelector('#books-container .book-row'); if (firstRow) b = allBooks.find(book => String(book.id) === String(firstRow.dataset.id)); }
+        if (!b || (!b.title && b.currentPage === 0 && !b.cover)) { closeUnifiedModal(); return; }
         title = `${b.title || 'Reading'} (p.${b.currentPage}/${b.totalPages})`;
-        bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover; 
-        
-        // 抓取書籍卡片上的日期作為打卡日期 (b.logDate 是透過 onchange 同步的)
-        startStr = b.logDate || today(); 
-        isAllDay = true;
-        activeBookId = b.id; 
+        bgColor = '#E4E1F2'; priority = 99; isReading = true; cover = b.cover;
+        startStr = b.logDate || today(); isAllDay = true; activeBookId = b.id;
     }
 
-    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const newId = editingId || Date.now().toString();
-    const evData = { 
+    const storage  = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const newId    = editingId || Date.now().toString();
+    const evData   = {
         id: String(newId), title, start: startStr, end: endStr, allDay: isAllDay,
-        extendedProps: { bgColor, priority, isReading, cover, bookId: activeBookId, category: currentCategory, originalTitle: (currentType==='schedule' ? document.getElementById('inputMain').value : ''), notes, workHours: whVal } 
+        extendedProps: { bgColor, priority, isReading, cover, bookId: activeBookId, category: currentCategory, originalTitle:(currentType==='schedule' ? document.getElementById('inputMain').value : ''), notes, workHours: whVal }
     };
-
     const idx = storage.findIndex(e => String(e.id) === String(newId));
     if (idx > -1) storage[idx] = evData; else storage.push(evData);
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    syncToCloud();
-    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage)); syncToCloud();
     if (mainCalendar) { mainCalendar.removeAllEvents(); mainCalendar.addEventSource(storage); }
-    if (bwCalendar) { bwCalendar.removeAllEvents(); bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
+    if (bwCalendar)   { bwCalendar.removeAllEvents();   bwCalendar.addEventSource(storage.filter(e => e.extendedProps && e.extendedProps.isReading)); }
     if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
-
     closeUnifiedModal();
-    
-    if (isReading) {
-        renderStatsTable(); 
-    } else if (currentCategory === 'Tutor') {
-        renderTutorIncome(); 
-    }
+    if (isReading) renderStatsTable();
+    else if (currentCategory === 'Tutor') renderTutorIncome();
 }
 </script>
 </body>
