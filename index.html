@@ -1458,7 +1458,11 @@ function renderStatsTable() {
             }
         }
 
+        // 跳脫單引號防護機制
+        const safeTitle = (book.title || '未命名').replace(/'/g, "\\'");
+
         const tr1 = document.createElement('tr');
+        tr1.className = "hover:bg-gray-50/50 transition-colors";
         tr1.innerHTML = `
             <td rowspan="2" class="w-16 align-top" style="padding-top: 16px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important;">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
@@ -1471,6 +1475,7 @@ function renderStatsTable() {
         `;
 
         const tr2 = document.createElement('tr');
+        tr2.className = "hover:bg-gray-50/50 transition-colors";
         tr2.innerHTML = `
             <td class="align-top min-w-[180px]" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
@@ -1506,7 +1511,7 @@ function renderStatsTable() {
             </td>
             <td class="align-top text-right pr-2 whitespace-nowrap" style="padding-top: 2px !important; padding-bottom: 16px !important; border-bottom: 1px solid #F0F0F0 !important; border-top: none !important;">
                 <div class="flex items-center justify-end gap-3">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${safeTitle}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
                         Analysis
                     </button>
                     <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
