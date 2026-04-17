@@ -1149,17 +1149,27 @@ function renderMonthlyStats() {
     books.forEach(b => {
         if (b.done && !b.isToRead) {
             let actualEndDate = null;
+            // 抓取行事曆上關於這本書的所有打卡紀錄
             const bookEvents = calendarEvents.filter(e => e.extendedProps && e.extendedProps.isReading && String(e.extendedProps.bookId) === String(b.id));
+            
             if (bookEvents.length > 0) {
+                // 依照時間先後排序打卡紀錄
                 const sortedEvents = bookEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
-                if (sortedEvents[0].start) {
-                    actualEndDate = sortedEvents[0].start.split('T')[0];
+                // 【修正處】抓取「最後一次」打卡的時間（陣列的最後一筆），作為實際結束日
+                if (sortedEvents[sortedEvents.length - 1].start) {
+                    actualEndDate = sortedEvents[sortedEvents.length - 1].start.split('T')[0];
                 }
             }
 
-            let finalDateStr = actualEndDate || b.completedAt || b.logDate;
+            // 【修正處】決定月份歸屬的優先順序：
+            // 1. b.completedAt (使用者勾選「已完成」當下系統記錄的精確時間)
+            // 2. actualEndDate (這本書在行事曆上的最後一次打卡日)
+            // 3. b.logDate (如果都沒有，才使用卡片建立日作為防錯退路)
+            let finalDateStr = b.completedAt || actualEndDate || b.logDate;
+            
             if (finalDateStr) {
                 const date = new Date(finalDateStr);
+                // 確定是今年的書，才塞入對應月份的陣列
                 if (date.getFullYear() === currentYear) {
                     monthlyGroups[date.getMonth()].push(b);
                     yearlyTotal++;
