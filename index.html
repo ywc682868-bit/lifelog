@@ -242,7 +242,10 @@
             <li><button onclick="showSection('academic'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-building-columns text-xs"></i> Academic</button></li>
             <li><button onclick="showSection('finance'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-wallet text-xs"></i> Finance</button></li>
         </ul>
-        <div class="mt-auto pt-4 border-t border-white/10">
+        <div class="mt-auto pt-4 border-t border-white/10 flex flex-col gap-1">
+            <button onclick="openExportModal()" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-sm transition-colors opacity-70 hover:opacity-100">
+                <i class="fa-solid fa-file-export text-xs"></i> Export Data
+            </button>
             <button onclick="openImportModal()" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-sm transition-colors opacity-70 hover:opacity-100">
                 <i class="fa-solid fa-file-import text-xs"></i> Import Data
             </button>
