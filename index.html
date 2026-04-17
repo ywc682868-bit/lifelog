@@ -353,7 +353,7 @@
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
                     
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full">
                         </div>
                 </div>
 
@@ -2053,12 +2053,22 @@ function openUnifiedModal(ev = null, clickedDateStr = null, forceBookId = null) 
             // 點擊既有的閱讀紀錄，把書籍卡片的日期改成事件日期
             let currentBooks = loadBooks();
             let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
+            
+            // 針對舊紀錄缺乏 bookId 的相容處理，透過書名反向尋找
+            if (!actBook) {
+                const titleMatch = ev.title.match(/^(.*?)\s*\(p\.\d+\/\d+\)$/);
+                const rawTitle = titleMatch ? titleMatch[1].trim() : ev.title.trim();
+                actBook = currentBooks.find(b => b.title === rawTitle);
+            }
+
             if (actBook) {
                 actBook.logDate = ev.startStr.split('T')[0];
                 lastEditedBookId = actBook.id;
                 localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
+                switchType('reading', actBook.id);
+            } else {
+                switchType('reading', ev.extendedProps.bookId);
             }
-            switchType('reading', ev.extendedProps.bookId);
         } else {
             switchType('schedule');
             document.getElementById('inputMain').value = ev.extendedProps.originalTitle || ev.title;
