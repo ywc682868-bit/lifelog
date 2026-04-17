@@ -226,7 +226,7 @@
     <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
         <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
         
-        <button onclick="forceSyncPull()" class="mb-8 mt-4 md:mt-0 text-left group">
+        <button onclick="showSection('main'); forceSyncPull(); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
                 <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
