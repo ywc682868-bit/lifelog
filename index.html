@@ -74,12 +74,8 @@
 }
 
 .fc-daygrid-day-frame {
-    min-height: 140px !important; /* 您可以修改 140px 這個數字，數字越大格子越長 */
-    overflow-y: auto !important;
-}
-
-.fc-daygrid-day-frame::-webkit-scrollbar {
-    display: none;
+    min-height: 140px !important; 
+    /* 絕對不要加 overflow 屬性，讓行事曆自然往右延伸與向下長高 */
 }
         .fc-event { border: none !important; background: transparent !important; margin-bottom: 1px !important; }
         .fc-h-event { border-radius: 4px !important; }
