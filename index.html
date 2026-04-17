@@ -795,10 +795,6 @@ window.addEventListener('online', () => forceSyncPull(false));
 
 // ── 初始化 ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('ashley_cleanup_2026_v1')) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.setItem('ashley_cleanup_2026_v1', 'done');
-    }
     initTimeDropdowns();
     listenToCloud();
 });
