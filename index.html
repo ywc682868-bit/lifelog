@@ -188,27 +188,29 @@
         }
 
         /* Responsive Mobile Specific CSS */
+        .calendar-scroll-wrapper { overflow: hidden; width: 100%; height: 100%; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         @media (max-width: 768px) {
             main { padding-top: 4rem !important; }
             .category-grid { grid-template-columns: repeat(3, 1fr); }
-            .modal-fixed-card { height: 90vh !important; max-height: 700px !important; }
+            .modal-fixed-card { height: auto !important; max-height: 90vh !important; overflow-y: auto; }
             
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc-header-toolbar { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 0 4px !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; width: auto !important; }
 
-            .calendar-scroll-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
-            #main-calendar, #bw-calendar, #acad-calendar { min-width: 233%; min-height: 800px; }
+            /* 行事曆強制寬高以防在彈性佈局下消失 */
+            .calendar-scroll-wrapper { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; width: 100%; min-height: 550px; }
+            #main-calendar, #bw-calendar, #acad-calendar { min-width: 800px !important; height: 550px !important; }
 
             .pan-wrapper { overflow: auto; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; display: block !important; }
             .pan-inner { width: 150%; min-height: 120%; transform: scale(0.85); transform-origin: top left; padding-bottom: 20px; display: block !important; }
 
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
-            .bw-tab-container { overflow-x: visible; }
+            .bw-tab-container { overflow-x: auto; overflow-y: hidden; white-space: nowrap; flex-wrap: nowrap; }
         }
     </style>
 </head>
@@ -224,12 +226,12 @@
     <nav id="mobile-sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 md:w-52 bg-morandi-dark-gray text-morandi-gray p-5 flex flex-col rounded-r-[30px] shadow-2xl shrink-0 z-50 transition-transform duration-300">
         <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
         
-        <button onclick="showSection('main'); toggleSidebar();" class="mb-8 mt-4 md:mt-0 text-left group">
+        <button onclick="forceSyncPull()" class="mb-8 mt-4 md:mt-0 text-left group">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-cursive text-morandi-blue-dark transition-colors group-hover:text-white">Ashley's Optimization</h1>
                 <i class="fa-solid fa-seedling text-morandi-blue-dark text-[12px] group-hover:text-white"></i>
             </div>
-            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400">
+            <div id="cloud-status" class="text-[10px] mt-1 text-gray-400 transition-opacity">
                 <i class="fa-solid fa-cloud"></i> <span>Ready</span>
             </div>
         </button>
@@ -246,8 +248,8 @@
         <div class="p-4 h-full flex flex-col">
             
             <section id="main-section" class="flex-1 bg-morandi-gray/5 p-4 rounded-[20px] border border-white/30 shadow-sm flex flex-col overflow-hidden">
-                <div class="calendar-scroll-wrapper flex-1 w-full h-full min-h-0">
-                    <div id="main-calendar" class="w-full h-full"></div>
+                <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
+                    <div id="main-calendar"></div>
                 </div>
             </section>
 
@@ -262,7 +264,7 @@
                         
                         <div id="bw-tab-calendar" class="bw-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
                             <div class="calendar-scroll-wrapper shrink-0 w-full h-[450px] md:h-[500px]">
-                                <div id="bw-calendar" class="w-full h-full"></div>
+                                <div id="bw-calendar"></div>
                             </div>
                             <div class="bg-white p-5 rounded-[20px] shadow-sm shrink-0">
                                 <h3 class="text-lg font-bold text-morandi-dark-gray mb-4 font-zh">年度閱讀統計 <span id="yearly-total" class="text-sm font-normal text-gray-500"></span></h3>
@@ -279,7 +281,7 @@
                         </div>
 
                         <div id="bw-tab-stats" class="bw-tab-content hidden flex-1 overflow-y-auto min-h-0">
-                            <div class="overflow-x-auto shadow-sm rounded-xl">
+                            <div class="overflow-x-auto shadow-sm rounded-xl w-full">
                                 <table class="stats-table min-w-full">
                                     <tbody id="stats-table-body">
                                         </tbody>
@@ -301,7 +303,7 @@
                         
                         <div id="acad-tab-timeline" class="acad-tab-content flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
                             <div class="calendar-scroll-wrapper flex-1 w-full min-h-0">
-                                <div id="acad-calendar" class="w-full h-full"></div>
+                                <div id="acad-calendar"></div>
                             </div>
                         </div>
 
@@ -350,7 +352,7 @@
                         <i class="fa-solid fa-plus text-sm"></i>
                     </button>
                     
-                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div id="wallet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full">
                         </div>
                 </div>
 
@@ -756,6 +758,42 @@ function refreshAllUI() {
     renderWallet();
     renderTransactions();
 }
+
+// 支援手動強制更新機制
+function forceSyncPull(silent = false) {
+    const statusEl = document.getElementById('cloud-status');
+    if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-morandi-blue-dark"></i> <span class="text-morandi-blue-dark">Syncing...</span>';
+    
+    db.ref('user_data').once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            localStorage.setItem(STORAGE_KEY, data.events || '[]');
+            localStorage.setItem(BOOKS_KEY, data.books || '[]');
+            localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
+            localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
+            localStorage.setItem(WALLET_KEY, data.wallet || '[]');
+            localStorage.setItem(TRX_KEY, data.trx || '[]');
+            localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
+            refreshAllUI();
+            
+            if (!silent && statusEl) {
+                statusEl.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> <span class="text-green-500">Updated</span>';
+                setTimeout(() => {
+                    statusEl.innerHTML = '<i class="fa-solid fa-cloud text-gray-400"></i> <span>Ready</span>';
+                }, 2000);
+            }
+        }
+    }).catch(e => {
+        if (!silent && statusEl) statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> <span class="text-red-500">Fail</span>';
+    });
+}
+
+// 手機喚醒/回到頁面時自動觸發更新
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        forceSyncPull(true);
+    }
+});
 
 // ===========================
 
@@ -1421,59 +1459,59 @@ function renderStatsTable() {
         const tr1 = document.createElement('tr');
         tr1.className = "hover:bg-gray-50/30 transition-colors";
         tr1.innerHTML = `
-            <td rowspan="2" class="w-16 align-top pt-4" style="border-bottom: none;">
+            <td rowspan="2" class="w-16 align-top" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="2" class="align-bottom pb-1 pt-4" style="border-bottom: none;">
+            <td colspan="5" class="align-bottom" style="padding-top: 16px; padding-bottom: 6px; border-bottom: none;">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
-            </td>
-            <td rowspan="2" class="w-24 align-middle text-center">
-                ${book.isToRead ? '-' : `<div class="text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1.5 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
-            </td>
-            <td rowspan="2" class="align-middle">
-                ${book.isToRead ? '-' : `
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
-                        <span class="text-xs text-gray-500 whitespace-nowrap">小時</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">分/次</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-14 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-xs text-gray-500 whitespace-nowrap">頁/分</span>
-                    </div>
-                </div>
-                `}
-            </td>
-            <td rowspan="2" class="relative align-middle">
-                <div class="flex items-center justify-end gap-3 pr-2">
-                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
-                    </button>
-                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
             </td>
         `;
 
         const tr2 = document.createElement('tr');
         tr2.className = "hover:bg-gray-50/30 transition-colors";
         tr2.innerHTML = `
-            <td class="align-top pt-1 pb-4">
+            <td class="align-top min-w-[180px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
                     <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
                     ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
                 </div>
             </td>
-            <td class="align-top pt-1 pb-4 w-48 whitespace-nowrap min-w-[150px]">
-                <div class="text-[11px] text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
+            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="text-xs text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar-days"></i> ${periodText}
+                </div>
+            </td>
+            <td class="align-top text-center w-24" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
+            </td>
+            <td class="align-top whitespace-nowrap" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                ${book.isToRead ? '-' : `
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span>
+                    </div>
+                </div>
+                `}
+            </td>
+            <td class="align-top text-right pr-2" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="flex items-center justify-end gap-3">
+                    <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
+                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
+                    </button>
+                    <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
                 </div>
             </td>
         `;
