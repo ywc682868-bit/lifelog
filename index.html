@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/scroll-behaviour.min.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -49,6 +53,13 @@
         :root { --font-en: 'Dancing Script', cursive; --font-zh: 'Klee One', sans-serif; }
         body { font-family: var(--font-zh); overflow: hidden; background-color: #F8F8F8; margin: 0; }
         .font-cursive { font-family: var(--font-en); }
+
+        /* 解決 iOS Safari 底部導覽列遮擋 100vh 的問題 */
+        @supports (-webkit-touch-callout: none) {
+            .h-screen {
+                height: -webkit-fill-available !important;
+            }
+        }
 
         .fc { font-family: var(--font-zh) !important; height: 100% !important; border: none !important; }
         .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #EEEEEE !important; }
@@ -150,7 +161,7 @@
         .bw-folder-tab.active { opacity: 1; height: 42px; box-shadow: 2px -4px 10px rgba(0,0,0,0.12); }
         
         .stats-cover { width: 40px; height: 55px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .toread-item { position: relative; width: 100%; aspect-ratio: 2/3; background: #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
+        .toread-item { position: relative; width: 100%; aspect-ratio: 2/3; background: #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; touch-action: none; }
         .toread-item:active { cursor: grabbing; transform: scale(0.95); }
         .toread-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .toread-item.drag-over { border: 2px solid #8DAAB9; opacity: 0.5; }
@@ -209,9 +220,6 @@
             .bw-folder-tab { font-size: 0.8rem !important; padding: 4px 10px 4px 20px !important; height: 30px !important; min-width: 100px !important; }
             .bw-folder-tab.active { height: 36px !important; }
             .bw-tab-container { overflow-x: visible; }
-            
-            /* Wallet 載具會員手機版直排 */
-            #wallet-grid { display: grid !important; grid-template-columns: 1fr !important; }
         }
     </style>
 </head>
@@ -621,7 +629,7 @@
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">類型</label>
                 <select id="wallet-type" class="custom-input h-[38px] text-sm mt-0 appearance-none bg-white shadow-sm border border-gray-100" onchange="toggleWalletFields()">
                     <option value="barcode">會員條碼 / 載具</option>
-                    <option value="link">行动支付 / 連結</option>
+                    <option value="link">行動支付 / 連結</option>
                 </select>
             </div>
             <div class="field-group">
@@ -764,6 +772,13 @@ function refreshAllUI() {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => { 
+    // 啟用 Mobile Drag & Drop Polyfill 以支援手機端的觸控拖曳行為
+    MobileDragDrop.polyfill({
+        dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+    });
+    // 防止手機滑動干擾拖曳事件
+    window.addEventListener('touchmove', function() {}, {passive: false});
+
     if (!localStorage.getItem('ashley_cleanup_2026_v1')) {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.setItem('ashley_cleanup_2026_v1', 'done');
@@ -1422,62 +1437,62 @@ function renderStatsTable() {
         }
 
         const tr1 = document.createElement('tr');
-        tr1.className = "hover:bg-gray-50/50 transition-colors";
+        tr1.className = "hover:bg-gray-50/30 transition-colors";
         tr1.innerHTML = `
-            <td rowspan="2" class="w-16 align-top pt-4 border-b border-gray-100">
+            <td rowspan="2" class="w-16 align-top" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="cursor-pointer hover:opacity-80 transition" onclick="openToReadModal('${book.id}')" title="編輯書籍資訊">
                     ${book.cover ? `<img src="${book.cover}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<div class="w-10 h-14 bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-dashed rounded">無</div>`}
                 </div>
             </td>
-            <td colspan="5" class="align-bottom pt-4 pb-2 border-none">
+            <td colspan="4" class="align-bottom" style="padding-top: 16px; padding-bottom: 6px; border-bottom: none;">
                 <div class="font-bold text-morandi-dark-gray text-[15px] tracking-wide">${book.title || '未命名'}</div>
             </td>
-        `;
-
-        const tr2 = document.createElement('tr');
-        tr2.className = "hover:bg-gray-50/50 transition-colors";
-        tr2.innerHTML = `
-            <td class="align-top pb-4 border-b border-gray-100 min-w-[160px]">
-                <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
-                    <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
-                    ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
-                </div>
-            </td>
-            <td class="align-top pb-4 border-b border-gray-100 w-48 whitespace-nowrap">
-                <div class="text-xs text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
-                    <i class="fa-regular fa-calendar-days"></i> ${periodText}
-                </div>
-            </td>
-            <td class="align-top pb-4 border-b border-gray-100 text-center w-24">
-                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
-            </td>
-            <td class="align-top pb-4 border-b border-gray-100 whitespace-nowrap">
-                ${book.isToRead ? '-' : `
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-16 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
-                        <span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span>
-                    </div>
-                </div>
-                `}
-            </td>
-            <td class="align-top pb-4 border-b border-gray-100 text-right pr-2 whitespace-nowrap">
+            <td rowspan="2" class="relative align-middle text-right pr-2" style="padding-top: 16px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
                 <div class="flex items-center justify-end gap-3">
                     <button class="ai-table-btn" onclick="openGeminiAnalysis('${book.title || '未命名'}', ${book.currentPage || 0}, ${book.totalPages || 0}, ${book.sessions}, ${readHours}, ${displayMins}, ${displayPages}, ${book.done}, ${book.isToRead})" title="至 Gemini 進行分析">
-                        Analysis
+                        <i class="fa-solid fa-sparkles text-[#7F9F9F]"></i> Analysis
                     </button>
                     <button class="delete-table-btn" onclick="deleteBookRecord('${book.id}')" title="刪除紀錄">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
+            </td>
+        `;
+
+        const tr2 = document.createElement('tr');
+        tr2.className = "hover:bg-gray-50/30 transition-colors";
+        tr2.innerHTML = `
+            <td class="align-top min-w-[180px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="text-xs text-gray-400 font-normal flex items-center gap-2">
+                    <span>平台: <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">${book.platform || '-'}</span></span>
+                    ${progressDisplay ? `<span>| ${progressDisplay}</span>` : ''}
+                </div>
+            </td>
+            <td class="align-top w-48 whitespace-nowrap min-w-[150px]" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                <div class="text-[11px] text-gray-400 font-mono tracking-tight flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-days"></i> ${periodText}
+                </div>
+            </td>
+            <td class="align-top text-center w-24" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                 ${book.isToRead ? '-' : `<div class="inline-block text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-lg shadow-sm">打卡 ${book.sessions} 次</div>`}
+            </td>
+            <td class="align-top whitespace-nowrap" style="padding-top: 6px; padding-bottom: 16px; border-bottom: 1px solid #F0F0F0;">
+                ${book.isToRead ? '-' : `
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${readHours}" onchange="updateTableHours('${book.id}', this.value)" class="w-12 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono"> 
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">小時</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayMins}" onchange="updateAvgField('${book.id}', 'manualAvgMins', this.value)" class="w-12 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">分/次</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" step="0.1" min="0" value="${displayPages}" onchange="updateAvgField('${book.id}', 'manualAvgPages', this.value)" class="w-12 border rounded py-1 px-1 text-xs outline-none text-center bg-gray-50 font-mono">
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">頁/分</span>
+                    </div>
+                </div>
+                `}
             </td>
         `;
 
