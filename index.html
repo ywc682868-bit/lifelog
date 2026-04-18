@@ -1134,20 +1134,28 @@ function deleteInvest() {
 
 async function fetchStockPrice(code) {
     const suffixes = ['.TW', '.TWO'];
+    const proxies = [
+        url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
     for (const suffix of suffixes) {
-        try {
-            const symbol = code + suffix;
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d&_=${Date.now()}`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-            const res = await fetch(proxyUrl);
-            const data = await res.json();
-            const parsed = JSON.parse(data.contents);
-            const result = parsed?.chart?.result?.[0];
-            if (!result) continue;
-            const price = result.meta?.regularMarketPrice
-                || result.indicators?.quote?.[0]?.close?.filter(Boolean).slice(-1)[0];
-            if (price && price > 0) return price;
-        } catch(e) {}
+        const symbol = code + suffix;
+        const apiUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`;
+        for (const proxyFn of proxies) {
+            try {
+                const res = await fetch(proxyFn(apiUrl), { signal: AbortSignal.timeout(8000) });
+                const raw = await res.text();
+                // allorigins 回傳 {contents: "..."}, corsproxy 直接回傳 JSON
+                let parsed;
+                try { const wrap = JSON.parse(raw); parsed = typeof wrap.contents === 'string' ? JSON.parse(wrap.contents) : wrap; }
+                catch(e) { parsed = JSON.parse(raw); }
+                const result = parsed?.chart?.result?.[0];
+                if (!result) continue;
+                const price = result.meta?.regularMarketPrice
+                    || result.indicators?.quote?.[0]?.close?.filter(Boolean).slice(-1)[0];
+                if (price && price > 0) return price;
+            } catch(e) { continue; }
+        }
     }
     return null;
 }
