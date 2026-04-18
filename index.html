@@ -444,6 +444,7 @@
                                 <thead><tr>
                                     <th class="text-left">代碼</th>
                                     <th class="text-left">名稱</th>
+                                    <th class="text-left">券商</th>
                                     <th class="text-right">投入金額</th>
                                     <th class="text-right">現價</th>
                                     <th class="text-right">目前獲利</th>
@@ -475,6 +476,10 @@
             <div class="field-group">
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">名稱</label>
                 <input type="text" id="invest-name" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：台積電">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">券商</label>
+                <input type="text" id="invest-broker" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：富邦、永豐">
             </div>
             <div class="field-group">
                 <label class="text-xs font-bold text-morandi-dark-gray mb-1">投入金額 (NT$)</label>
@@ -1092,6 +1097,7 @@ function openInvestModal(id = null) {
         if (item) {
             document.getElementById('invest-code').value   = item.code;
             document.getElementById('invest-name').value   = item.name;
+            document.getElementById('invest-broker').value = item.broker || '';
             document.getElementById('invest-amount').value = item.amount;
             document.getElementById('invest-shares').value = item.shares || 0;
         }
@@ -1099,6 +1105,7 @@ function openInvestModal(id = null) {
     } else {
         document.getElementById('invest-code').value   = '';
         document.getElementById('invest-name').value   = '';
+        document.getElementById('invest-broker').value = '';
         document.getElementById('invest-amount').value = '';
         document.getElementById('invest-shares').value = '';
         delBtn.classList.add('hidden');
@@ -1111,15 +1118,16 @@ function closeInvestModal() { document.getElementById('investModal').classList.a
 function saveInvest() {
     const code   = document.getElementById('invest-code').value.trim().toUpperCase();
     const name   = document.getElementById('invest-name').value.trim();
+    const broker = document.getElementById('invest-broker').value.trim();
     const amount = parseFloat(document.getElementById('invest-amount').value) || 0;
     const shares = parseFloat(document.getElementById('invest-shares').value) || 0;
     if (!code || !name) return;
     let items = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]');
     if (editingInvestId) {
         const idx = items.findIndex(x => x.id === editingInvestId);
-        if (idx > -1) items[idx] = { ...items[idx], code, name, amount, shares };
+        if (idx > -1) items[idx] = { ...items[idx], code, name, broker, amount, shares };
     } else {
-        items.push({ id: 'inv_' + Date.now(), code, name, amount, shares, price: null, lastUpdate: null });
+        items.push({ id: 'inv_' + Date.now(), code, name, broker, amount, shares, price: null, lastUpdate: null });
     }
     localStorage.setItem(INVEST_KEY, JSON.stringify(items)); syncToCloud();
     closeInvestModal(); renderInvest();
@@ -1195,6 +1203,7 @@ function renderInvest() {
         return `<tr>
             <td class="font-bold text-sm text-morandi-blue-dark">${item.code}</td>
             <td class="text-sm">${item.name}</td>
+            <td class="text-xs text-gray-400">${item.broker || '-'}</td>
             <td class="text-right font-mono text-sm">$${item.amount.toLocaleString()}</td>
             <td class="text-right font-mono text-xs text-gray-500">${item.price ? '$' + item.price.toLocaleString() : '-'}</td>
             <td class="text-right font-mono text-sm" style="${profitColor}">${profit !== null ? (profit >= 0 ? '+' : '') + '$' + profit.toLocaleString() + (profitPct ? ` (${profitPct}%)` : '') : '-'}</td>
