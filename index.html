@@ -1211,10 +1211,21 @@ function renderInvest() {
         </tr>`;
     }).join('');
     const totalProfit = totalValue > 0 ? totalValue - totalAmount : null;
-    if (sumEl) sumEl.innerHTML = `
-        <span>總投入：<strong class="text-gray-700 font-mono">$${totalAmount.toLocaleString()}</strong></span>
-        ${totalProfit !== null ? `<span>總獲利：<strong class="font-mono" style="${totalProfit >= 0 ? 'color:#E05C5C' : 'color:#5CA8E0'}">${totalProfit >= 0 ? '+' : ''}$${totalProfit.toLocaleString()}</strong></span>` : ''}
-    `;
+    const profitColor = totalProfit === null ? '' : totalProfit >= 0 ? 'color:#E05C5C' : 'color:#5CA8E0';
+    // 用 tfoot 讓總計對齊欄位
+    const tfoot = document.createElement('tfoot');
+    tfoot.innerHTML = `<tr style="border-top:2px solid #F0F0F0;">
+        <td colspan="3"></td>
+        <td class="text-right font-mono font-bold text-gray-700 py-3">$${totalAmount.toLocaleString()}</td>
+        <td></td>
+        <td class="text-right font-mono font-bold py-3" style="${profitColor}">${totalProfit !== null ? (totalProfit >= 0 ? '+' : '') + '$' + totalProfit.toLocaleString() : '-'}</td>
+        <td></td>
+    </tr>`;
+    const table = tbody.closest('table');
+    const existingTfoot = table.querySelector('tfoot');
+    if (existingTfoot) existingTfoot.remove();
+    table.appendChild(tfoot);
+    if (sumEl) sumEl.innerHTML = '';
     const lastUpdate = items.find(x => x.lastUpdate)?.lastUpdate;
     if (lastEl && lastUpdate) lastEl.textContent = `更新於 ${lastUpdate}`;
 }
