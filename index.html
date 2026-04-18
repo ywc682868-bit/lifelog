@@ -1481,7 +1481,7 @@ function initWallet() {
         { id:'w2', title:'雲端發票載具', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w3', title:'全家 FamilyMart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w4', title:'7-ELEVEN OpenPoint', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
-        { id:'w5', title:'全聯 PX Mart', subtitle:'點擊開啟', type:'link', linkUrl:'pxmart://', img:null, bgColor:'#E03C2D', icon:'fa-solid fa-store' }
+        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'pxpay://', img:null, bgColor:'#8DAAB9', icon:'fa-solid fa-mobile-screen' }
     ];
     // 保留已有圖片/subtitle，但 type/linkUrl/bgColor/icon 一律用預設值
     const existing = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
@@ -1495,6 +1495,9 @@ function initWallet() {
 
 function renderWallet() {
     const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
+    const iconHtml = (item) => item.icon && item.icon.startsWith('text:')
+        ? `<span style="font-weight:900; font-size:1rem; letter-spacing:-1px; color:white;">${item.icon.replace('text:','')}</span>`
+        : `<i class="${item.icon || 'fa-solid fa-link'}"></i>`;
     document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
         <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center" onclick="window.open('${item.linkUrl}', '_blank')">
             <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
