@@ -837,6 +837,7 @@ function initUI() {
     renderMonthlyStats();
     initWallet();
     renderTransactions();
+    loadAllHolidays(); // 非同步載入台灣假日
 }
 
 function listenToCloud() {
@@ -1208,18 +1209,98 @@ function initTimeDropdowns() {
 }
 
 // ── CALENDARS ─────────────────────────────────────────────────
-const TAIWAN_SPECIAL_DAYS = [
-    { date: '2026-01-01', title: '元旦', type: 'holiday' }, { date: '2026-02-16', title: '除夕', type: 'holiday' },
-    { date: '2026-02-17', title: '初一', type: 'holiday' }, { date: '2026-02-18', title: '初二', type: 'holiday' },
-    { date: '2026-02-19', title: '初三', type: 'holiday' }, { date: '2026-02-28', title: '和平紀念日', type: 'holiday' },
-    { date: '2026-04-04', title: '兒童節', type: 'holiday' }, { date: '2026-04-05', title: '清明節', type: 'holiday' },
-    { date: '2026-05-01', title: '勞動節', type: 'holiday' }, { date: '2026-06-19', title: '端午節', type: 'holiday' },
-    { date: '2026-09-25', title: '中秋節', type: 'holiday' }, { date: '2026-10-10', title: '國慶日', type: 'holiday' },
-    { date: '2026-02-04', title: '立春', type: 'solar' }, { date: '2026-03-20', title: '春分', type: 'solar' },
-    { date: '2026-05-05', title: '立夏', type: 'solar' }, { date: '2026-06-21', title: '夏至', type: 'solar' },
-    { date: '2026-08-07', title: '立秋', type: 'solar' }, { date: '2026-09-23', title: '秋分', type: 'solar' },
-    { date: '2026-11-07', title: '立冬', type: 'solar' }, { date: '2026-12-22', title: '冬至', type: 'solar' }
+// 靜態節氣（不會變動）
+const SOLAR_TERMS = [
+    { date: '2025-02-03', title: '立春' }, { date: '2025-03-20', title: '春分' },
+    { date: '2025-05-05', title: '立夏' }, { date: '2025-06-21', title: '夏至' },
+    { date: '2025-08-07', title: '立秋' }, { date: '2025-09-23', title: '秋分' },
+    { date: '2025-11-07', title: '立冬' }, { date: '2025-12-22', title: '冬至' },
+    { date: '2026-02-04', title: '立春' }, { date: '2026-03-20', title: '春分' },
+    { date: '2026-05-05', title: '立夏' }, { date: '2026-06-21', title: '夏至' },
+    { date: '2026-08-07', title: '立秋' }, { date: '2026-09-23', title: '秋分' },
+    { date: '2026-11-07', title: '立冬' }, { date: '2026-12-22', title: '冬至' },
+    { date: '2027-02-04', title: '立春' }, { date: '2027-03-20', title: '春分' },
+    { date: '2027-05-05', title: '立夏' }, { date: '2027-06-21', title: '夏至' },
+    { date: '2027-08-07', title: '立秋' }, { date: '2027-09-23', title: '秋分' },
+    { date: '2027-11-07', title: '立冬' }, { date: '2027-12-22', title: '冬至' },
 ];
+
+let TAIWAN_SPECIAL_DAYS = SOLAR_TERMS.map(s => ({ ...s, type: 'solar' }));
+
+// 從政府開放資料平台抓取台灣國定假日
+async function fetchTaiwanHolidays(year) {
+    const cacheKey = `tw_holidays_${year}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            return data;
+        } catch(e) {}
+    }
+    try {
+        // 使用政府開放資料平台的行政院人事行政總處行事曆
+        const url = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
+        const res = await fetch(url);
+        const raw = await res.json();
+        // 過濾出指定年份的假日
+        const holidays = raw
+            .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
+            .map(d => ({
+                date: `${d.date.slice(0,4)}-${d.date.slice(4,6)}-${d.date.slice(6,8)}`,
+                title: d.description || '假日',
+                type: 'holiday'
+            }));
+        if (holidays.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(holidays));
+            return holidays;
+        }
+    } catch(e) {}
+
+    // 備用：若 API 失敗則用內建資料
+    const fallback = {
+        2025: [
+            { date:'2025-01-01', title:'元旦' }, { date:'2025-01-27', title:'除夕' },
+            { date:'2025-01-28', title:'初一' }, { date:'2025-01-29', title:'初二' },
+            { date:'2025-01-30', title:'初三' }, { date:'2025-02-28', title:'和平紀念日' },
+            { date:'2025-04-03', title:'兒童節補假' }, { date:'2025-04-04', title:'兒童節清明' },
+            { date:'2025-05-01', title:'勞動節' }, { date:'2025-05-31', title:'端午節' },
+            { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
+        ],
+        2026: [
+            { date:'2026-01-01', title:'元旦' }, { date:'2026-02-16', title:'除夕' },
+            { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
+            { date:'2026-02-19', title:'初三' }, { date:'2026-02-28', title:'和平紀念日' },
+            { date:'2026-04-04', title:'兒童節' }, { date:'2026-04-05', title:'清明節' },
+            { date:'2026-05-01', title:'勞動節' }, { date:'2026-06-19', title:'端午節' },
+            { date:'2026-09-25', title:'中秋節' }, { date:'2026-10-10', title:'國慶日' },
+        ],
+        2027: [
+            { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
+            { date:'2027-02-06', title:'初一' }, { date:'2027-02-07', title:'初二' },
+            { date:'2027-02-08', title:'初三' }, { date:'2027-02-28', title:'和平紀念日' },
+            { date:'2027-04-04', title:'兒童節清明' }, { date:'2027-05-01', title:'勞動節' },
+            { date:'2027-06-09', title:'端午節' }, { date:'2027-09-15', title:'中秋節' },
+            { date:'2027-10-10', title:'國慶日' },
+        ]
+    };
+    return (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
+}
+
+async function loadAllHolidays() {
+    const year = new Date().getFullYear();
+    const [h1, h2] = await Promise.all([
+        fetchTaiwanHolidays(year),
+        fetchTaiwanHolidays(year + 1)
+    ]);
+    const holidays = [...h1, ...h2];
+    // 合併節氣和假日，避免重複
+    TAIWAN_SPECIAL_DAYS = [
+        ...SOLAR_TERMS.map(s => ({ ...s, type: 'solar' })),
+        ...holidays.filter(h => !SOLAR_TERMS.find(s => s.date === h.date))
+    ];
+    // 更新所有行事曆
+    if (mainCalendar) { mainCalendar.removeAllEvents(); const ev = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); mainCalendar.addEventSource(ev); mainCalendar.render(); }
+}
 
 function initCalendars() {
     const userEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
