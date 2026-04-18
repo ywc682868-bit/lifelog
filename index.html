@@ -1312,7 +1312,15 @@ function renderStatsTable() {
     const ongoing   = validBooks.filter(b => !b.done && !b.isToRead);
     const toread    = validBooks.filter(b => b.isToRead);
     const completed = validBooks.filter(b => b.done && !b.isToRead);
-    completed.sort((a,b) => new Date(b.finalEndDate) - new Date(a.finalEndDate));
+
+    // 全部按開始日期排序，越早開始的在越下面
+    const sortByStart = (a, b) => {
+        const da = a.actualStartDate || a.logDate || '9999';
+        const db = b.actualStartDate || b.logDate || '9999';
+        return new Date(db) - new Date(da);
+    };
+    ongoing.sort(sortByStart);
+    completed.sort(sortByStart);
 
     [...ongoing, ...toread, ...completed].forEach(book => {
         let periodText = book.isToRead ? '待讀中' : (book.actualStartDate || '-');
