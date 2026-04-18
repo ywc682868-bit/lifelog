@@ -1133,17 +1133,21 @@ function deleteInvest() {
 }
 
 async function fetchStockPrice(code) {
-    // 台股：先試 .TW（上市），再試 .TWO（上櫃）
     const suffixes = ['.TW', '.TWO'];
     for (const suffix of suffixes) {
         try {
             const symbol = encodeURIComponent(code + suffix);
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
+            // 抓最近 5 天，取最新有效收盤價
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d&_=${Date.now()}`;
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl);
             const data = await res.json();
             const parsed = JSON.parse(data.contents);
-            const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+            const result = parsed?.chart?.result?.[0];
+            if (!result) continue;
+            // 優先用 regularMarketPrice，再用最近一筆 close
+            const price = result.meta?.regularMarketPrice
+                || result.indicators?.quote?.[0]?.close?.filter(Boolean).slice(-1)[0];
             if (price && price > 0) return price;
         } catch(e) {}
     }
