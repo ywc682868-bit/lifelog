@@ -1270,12 +1270,20 @@ async function fetchTaiwanHolidays(year) {
             { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
         ],
         2026: [
-            { date:'2026-01-01', title:'元旦' }, { date:'2026-02-16', title:'除夕' },
+            { date:'2026-01-01', title:'元旦' },
+            { date:'2026-02-15', title:'小年夜' }, { date:'2026-02-16', title:'除夕' },
             { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
-            { date:'2026-02-19', title:'初三' }, { date:'2026-02-28', title:'和平紀念日' },
-            { date:'2026-04-04', title:'兒童節' }, { date:'2026-04-05', title:'清明節' },
-            { date:'2026-05-01', title:'勞動節' }, { date:'2026-06-19', title:'端午節' },
-            { date:'2026-09-25', title:'中秋節' }, { date:'2026-10-10', title:'國慶日' },
+            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'小年夜補假' },
+            { date:'2026-02-27', title:'和平紀念日補假' }, { date:'2026-02-28', title:'和平紀念日' },
+            { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
+            { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' },
+            { date:'2026-05-01', title:'勞動節' },
+            { date:'2026-06-19', title:'端午節' },
+            { date:'2026-09-25', title:'中秋節' },
+            { date:'2026-09-28', title:'孔子誕辰/教師節' },
+            { date:'2026-10-09', title:'國慶日補假' }, { date:'2026-10-10', title:'國慶日' },
+            { date:'2026-10-25', title:'台灣光復節' }, { date:'2026-10-26', title:'台灣光復節補假' },
+            { date:'2026-12-25', title:'行憲紀念日' },
         ],
         2027: [
             { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
@@ -1291,6 +1299,9 @@ async function fetchTaiwanHolidays(year) {
 
 async function loadAllHolidays() {
     const year = new Date().getFullYear();
+    // 清除舊快取，確保使用最新內建資料
+    localStorage.removeItem(`tw_holidays_${year}`);
+    localStorage.removeItem(`tw_holidays_${year + 1}`);
     const [h1, h2] = await Promise.all([
         fetchTaiwanHolidays(year),
         fetchTaiwanHolidays(year + 1)
