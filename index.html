@@ -445,8 +445,8 @@
                                     <th class="text-left">代碼</th>
                                     <th class="text-left">名稱</th>
                                     <th class="text-right">投入金額</th>
-                                    <th class="text-right">目前獲利</th>
                                     <th class="text-right">現價</th>
+                                    <th class="text-right">目前獲利</th>
                                     <th class="w-8"></th>
                                 </tr></thead>
                                 <tbody id="invest-table-body"></tbody>
@@ -1136,8 +1136,7 @@ async function fetchStockPrice(code) {
     const suffixes = ['.TW', '.TWO'];
     for (const suffix of suffixes) {
         try {
-            const symbol = encodeURIComponent(code + suffix);
-            // 抓最近 5 天，取最新有效收盤價
+            const symbol = code + suffix;
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d&_=${Date.now()}`;
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl);
@@ -1145,7 +1144,6 @@ async function fetchStockPrice(code) {
             const parsed = JSON.parse(data.contents);
             const result = parsed?.chart?.result?.[0];
             if (!result) continue;
-            // 優先用 regularMarketPrice，再用最近一筆 close
             const price = result.meta?.regularMarketPrice
                 || result.indicators?.quote?.[0]?.close?.filter(Boolean).slice(-1)[0];
             if (price && price > 0) return price;
@@ -1190,8 +1188,8 @@ function renderInvest() {
             <td class="font-bold text-sm text-morandi-blue-dark">${item.code}</td>
             <td class="text-sm">${item.name}</td>
             <td class="text-right font-mono text-sm">$${item.amount.toLocaleString()}</td>
+            <td class="text-right font-mono text-xs text-gray-500">${item.price ? '$' + item.price.toLocaleString() : '-'}</td>
             <td class="text-right font-mono text-sm" style="${profitColor}">${profit !== null ? (profit >= 0 ? '+' : '') + '$' + profit.toLocaleString() + (profitPct ? ` (${profitPct}%)` : '') : '-'}</td>
-            <td class="text-right font-mono text-xs text-gray-400">${item.price ? '$' + item.price.toLocaleString() : '-'}</td>
             <td class="text-right"><button onclick="openInvestModal('${item.id}')" class="text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button></td>
         </tr>`;
     }).join('');
