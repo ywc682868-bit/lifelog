@@ -435,7 +435,7 @@
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                             <h4 class="font-bold text-gray-700 text-sm">Investment <span id="invest-last-update" class="text-[10px] text-gray-400 font-normal ml-2"></span></h4>
                             <div class="flex items-center gap-2">
-                                <button onclick="fetchAllPrices()" class="text-[10px] bg-morandi-blue-light text-morandi-dark-gray px-3 py-1 rounded-full hover:opacity-80 transition"><i class="fa-solid fa-rotate mr-1"></i>更新價格</button>
+                                <button onclick="fetchAllPrices()" class="text-[10px] bg-morandi-blue-light text-morandi-dark-gray px-3 py-1 rounded-full hover:opacity-80 transition"><i class="fa-solid fa-rotate mr-1"></i>更新</button>
                                 <button onclick="openInvestModal()" class="w-7 h-7 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm text-xs"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
@@ -1133,20 +1133,21 @@ function deleteInvest() {
 }
 
 async function fetchStockPrice(code) {
-    // 台股代碼加上 .TW 或 .TWO
-    const symbol = code + '.TW';
-    try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`);
-        const data = await res.json();
-        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        if (price) return price;
-    } catch(e) {}
-    // 嘗試 TWO（上櫃）
-    try {
-        const res2 = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.TWO?interval=1d&range=1d`);
-        const data2 = await res2.json();
-        return data2?.chart?.result?.[0]?.meta?.regularMarketPrice || null;
-    } catch(e) { return null; }
+    // 台股：先試 .TW（上市），再試 .TWO（上櫃）
+    const suffixes = ['.TW', '.TWO'];
+    for (const suffix of suffixes) {
+        try {
+            const symbol = encodeURIComponent(code + suffix);
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            const parsed = JSON.parse(data.contents);
+            const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+            if (price && price > 0) return price;
+        } catch(e) {}
+    }
+    return null;
 }
 
 async function fetchAllPrices() {
@@ -1159,7 +1160,7 @@ async function fetchAllPrices() {
     }
     localStorage.setItem(INVEST_KEY, JSON.stringify(items)); syncToCloud();
     renderInvest();
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i>更新價格';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i>更新';
 }
 
 function renderInvest() {
