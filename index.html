@@ -422,28 +422,37 @@
                 </div>
 
                 <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
-                    <h3 class="text-lg font-bold text-morandi-dark-gray mb-6 font-zh">Savings & Investments</h3>
-                    <div class="space-y-6 mb-8">
-                        <h4 class="font-bold text-gray-700 text-sm border-b border-gray-100 pb-2">Savings Goals</h4>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span class="font-bold text-gray-600">緊急預備金 Emergency Fund</span><span class="font-mono text-gray-500">$50,000 / $100,000</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-[#7F9F9F] h-2 rounded-full" style="width: 50%"></div></div>
+                    <!-- Savings Goals -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
+                            <h4 class="font-bold text-gray-700 text-sm">Savings Goals</h4>
+                            <button onclick="openSavingsModal()" class="w-7 h-7 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm text-xs"><i class="fa-solid fa-plus"></i></button>
                         </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span class="font-bold text-gray-600">旅遊基金 Travel Fund</span><span class="font-mono text-gray-500">$12,000 / $30,000</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-[#8DAAB9] h-2 rounded-full" style="width: 40%"></div></div>
-                        </div>
+                        <div id="savings-list" class="space-y-4"></div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <h4 class="font-bold text-gray-700 text-sm border-b border-gray-100 pb-2 mb-4">Investment Portfolio</h4>
-                        <table class="stats-table min-w-full">
-                            <thead class="bg-gray-50 text-[11px] text-gray-400 uppercase"><tr><th>Asset</th><th>Allocation</th><th>Current Value</th></tr></thead>
-                            <tbody>
-                                <tr><td class="font-bold text-sm">ETF (0050 / 006208)</td><td>60%</td><td class="font-mono text-sm">$120,000</td></tr>
-                                <tr><td class="font-bold text-sm">Stocks (Tech Sector)</td><td>30%</td><td class="font-mono text-sm">$60,000</td></tr>
-                                <tr><td class="font-bold text-sm">Cash / Bonds</td><td>10%</td><td class="font-mono text-sm">$20,000</td></tr>
-                            </tbody>
-                        </table>
+                    <!-- Investments -->
+                    <div>
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
+                            <h4 class="font-bold text-gray-700 text-sm">Investment <span id="invest-last-update" class="text-[10px] text-gray-400 font-normal ml-2"></span></h4>
+                            <div class="flex items-center gap-2">
+                                <button onclick="fetchAllPrices()" class="text-[10px] bg-morandi-blue-light text-morandi-dark-gray px-3 py-1 rounded-full hover:opacity-80 transition"><i class="fa-solid fa-rotate mr-1"></i>更新價格</button>
+                                <button onclick="openInvestModal()" class="w-7 h-7 flex items-center justify-center bg-morandi-green-dark text-white rounded-full hover:opacity-90 transition shadow-sm text-xs"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="stats-table min-w-full">
+                                <thead><tr>
+                                    <th class="text-left">代碼</th>
+                                    <th class="text-left">名稱</th>
+                                    <th class="text-right">投入金額</th>
+                                    <th class="text-right">目前獲利</th>
+                                    <th class="text-right">現價</th>
+                                    <th class="w-8"></th>
+                                </tr></thead>
+                                <tbody id="invest-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="invest-summary" class="mt-4 flex gap-6 text-xs text-gray-500 bg-gray-50 rounded-xl p-3"></div>
                     </div>
                 </div>
             </section>
@@ -453,6 +462,60 @@
 
 <div class="fab-container">
     <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-xl"></i></button>
+</div>
+
+<!-- Investment Modal -->
+<div id="investModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+    <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
+        <div class="space-y-3">
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">股票代碼</label>
+                <input type="text" id="invest-code" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：0050、2330">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">名稱</label>
+                <input type="text" id="invest-name" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：台積電">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">投入金額 (NT$)</label>
+                <input type="number" id="invest-amount" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="0">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">持有股數</label>
+                <input type="number" id="invest-shares" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="0">
+            </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button id="invest-delete-btn" onclick="deleteInvest()" class="hidden flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 font-bold text-sm hover:bg-gray-200 transition">Delete</button>
+            <button onclick="saveInvest()" class="flex-1 py-2.5 rounded-full bg-morandi-blue-dark text-white font-bold text-sm hover:opacity-90 transition shadow-sm">Save</button>
+        </div>
+        <button onclick="closeInvestModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
+    </div>
+</div>
+
+<!-- Savings Modal -->
+<div id="savingsModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+    <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
+        <div class="space-y-3">
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">名稱</label>
+                <input type="text" id="savings-name" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="例如：旅遊基金">
+            </div>
+            <div class="field-group">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">目標金額 (NT$)</label>
+                <input type="number" id="savings-target" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="0">
+            </div>
+            <div id="savings-add-amount-row" class="field-group hidden">
+                <label class="text-xs font-bold text-morandi-dark-gray mb-1">新增儲蓄金額 (NT$)</label>
+                <input type="number" id="savings-add-amount" class="custom-input h-[38px] text-sm mt-0 shadow-sm border border-gray-100" placeholder="0">
+            </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button id="savings-delete-btn" onclick="deleteSavings()" class="hidden flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 font-bold text-sm hover:bg-gray-200 transition">Delete</button>
+            <button onclick="saveSavings()" class="flex-1 py-2.5 rounded-full bg-morandi-green-dark text-white font-bold text-sm hover:opacity-90 transition shadow-sm">Save</button>
+        </div>
+        <button onclick="closeSavingsModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-times"></i></button>
+    </div>
 </div>
 
 <!-- Transaction Modal -->
@@ -685,6 +748,8 @@ const ACAD_PUB_KEY = 'ashley_acad_pub_v1';
 const WALLET_KEY   = 'ashley_wallet_v1';
 const TRX_KEY      = 'ashley_trx_v1';
 const SETTINGS_KEY = 'ashley_settings_v1';
+const INVEST_KEY   = 'ashley_invest_v1';
+const SAVINGS_KEY  = 'ashley_savings_v1';
 const DB_NODE      = 'ashley_private_db_2026';
 
 let mainCalendar, bwCalendar, acadCalendar;
@@ -718,7 +783,9 @@ function syncToCloud() {
         pub:      localStorage.getItem(ACAD_PUB_KEY)  || '[]',
         wallet:   localStorage.getItem(WALLET_KEY)    || '[]',
         trx:      localStorage.getItem(TRX_KEY)       || '[]',
-        settings: localStorage.getItem(SETTINGS_KEY)  || '{}'
+        settings: localStorage.getItem(SETTINGS_KEY)  || '{}',
+        invest:   localStorage.getItem(INVEST_KEY)    || '[]',
+        savings:  localStorage.getItem(SAVINGS_KEY)   || '[]'
     };
     
     setCloudStatus('saving');
@@ -759,6 +826,8 @@ function applyCloudData(data) {
     if (data.wallet   !== undefined) localStorage.setItem(WALLET_KEY,    data.wallet   || '[]');
     if (data.trx      !== undefined) localStorage.setItem(TRX_KEY,       data.trx      || '[]');
     if (data.settings !== undefined) localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
+    if (data.invest   !== undefined) localStorage.setItem(INVEST_KEY,    data.invest   || '[]');
+    if (data.savings  !== undefined) localStorage.setItem(SAVINGS_KEY,   data.savings  || '[]');
 }
 
 function initUI() {
@@ -806,6 +875,7 @@ function refreshAllUI() {
     if (acadCalendar) { acadCalendar.removeAllEvents(); acadCalendar.addEventSource(storage); }
     renderBooks(); renderMonthlyStats(); renderToRead(); renderStatsTable();
     renderLitGrid(); renderPubTable(); renderWallet(); renderTransactions();
+    renderSavings(); renderInvest();
 }
 
 function forceSyncPull(silent = false, retryCount = 0) {
@@ -931,6 +1001,201 @@ function switchFinTab(tab) {
     document.querySelectorAll('#finance-section .bw-folder-tab').forEach((el,i) => { el.classList.remove('active'); el.style.zIndex = 3-i; });
     const activeBtn = document.getElementById(`btn-fin-${tab}`);
     activeBtn.classList.add('active'); activeBtn.style.zIndex = '10';
+    if (tab === 'invest') { renderSavings(); renderInvest(); }
+}
+
+// ── SAVINGS GOALS ─────────────────────────────────────────────
+let editingSavingsId = null;
+
+function openSavingsModal(id = null) {
+    editingSavingsId = id;
+    const delBtn = document.getElementById('savings-delete-btn');
+    const addRow = document.getElementById('savings-add-amount-row');
+    document.getElementById('savings-add-amount').value = '';
+    if (id) {
+        const item = JSON.parse(localStorage.getItem(SAVINGS_KEY) || '[]').find(s => s.id === id);
+        if (item) {
+            document.getElementById('savings-name').value   = item.name;
+            document.getElementById('savings-target').value = item.target;
+        }
+        delBtn.classList.remove('hidden');
+        addRow.classList.remove('hidden');
+    } else {
+        document.getElementById('savings-name').value   = '';
+        document.getElementById('savings-target').value = '';
+        delBtn.classList.add('hidden');
+        addRow.classList.add('hidden');
+    }
+    document.getElementById('savingsModal').classList.remove('hidden');
+}
+
+function closeSavingsModal() { document.getElementById('savingsModal').classList.add('hidden'); }
+
+function saveSavings() {
+    const name   = document.getElementById('savings-name').value.trim();
+    const target = parseFloat(document.getElementById('savings-target').value) || 0;
+    const add    = parseFloat(document.getElementById('savings-add-amount').value) || 0;
+    if (!name) return;
+    let items = JSON.parse(localStorage.getItem(SAVINGS_KEY) || '[]');
+    if (editingSavingsId) {
+        const idx = items.findIndex(s => s.id === editingSavingsId);
+        if (idx > -1) {
+            items[idx].name   = name;
+            items[idx].target = target;
+            if (add > 0) items[idx].current = (items[idx].current || 0) + add;
+        }
+    } else {
+        items.push({ id: 'sv_' + Date.now(), name, target, current: 0 });
+    }
+    localStorage.setItem(SAVINGS_KEY, JSON.stringify(items)); syncToCloud();
+    closeSavingsModal(); renderSavings();
+}
+
+function deleteSavings() {
+    if (!editingSavingsId) return;
+    let items = JSON.parse(localStorage.getItem(SAVINGS_KEY) || '[]').filter(s => s.id !== editingSavingsId);
+    localStorage.setItem(SAVINGS_KEY, JSON.stringify(items)); syncToCloud();
+    closeSavingsModal(); renderSavings();
+}
+
+function renderSavings() {
+    const items = JSON.parse(localStorage.getItem(SAVINGS_KEY) || '[]');
+    const el = document.getElementById('savings-list');
+    if (!el) return;
+    if (items.length === 0) { el.innerHTML = '<p class="text-xs text-gray-400">尚無儲蓄目標</p>'; return; }
+    const colors = ['#7F9F9F','#8DAAB9','#EBC4B9','#D5E0D5','#E8D1D1'];
+    el.innerHTML = items.map((s, i) => {
+        const pct = s.target > 0 ? Math.min(100, Math.round((s.current || 0) / s.target * 100)) : 0;
+        const color = colors[i % colors.length];
+        return `<div class="mb-3">
+            <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-bold text-gray-600">${s.name}</span>
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-gray-500">$${(s.current||0).toLocaleString()} / $${s.target.toLocaleString()}</span>
+                    <button onclick="openSavingsModal('${s.id}')" class="w-5 h-5 flex items-center justify-center rounded-full text-white text-[10px]" style="background:${color}"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2"><div class="h-2 rounded-full transition-all" style="width:${pct}%;background:${color}"></div></div>
+        </div>`;
+    }).join('');
+}
+
+// ── INVESTMENTS ────────────────────────────────────────────────
+let editingInvestId = null;
+
+function openInvestModal(id = null) {
+    editingInvestId = id;
+    const delBtn = document.getElementById('invest-delete-btn');
+    if (id) {
+        const item = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]').find(x => x.id === id);
+        if (item) {
+            document.getElementById('invest-code').value   = item.code;
+            document.getElementById('invest-name').value   = item.name;
+            document.getElementById('invest-amount').value = item.amount;
+            document.getElementById('invest-shares').value = item.shares || 0;
+        }
+        delBtn.classList.remove('hidden');
+    } else {
+        document.getElementById('invest-code').value   = '';
+        document.getElementById('invest-name').value   = '';
+        document.getElementById('invest-amount').value = '';
+        document.getElementById('invest-shares').value = '';
+        delBtn.classList.add('hidden');
+    }
+    document.getElementById('investModal').classList.remove('hidden');
+}
+
+function closeInvestModal() { document.getElementById('investModal').classList.add('hidden'); }
+
+function saveInvest() {
+    const code   = document.getElementById('invest-code').value.trim().toUpperCase();
+    const name   = document.getElementById('invest-name').value.trim();
+    const amount = parseFloat(document.getElementById('invest-amount').value) || 0;
+    const shares = parseFloat(document.getElementById('invest-shares').value) || 0;
+    if (!code || !name) return;
+    let items = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]');
+    if (editingInvestId) {
+        const idx = items.findIndex(x => x.id === editingInvestId);
+        if (idx > -1) items[idx] = { ...items[idx], code, name, amount, shares };
+    } else {
+        items.push({ id: 'inv_' + Date.now(), code, name, amount, shares, price: null, lastUpdate: null });
+    }
+    localStorage.setItem(INVEST_KEY, JSON.stringify(items)); syncToCloud();
+    closeInvestModal(); renderInvest();
+}
+
+function deleteInvest() {
+    if (!editingInvestId) return;
+    let items = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]').filter(x => x.id !== editingInvestId);
+    localStorage.setItem(INVEST_KEY, JSON.stringify(items)); syncToCloud();
+    closeInvestModal(); renderInvest();
+}
+
+async function fetchStockPrice(code) {
+    // 台股代碼加上 .TW 或 .TWO
+    const symbol = code + '.TW';
+    try {
+        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`);
+        const data = await res.json();
+        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        if (price) return price;
+    } catch(e) {}
+    // 嘗試 TWO（上櫃）
+    try {
+        const res2 = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.TWO?interval=1d&range=1d`);
+        const data2 = await res2.json();
+        return data2?.chart?.result?.[0]?.meta?.regularMarketPrice || null;
+    } catch(e) { return null; }
+}
+
+async function fetchAllPrices() {
+    const btn = document.querySelector('[onclick="fetchAllPrices()"]');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>更新中...';
+    let items = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]');
+    for (let item of items) {
+        const price = await fetchStockPrice(item.code);
+        if (price) { item.price = price; item.lastUpdate = new Date().toLocaleDateString('zh-TW'); }
+    }
+    localStorage.setItem(INVEST_KEY, JSON.stringify(items)); syncToCloud();
+    renderInvest();
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i>更新價格';
+}
+
+function renderInvest() {
+    const items  = JSON.parse(localStorage.getItem(INVEST_KEY) || '[]');
+    const tbody  = document.getElementById('invest-table-body');
+    const sumEl  = document.getElementById('invest-summary');
+    const lastEl = document.getElementById('invest-last-update');
+    if (!tbody) return;
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 text-xs py-4">尚無投資紀錄，點擊 ＋ 新增</td></tr>';
+        if (sumEl) sumEl.innerHTML = '';
+        return;
+    }
+    let totalAmount = 0, totalValue = 0;
+    tbody.innerHTML = items.map(item => {
+        const currentValue = item.price && item.shares ? Math.round(item.price * item.shares) : null;
+        const profit       = currentValue !== null ? currentValue - item.amount : null;
+        const profitPct    = profit !== null && item.amount > 0 ? (profit / item.amount * 100).toFixed(1) : null;
+        const profitColor  = profit === null ? '' : profit >= 0 ? 'color:#E05C5C' : 'color:#5CA8E0';
+        totalAmount += item.amount;
+        if (currentValue !== null) totalValue += currentValue;
+        return `<tr>
+            <td class="font-bold text-sm text-morandi-blue-dark">${item.code}</td>
+            <td class="text-sm">${item.name}</td>
+            <td class="text-right font-mono text-sm">$${item.amount.toLocaleString()}</td>
+            <td class="text-right font-mono text-sm" style="${profitColor}">${profit !== null ? (profit >= 0 ? '+' : '') + '$' + profit.toLocaleString() + (profitPct ? ` (${profitPct}%)` : '') : '-'}</td>
+            <td class="text-right font-mono text-xs text-gray-400">${item.price ? '$' + item.price.toLocaleString() : '-'}</td>
+            <td class="text-right"><button onclick="openInvestModal('${item.id}')" class="text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button></td>
+        </tr>`;
+    }).join('');
+    const totalProfit = totalValue > 0 ? totalValue - totalAmount : null;
+    if (sumEl) sumEl.innerHTML = `
+        <span>總投入：<strong class="text-gray-700 font-mono">$${totalAmount.toLocaleString()}</strong></span>
+        ${totalProfit !== null ? `<span>總獲利：<strong class="font-mono" style="${totalProfit >= 0 ? 'color:#E05C5C' : 'color:#5CA8E0'}">${totalProfit >= 0 ? '+' : ''}$${totalProfit.toLocaleString()}</strong></span>` : ''}
+    `;
+    const lastUpdate = items.find(x => x.lastUpdate)?.lastUpdate;
+    if (lastEl && lastUpdate) lastEl.textContent = `更新於 ${lastUpdate}`;
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────
