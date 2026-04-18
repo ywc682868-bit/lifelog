@@ -1313,11 +1313,14 @@ function renderStatsTable() {
     const toread    = validBooks.filter(b => b.isToRead);
     const completed = validBooks.filter(b => b.done && !b.isToRead);
 
-    // 全部按開始日期排序，越早開始的在越下面
+    // 全部按開始日期排序，越早開始的在越下面；同開始日期則結束日期晚的在上面
     const sortByStart = (a, b) => {
         const da = a.actualStartDate || a.logDate || '9999';
         const db = b.actualStartDate || b.logDate || '9999';
-        return new Date(db) - new Date(da);
+        if (da !== db) return new Date(db) - new Date(da);
+        const ea = a.actualEndDate || a.completedAt || a.logDate || '0000';
+        const eb = b.actualEndDate || b.completedAt || b.logDate || '0000';
+        return new Date(eb) - new Date(ea);
     };
     ongoing.sort(sortByStart);
     completed.sort(sortByStart);
