@@ -1943,7 +1943,7 @@ function renderWallet() {
     document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
         <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center" onclick="window.open('${item.linkUrl}', '_blank')">
             <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
-            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style="background-color: ${item.bgColor || '#8DAAB9'}">${iconHtml(item)}</div>
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm overflow-hidden" style="background-color: ${item.bgColor || '#8DAAB9'}">${iconHtml(item)}</div>
             <div><h4 class="font-bold text-lg" style="color: ${titleColor(item)}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
         </div>` : `
         <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
