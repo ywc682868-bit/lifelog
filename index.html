@@ -1913,7 +1913,7 @@ function initWallet() {
         { id:'w2', title:'雲端發票載具', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w3', title:'全家 FamilyMart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w4', title:'7-ELEVEN OpenPoint', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
-        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'https://iospxpay.page.link/MemberCard', img:null, bgColor:'#B5C6E0', icon:'fa-brands fa-px mart' }
+        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'https://iospxpay.page.link/MemberCard', img:null, bgColor:'#1A3A6B', icon:'svg:pxmart' }
     ];
     // 保留已有圖片/subtitle，但 type/linkUrl/bgColor/icon 一律用預設值
     const existing = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
@@ -1927,14 +1927,24 @@ function initWallet() {
 
 function renderWallet() {
     const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
-    const iconHtml = (item) => item.icon && item.icon.startsWith('text:')
-        ? `<span style="font-weight:900; font-size:1rem; letter-spacing:-1px; color:white;">${item.icon.replace('text:','')}</span>`
-        : `<i class="${item.icon || 'fa-solid fa-link'}"></i>`;
+    const iconHtml = (item) => {
+        if (item.icon && item.icon.startsWith('text:'))
+            return `<span style="font-weight:900; font-size:1rem; letter-spacing:-1px; color:white;">${item.icon.replace('text:','')}</span>`;
+        if (item.icon === 'svg:pxmart')
+            return `<svg viewBox="0 0 100 100" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="#1A3A6B"/>
+                <rect y="35" width="100" height="30" fill="#CC1111"/>
+                <circle cx="50" cy="50" r="28" fill="none" stroke="white" stroke-width="5"/>
+                <path d="M35 62 L50 30 L65 62 M40 52 L60 52" stroke="white" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>`;
+        return `<i class="${item.icon || 'fa-solid fa-link'}"></i>`;
+    };
+    const titleColor = (item) => item.id === 'w5' ? '#B5C6E0' : (item.bgColor || '#8DAAB9');
     document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
         <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center" onclick="window.open('${item.linkUrl}', '_blank')">
             <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
             <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style="background-color: ${item.bgColor || '#8DAAB9'}">${iconHtml(item)}</div>
-            <div><h4 class="font-bold text-lg" style="color: ${item.bgColor || '#8DAAB9'}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
+            <div><h4 class="font-bold text-lg" style="color: ${titleColor(item)}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
         </div>` : `
         <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
             <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
