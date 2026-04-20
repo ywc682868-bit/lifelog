@@ -236,6 +236,43 @@
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
 
+<!-- 密碼保護畫面 -->
+<div id="lock-screen" class="fixed inset-0 z-[99999] flex items-center justify-center" style="background: linear-gradient(135deg, #E2EBF0 0%, #E2E8E8 100%);">
+    <div class="bg-white rounded-[32px] shadow-2xl p-10 w-full max-w-[340px] flex flex-col items-center gap-6">
+        <div>
+            <h1 class="text-2xl font-cursive text-morandi-dark-gray text-center">Ashley's Optimization</h1>
+            <p class="text-xs text-gray-400 text-center mt-1 font-zh">請輸入密碼以繼續</p>
+        </div>
+        <div class="w-full">
+            <input type="password" id="lock-password" placeholder="密碼" class="custom-input text-center text-lg tracking-widest" onkeydown="if(event.key==='Enter') checkPassword()">
+        </div>
+        <div id="lock-error" class="hidden text-xs text-red-400 font-zh">密碼錯誤，請再試一次</div>
+        <button onclick="checkPassword()" class="w-full py-3 rounded-full text-white font-cursive text-base shadow-sm hover:opacity-90 transition" style="background-color:#8DAAB9;">Enter</button>
+    </div>
+</div>
+
+<script>
+const APP_PASSWORD = 'ashley2026';
+const SESSION_KEY  = 'ashley_unlocked';
+
+function checkPassword() {
+    const input = document.getElementById('lock-password').value;
+    if (input === APP_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        document.getElementById('lock-screen').style.display = 'none';
+    } else {
+        document.getElementById('lock-error').classList.remove('hidden');
+        document.getElementById('lock-password').value = '';
+        document.getElementById('lock-password').focus();
+    }
+}
+
+// 若本次 session 已解鎖，直接跳過
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('lock-screen').style.display = 'none';
+}
+</script>
+
 <button onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-40 bg-white/80 backdrop-blur p-2 rounded-lg shadow-sm text-morandi-dark-gray border border-gray-100">
     <i class="fa-solid fa-bars text-xl px-1"></i>
 </button>
