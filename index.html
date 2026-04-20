@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ashley's Optimization</title>
-    <link rel="apple-touch-icon" href="1.png">
-    <link rel="icon" type="image/png" href="1.png">
+    <link rel="apple-touch-icon" href="09a65827-d330-4c95-819c-178050fef0e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Ashley's">
@@ -259,7 +258,7 @@
         
         <ul class="flex flex-col space-y-2 w-full flex-grow">
             <li><button onclick="showSection('bookworm'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-book-open text-xs"></i> Bookworm</button></li>
-            <li><button onclick="window.open('https://ywc682868-bit.github.io/tigps/', '_blank'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-desktop text-xs"></i> TIGPS</button></li>
+            <li><button onclick="window.open('您的TIGPS網頁網址', '_blank'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-desktop text-xs"></i> TIGPS</button></li>
             <li><button onclick="showSection('academic'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-building-columns text-xs"></i> Academic</button></li>
             <li><button onclick="showSection('finance'); toggleSidebar();" class="w-full flex items-center gap-3 text-morandi-blue-dark hover:text-white text-left p-2 rounded-xl font-cursive text-base transition-colors"><i class="fa-solid fa-wallet text-xs"></i> Finance</button></li>
         </ul>
@@ -1877,7 +1876,7 @@ function initWallet() {
         { id:'w2', title:'雲端發票載具', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w3', title:'全家 FamilyMart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
         { id:'w4', title:'7-ELEVEN OpenPoint', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
-        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'pxpay://', img:null, bgColor:'#8DAAB9', icon:'fa-solid fa-mobile-screen' }
+        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'https://iospxpay.page.link/MemberCard', img:null, bgColor:'#8DAAB9', icon:'fa-solid fa-mobile-screen' }
     ];
     // 保留已有圖片/subtitle，但 type/linkUrl/bgColor/icon 一律用預設值
     const existing = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
