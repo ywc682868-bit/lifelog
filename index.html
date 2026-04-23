@@ -932,9 +932,8 @@ function initUI() {
 
 function listenToCloud() {
     if (!currentUser) return;
-    const nodePath =(`users/${currentUser.uid}/ashley_data_2026`);
+    const nodePath = `users/${currentUser.uid}/ashley_data_2026`;
     
-    // 原有的 fallbackTimer 邏輯保持不變...
     const fallbackTimer = setTimeout(() => {
         if (!isDataLoaded) {
             console.warn('Firebase 連線逾時，使用本機資料載入');
@@ -944,7 +943,7 @@ function listenToCloud() {
     }, 3000);
 
     db.ref(nodePath).on('value', (snapshot) => {
-        // ... 原有的 snapshot 處理邏輯 ...
+
         clearTimeout(fallbackTimer);
         const data = snapshot.val();
         if (data) applyCloudData(data);
@@ -975,7 +974,12 @@ function refreshAllUI() {
 
 function forceSyncPull(silent = false, retryCount = 0) {
     if (!silent) setCloudStatus('pulling');
-    db.ref(DB_NODE).once('value').then((snapshot) => {
+    if (!currentUser) return; // 確保已登入
+
+    // 🚩 將 DB_NODE 改為你的專屬帳號路徑
+    const nodePath = `users/${currentUser.uid}/ashley_data_2026`;
+    
+    db.ref(nodePath).once('value').then((snapshot) => {
         const data = snapshot.val();
         if (data) applyCloudData(data);
         refreshAllUI();
