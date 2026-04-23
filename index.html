@@ -8,8 +8,8 @@
     <link rel="icon" type="image/png" href="1.png">
     <link rel="apple-touch-icon" href="09a65827-d330-4c95-819c-178050fef0e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ashley's">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -17,7 +17,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -32,9 +31,7 @@
         firebaseConfig.databaseURL = "https://optimization-30a4f-default-rtdb.firebaseio.com";
 
         firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
-let currentUser = null;
+        const db = firebase.database();
 
         tailwind.config = {
             theme: {
@@ -241,6 +238,7 @@ let currentUser = null;
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
 
+<!-- 密碼保護畫面 -->
 <div id="lock-screen" class="fixed inset-0 z-[99999] flex items-center justify-center" style="background: linear-gradient(135deg, #E2EBF0 0%, #E2E8E8 100%);">
     <div class="bg-white rounded-[32px] shadow-2xl p-10 w-full max-w-[340px] flex flex-col items-center gap-6">
         <div>
@@ -260,38 +258,16 @@ const APP_PASSWORD = '686868';
 const SESSION_KEY  = 'ashley_unlocked';
 
 function checkPassword() {
-    // 🚩 這裡填入您在 Firebase Console 建立的那個 Email
-    const email = "ywc682868@gmail.com"; 
-    const password = document.getElementById('lock-password').value;
-
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            currentUser = userCredential.user;
-            sessionStorage.setItem(SESSION_KEY, '1');
-            document.getElementById('lock-screen').style.display = 'none';
-            listenToCloud(); // 登入成功後手動啟動監聽
-        })
-        .catch((error) => {
-            // 如果報錯，代表密碼錯了或者是該 Email 還沒在 Firebase 註冊
-            document.getElementById('lock-error').innerText = "驗證失敗：請檢查密碼或網路";
-            document.getElementById('lock-error').classList.remove('hidden');
-            document.getElementById('lock-password').value = '';
-            document.getElementById('lock-password').focus();
-        });
-}
-
-// 監聽登入狀態切換
-auth.onAuthStateChanged(user => {
-    if (user) {
-        currentUser = user;
-        // 如果已經登入成功，自動隱藏鎖定畫面並開啟雲端同步
+    const input = document.getElementById('lock-password').value;
+    if (input === APP_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, '1');
         document.getElementById('lock-screen').style.display = 'none';
-        listenToCloud();
     } else {
-        // 未登入狀態，顯示鎖定畫面
-        document.getElementById('lock-screen').style.display = 'flex';
+        document.getElementById('lock-error').classList.remove('hidden');
+        document.getElementById('lock-password').value = '';
+        document.getElementById('lock-password').focus();
     }
-});
+}
 
 // 若本次 session 已解鎖，直接跳過
 if (sessionStorage.getItem(SESSION_KEY) === '1') {
@@ -489,6 +465,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                 </div>
 
                 <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
+                    <!-- Savings Goals -->
                     <div class="mb-8">
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                             <h4 class="font-bold text-gray-700 text-sm">Savings Goals</h4>
@@ -496,6 +473,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                         </div>
                         <div id="savings-list" class="space-y-4"></div>
                     </div>
+                    <!-- Investments -->
                     <div>
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                             <h4 class="font-bold text-gray-700 text-sm">Investment <span id="invest-last-update" class="text-[10px] text-gray-400 font-normal ml-2"></span></h4>
@@ -530,6 +508,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-xl"></i></button>
 </div>
 
+<!-- Investment Modal -->
 <div id="investModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -562,6 +541,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
+<!-- Savings Modal -->
 <div id="savingsModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -586,6 +566,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
+<!-- Transaction Modal -->
 <div id="trxModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative pt-10">
         <div class="space-y-3">
@@ -617,6 +598,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
+<!-- Unified Modal -->
 <div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div style="position:relative; width:100%; max-width:460px; height:680px;">
         <button onclick="closeUnifiedModal()" style="position:absolute; top:20px; right:20px; background:none; border:none; cursor:pointer; color:#BBBBBB; font-size:20px; z-index:10001; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%;" onmouseover="this.style.color='#888'" onmouseout="this.style.color='#BBBBBB'"><i class="fa-solid fa-times"></i></button>
@@ -683,7 +665,12 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                 <button onclick="handleSave()" id="saveBtn" class="flex-1 py-2 text-white rounded-full font-cursive text-sm shadow-sm active:scale-95 transition-all" style="background-color:#8DAAB9;">Keep it</button>
             </div>
         </div>
-        </div></div></div><div id="toreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+        </div><!-- end modal-fixed-card -->
+    </div><!-- end wrapper -->
+</div><!-- end unifiedModal -->
+
+<!-- ToRead Modal -->
+<div id="toreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <div class="flex gap-5 items-center">
             <div class="cover-preview-box shrink-0 w-[110px] h-[110px] rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 relative hover:bg-gray-100 transition" onclick="document.getElementById('tr-cover-input').click()">
@@ -719,6 +706,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
+<!-- Lit Modal -->
 <div id="litModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-md rounded-[28px] shadow-2xl">
         <h4 class="font-bold mb-4 font-zh text-morandi-dark-gray">Add Research Paper</h4>
@@ -753,6 +741,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
+<!-- Wallet Modal -->
 <div id="walletModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -835,17 +824,8 @@ function compressImage(dataUrl, maxW, maxH, quality, cb) {
 
 // ── 雲端同步（修復：改用 update() 防止多裝置覆蓋）───────────────
 function syncToCloud() {
-    if (!currentUser) return; // 未登入不執行同步
-    
-    const localEvents = localStorage.getItem(STORAGE_KEY) || '[]';
-    // 保護機制：如果本地資料是空的，且系統已經加載過雲端資料，則禁止自動上傳空白
-    if (localEvents === '[]' && isDataLoaded) {
-        console.warn("本地資料為空，防止自動覆蓋雲端。");
-        return;
-    }
-
     const data = {
-        events:  localEvents,
+        events:   localStorage.getItem(STORAGE_KEY)   || '[]',
         books:    localStorage.getItem(BOOKS_KEY)      || '[]',
         lit:      localStorage.getItem(ACAD_LIT_KEY)  || '[]',
         pub:      localStorage.getItem(ACAD_PUB_KEY)  || '[]',
@@ -858,7 +838,7 @@ function syncToCloud() {
     
     setCloudStatus('saving');
     // ★ 使用 update() 而非 set()：各欄位獨立更新，不會覆蓋其他裝置的並行修改
-   db.ref('users/' + currentUser.uid + '/ashley_data_2026').update(data)
+    db.ref(DB_NODE).update(data)
         .then(() => {
             setCloudStatus('synced');
             setTimeout(() => setCloudStatus('ready'), 2000);
@@ -884,28 +864,20 @@ function setCloudStatus(state) {
 }
 
 function applyCloudData(data) {
+    // ★ 修復：data 為 null 時完全不覆蓋 localStorage，保留本機資料
     if (!data) return;
-
-    const localEvents = localStorage.getItem(STORAGE_KEY) || '[]';
-
-    // 🚩 核心保護：如果雲端回傳 events 是空的 ("[]")，但本地是有資料的
-    // 則不執行覆蓋，防止雲端異常導致本地被洗掉
-    if ((!data.events || data.events === "[]") && localEvents !== "[]") {
-        console.error("雲端回傳空資料，已攔截同步以保護本地資料。");
-        return;
-    }
-
-    // 雲端有實質資料才進行覆蓋
-    if (data.events !== undefined) localStorage.setItem(STORAGE_KEY, data.events || '[]');
-    if (data.books !== undefined) localStorage.setItem(BOOKS_KEY, data.books || '[]');
-    if (data.lit !== undefined) localStorage.setItem(ACAD_LIT_KEY, data.lit || '[]');
-    if (data.pub !== undefined) localStorage.setItem(ACAD_PUB_KEY, data.pub || '[]');
-    if (data.wallet !== undefined) localStorage.setItem(WALLET_KEY, data.wallet || '[]');
-    if (data.trx !== undefined) localStorage.setItem(TRX_KEY, data.trx || '[]');
-    if (data.settings !== undefined) localStorage.setItem(SETTINGS_KEY, data.settings || '{}');
-    if (data.invest !== undefined) localStorage.setItem(INVEST_KEY, data.invest || '[]');
-    if (data.savings !== undefined) localStorage.setItem(SAVINGS_KEY, data.savings || '[]');
+    // 只在雲端有值時才覆蓋，避免空字串清掉本機資料
+    if (data.events   !== undefined) localStorage.setItem(STORAGE_KEY,   data.events   || '[]');
+    if (data.books    !== undefined) localStorage.setItem(BOOKS_KEY,     data.books    || '[]');
+    if (data.lit      !== undefined) localStorage.setItem(ACAD_LIT_KEY,  data.lit      || '[]');
+    if (data.pub      !== undefined) localStorage.setItem(ACAD_PUB_KEY,  data.pub      || '[]');
+    if (data.wallet   !== undefined) localStorage.setItem(WALLET_KEY,    data.wallet   || '[]');
+    if (data.trx      !== undefined) localStorage.setItem(TRX_KEY,       data.trx      || '[]');
+    if (data.settings !== undefined) localStorage.setItem(SETTINGS_KEY,  data.settings || '{}');
+    if (data.invest   !== undefined) localStorage.setItem(INVEST_KEY,    data.invest   || '[]');
+    if (data.savings  !== undefined) localStorage.setItem(SAVINGS_KEY,   data.savings  || '[]');
 }
+
 function initUI() {
     if (isDataLoaded) return;
     isDataLoaded = true;
@@ -917,9 +889,7 @@ function initUI() {
 }
 
 function listenToCloud() {
-    if (!currentUser) return;
-    const nodePath = 'users/' + currentUser.uid + '/ashley_data_2026';
-    
+    // ★ 保護：3秒內 Firebase 沒回應，直接用 localStorage 資料初始化畫面
     const fallbackTimer = setTimeout(() => {
         if (!isDataLoaded) {
             console.warn('Firebase 連線逾時，使用本機資料載入');
@@ -928,8 +898,7 @@ function listenToCloud() {
         }
     }, 3000);
 
-    db.ref(nodePath).on('value', (snapshot) => {
-
+    db.ref(DB_NODE).on('value', (snapshot) => {
         clearTimeout(fallbackTimer);
         const data = snapshot.val();
         if (data) applyCloudData(data);
@@ -960,12 +929,7 @@ function refreshAllUI() {
 
 function forceSyncPull(silent = false, retryCount = 0) {
     if (!silent) setCloudStatus('pulling');
-    if (!currentUser) return; // 確保已登入
-
-    // 🚩 將 DB_NODE 改為你的專屬帳號路徑
-    const nodePath = 'users/' + currentUser.uid + '/ashley_data_2026';
-    
-    db.ref(nodePath).once('value').then((snapshot) => {
+    db.ref(DB_NODE).once('value').then((snapshot) => {
         const data = snapshot.val();
         if (data) applyCloudData(data);
         refreshAllUI();
@@ -988,12 +952,15 @@ function forceSyncPull(silent = false, retryCount = 0) {
 }
 
 // ── 切回頁面靜默拉取，不顯示錯誤；網路恢復才顯示
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') forceSyncPull(true);
+});
 window.addEventListener('online', () => forceSyncPull(false));
 
 // ── 初始化 ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initTimeDropdowns();
-    // 🚩 這裡不需要呼叫 listenToCloud()，因為 auth.onAuthStateChanged 會自動執行它
+    listenToCloud();
 });
 
 function toggleSidebar() {
@@ -1336,86 +1303,69 @@ let TAIWAN_SPECIAL_DAYS = SOLAR_TERMS.map(s => ({ ...s, type: 'solar' }));
 
 // 從政府開放資料平台抓取台灣國定假日
 async function fetchTaiwanHolidays(year) {
-    const cacheKey = 'tw_holidays_' + year;
+    const cacheKey = `tw_holidays_${year}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-        try { return JSON.parse(cached); } catch(e) {}
+        try {
+            const data = JSON.parse(cached);
+            return data;
+        } catch(e) {}
     }
-
-    let holidays = [];
-
     try {
-        const targetUrl = 'https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=1000&page=0';
-        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
-        
-        const res = await fetch(proxyUrl);
-        const wrapper = await res.json();
-        const raw = JSON.parse(wrapper.contents);
-        
-        if (Array.isArray(raw)) {
-            const coreHolidays = {
-                2026: [
-                    { date: year + '-01-01', title: '元旦' }, { date: year + '-02-16', title: '除夕' },
-                    { date: year + '-02-17', title: '初一' }, { date: year + '-02-18', title: '初二' },
-                    { date: year + '-02-19', title: '初三' }, { date: year + '-02-28', title: '和平紀念日' },
-                    { date: year + '-04-04', title: '兒童節' }, { date: year + '-04-05', title: '清明節' },
-                    { date: year + '-05-01', title: '勞動節' }, { date: year + '-06-19', title: '端午節' },
-                    { date: year + '-09-25', title: '中秋節' }, { date: year + '-10-10', title: '國慶日' }
-                ]
-            };
-
-            const holidayMap = {};
-            if (coreHolidays[year]) {
-                coreHolidays[year].forEach(function(h) { holidayMap[h.date] = { date: h.date, title: h.title, type: 'holiday' }; });
-            }
-
-            raw.forEach(function(d) {
-                if (!d.date) return;
-                var cleanDate = d.date.replaceAll('/', '');
-                if (!cleanDate.startsWith(String(year))) return;
-                var formattedDate = cleanDate.slice(0,4) + '-' + cleanDate.slice(4,6) + '-' + cleanDate.slice(6,8);
-                var desc = d.description || '';
-
-                if (d.isHoliday === '是') {
-                    if (desc && !['星期一','星期二','星期三','星期四','星期五','星期六','星期日'].includes(desc)) {
-                        if (holidayMap[formattedDate]) {
-                            if (desc.includes('補假') && !holidayMap[formattedDate].title.includes('補假')) {
-                                holidayMap[formattedDate].title += '(' + desc + ')';
-                            }
-                        } else {
-                            holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'holiday' };
-                        }
-                    }
-                } else if (desc && (desc.includes('補班') || desc.includes('補行'))) {
-                    holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'solar' };
-                }
-            });
-            holidays = Object.values(holidayMap);
+        // 使用政府開放資料平台的行政院人事行政總處行事曆
+        const url = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
+        const res = await fetch(url);
+        const raw = await res.json();
+        // 過濾出指定年份的假日
+        const holidays = raw
+            .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
+            .map(d => ({
+                date: `${d.date.slice(0,4)}-${d.date.slice(4,6)}-${d.date.slice(6,8)}`,
+                title: d.description || '假日',
+                type: 'holiday'
+            }));
+        if (holidays.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(holidays));
+            return holidays;
         }
-    } catch(e) { 
-        console.error(year + ' 假日抓取失敗:', e); 
-    }
+    } catch(e) {}
 
-    // 如果 API 抓不到，使用備用清單
-    if (holidays.length === 0) {
-        const fallback = {
-            2026: [
-                { date: year + '-01-01', title: '元旦' }, { date: year + '-02-16', title: '除夕' },
-                { date: year + '-02-17', title: '初一' }, { date: year + '-02-18', title: '初二' },
-                { date: year + '-02-19', title: '初三' }, { date: year + '-02-28', title: '和平紀念日' },
-                { date: year + '-04-03', title: '兒童節補假' }, { date: year + '-04-04', title: '兒童節' },
-                { date: year + '-04-05', title: '清明節' }, { date: year + '-04-06', title: '清明補假' },
-                { date: year + '-05-01', title: '勞動節' }, { date: year + '-06-19', title: '端午節' },
-                { date: year + '-09-25', title: '中秋節' }, { date: year + '-10-10', title: '國慶日' }
-            ]
-        };
-        holidays = (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
-    }
-
-    if (holidays.length > 0) {
-        localStorage.setItem(cacheKey, JSON.stringify(holidays));
-    }
-    return holidays;
+    // 備用：若 API 失敗則用內建資料
+    const fallback = {
+        2025: [
+            { date:'2025-01-01', title:'元旦' }, { date:'2025-01-27', title:'除夕' },
+            { date:'2025-01-28', title:'初一' }, { date:'2025-01-29', title:'初二' },
+            { date:'2025-01-30', title:'初三' }, { date:'2025-02-28', title:'和平紀念日' },
+            { date:'2025-04-03', title:'兒童節補假' }, { date:'2025-04-04', title:'兒童節清明' },
+            { date:'2025-05-01', title:'勞動節' }, { date:'2025-05-31', title:'端午節' },
+            { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
+        ],
+        2026: [
+            { date:'2026-01-01', title:'元旦' },
+            { date:'2026-02-15', title:'小年夜' }, { date:'2026-02-16', title:'除夕' },
+            { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
+            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'小年夜補假' },
+            { date:'2026-02-27', title:'和平紀念日補假' }, { date:'2026-02-28', title:'和平紀念日' },
+            { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
+            { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' },
+            { date:'2026-05-01', title:'勞動節' },
+            { date:'2026-06-19', title:'端午節' },
+            { date:'2026-09-25', title:'中秋節' },
+            { date:'2026-09-28', title:'孔子誕辰/教師節' },
+            { date:'2026-10-09', title:'國慶日補假' }, { date:'2026-10-10', title:'國慶日' },
+            { date:'2026-10-25', title:'台灣光復節' }, { date:'2026-10-26', title:'台灣光復節補假' },
+            { date:'2026-12-25', title:'行憲紀念日' },
+        ],
+        2027: [
+            { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
+            { date:'2027-02-06', title:'初一' }, { date:'2027-02-07', title:'初二' },
+            { date:'2027-02-08', title:'初三' }, { date:'2027-02-28', title:'和平紀念日' },
+            { date:'2027-04-04', title:'兒童節清明' }, { date:'2027-05-01', title:'勞動節' },
+            { date:'2027-06-09', title:'端午節' }, { date:'2027-09-15', title:'中秋節' },
+            { date:'2027-10-10', title:'國慶日' },
+        ]
+    };
+    return (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
 }
 
 async function loadAllHolidays() {
@@ -1896,6 +1846,385 @@ function deleteBookRecord(bookId) {
     renderStatsTable(); renderToRead(); renderBooks(); renderMonthlyStats();
 }
 
+// ── ACADEMIC ─────────────────────────────────────────────────
+function renderLitGrid() {
+    const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
+    const grid   = document.getElementById('lit-grid');
+    grid.innerHTML = papers.map(p => `
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-2 relative">
+            <div class="text-[10px] font-bold text-morandi-blue-dark uppercase">${p.journal}</div>
+            <div class="text-sm font-bold text-gray-700 leading-tight">${p.title}</div>
+            <div class="mt-auto pt-2 flex justify-between items-center border-t border-gray-50">
+                <span class="text-[10px] text-gray-400">${p.year}</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full ${p.impact === 'Critical' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-500'}">${p.impact}</span>
+            </div>
+            <button onclick="deleteLit('${p.id}')" class="absolute -top-2 -right-2 w-5 h-5 bg-white text-gray-300 rounded-full shadow-sm hover:text-red-400 text-[10px]"><i class="fa-solid fa-times"></i></button>
+        </div>`).join('');
+    if (!papers.length) grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">No research papers added yet.</div>';
+}
+function openLitModal() { document.getElementById('litModal').classList.remove('hidden'); }
+function saveLitPaper() {
+    const papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]');
+    papers.push({ id:Date.now().toString(), title:document.getElementById('lit-title').value, journal:document.getElementById('lit-journal').value, year:document.getElementById('lit-year').value, impact:document.getElementById('lit-impact').value });
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers)); syncToCloud();
+    document.getElementById('litModal').classList.add('hidden'); renderLitGrid();
+}
+function deleteLit(id) {
+    let papers = JSON.parse(localStorage.getItem(ACAD_LIT_KEY) || '[]').filter(p => p.id !== id);
+    localStorage.setItem(ACAD_LIT_KEY, JSON.stringify(papers)); syncToCloud(); renderLitGrid();
+}
+function renderPubTable() {
+    const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
+    document.getElementById('pub-table-body').innerHTML = subs.map(s => `
+        <tr>
+            <td class="px-4 py-4 font-bold text-gray-700">${s.title}</td>
+            <td><span class="bg-gray-100 px-2 py-1 rounded text-xs">${s.journal}</span></td>
+            <td><select onchange="updatePubStatus('${s.id}', this.value)" class="text-xs border-none bg-blue-50 text-blue-600 rounded px-2 py-1 outline-none">
+                <option ${s.status==='Drafting'?'selected':''}>Drafting</option>
+                <option ${s.status==='Under Review'?'selected':''}>Under Review</option>
+                <option ${s.status==='Major Revision'?'selected':''}>Major Revision</option>
+                <option ${s.status==='Accepted'?'selected':''}>Accepted</option>
+            </select></td>
+            <td class="text-xs text-gray-400 font-cursive text-base">${s.deadline || '-'}</td>
+            <td><button onclick="deletePub('${s.id}')" class="text-gray-300 hover:text-red-400 px-2"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
+        </tr>`).join('');
+}
+function addSubmissionRow() {
+    const title = prompt("Enter Manuscript Title:"); if (!title) return;
+    const journal = prompt("Enter Target Journal:");
+    const subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
+    subs.push({ id:Date.now().toString(), title, journal, status:'Drafting', deadline:today() });
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud(); renderPubTable();
+}
+function updatePubStatus(id, val) {
+    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]');
+    const s = subs.find(x => x.id === id); if (s) s.status = val;
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud();
+}
+function deletePub(id) {
+    let subs = JSON.parse(localStorage.getItem(ACAD_PUB_KEY) || '[]').filter(x => x.id !== id);
+    localStorage.setItem(ACAD_PUB_KEY, JSON.stringify(subs)); syncToCloud(); renderPubTable();
+}
+
+// ── WALLET ────────────────────────────────────────────────────
+let editingWalletId = null, tempWalletImg = null;
+
+function initWallet() {
+    const def = [
+        { id:'w1', title:'LINE Pay', subtitle:'點擊開啟', type:'link', linkUrl:'line://pay/', img:null, bgColor:'#06C755', icon:'fa-brands fa-line' },
+        { id:'w2', title:'雲端發票載具', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w3', title:'全家 FamilyMart', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w4', title:'7-ELEVEN OpenPoint', subtitle:'', type:'barcode', linkUrl:'', img:null, bgColor:'', icon:'' },
+        { id:'w5', title:'全聯 PX Pay', subtitle:'點擊開啟', type:'link', linkUrl:'https://iospxpay.page.link/MemberCard', img:null, bgColor:'#1A3A6B', icon:'svg:pxmart' }
+    ];
+    // 保留已有圖片/subtitle，但 type/linkUrl/bgColor/icon 一律用預設值
+    const existing = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
+    const merged = def.map(d => {
+        const found = existing.find(e => e.id === d.id);
+        return found ? { ...found, id: d.id, title: d.title, type: d.type, linkUrl: d.linkUrl, bgColor: d.bgColor, icon: d.icon } : d;
+    });
+    localStorage.setItem(WALLET_KEY, JSON.stringify(merged)); syncToCloud();
+    renderWallet();
+}
+
+function renderWallet() {
+    const items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
+    const iconHtml = (item) => {
+        if (item.icon && item.icon.startsWith('text:'))
+            return `<span style="font-weight:900; font-size:1rem; letter-spacing:-1px; color:white;">${item.icon.replace('text:','')}</span>`;
+        if (item.icon === 'svg:pxmart')
+            return `<svg viewBox="0 0 100 100" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="#1A3A6B"/>
+                <rect y="35" width="100" height="30" fill="#CC1111"/>
+                <circle cx="50" cy="50" r="28" fill="none" stroke="white" stroke-width="5"/>
+                <path d="M35 62 L50 30 L65 62 M40 52 L60 52" stroke="white" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>`;
+        return `<i class="${item.icon || 'fa-solid fa-link'}"></i>`;
+    };
+    const titleColor = (item) => item.id === 'w5' ? '#B5C6E0' : (item.bgColor || '#8DAAB9');
+    document.getElementById('wallet-grid').innerHTML = items.map(item => item.type === 'link' ? `
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm cursor-pointer hover:bg-gray-100 transition relative text-center" onclick="window.open('${item.linkUrl}', '_blank')">
+            <button onclick="event.stopPropagation(); openWalletEditModal('${item.id}')" class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm overflow-hidden" style="background-color: ${item.bgColor || '#8DAAB9'}">${iconHtml(item)}</div>
+            <div><h4 class="font-bold text-lg" style="color: ${titleColor(item)}">${item.title}</h4><p class="text-xs text-gray-500">${item.subtitle}</p></div>
+        </div>` : `
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-gray-100 transition relative group text-center" onclick="openWalletEditModal('${item.id}')">
+            <button class="absolute top-3 right-3 text-gray-300 hover:text-gray-500"><i class="fa-solid fa-pen text-xs"></i></button>
+            <h4 class="font-bold text-gray-700 mb-3 text-sm">${item.title}</h4>
+            ${item.img ? `<img src="${item.img}" class="w-full object-contain mx-auto" style="max-height:80px;">` : `<div class="w-full mock-barcode mb-2 opacity-30" style="height:50px;"></div>`}
+            <p class="text-xs text-gray-500 font-mono tracking-widest mt-2">${item.subtitle}</p>
+        </div>`).join('');
+}
+
+function openWalletEditModal(id = null) {
+    editingWalletId = id; tempWalletImg = null;
+    const modal = document.getElementById('walletModal');
+    const deleteBtn = document.getElementById('wallet-delete-btn');
+    modal.classList.remove('hidden');
+    if (id) {
+        document.getElementById('wallet-modal-title').innerText = '編輯項目';
+        deleteBtn.classList.remove('hidden');
+        const item = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]').find(x => x.id === id);
+        if (item) {
+            document.getElementById('wallet-type').value     = item.type;
+            document.getElementById('wallet-title').value    = item.title;
+            document.getElementById('wallet-subtitle').value = item.subtitle;
+            document.getElementById('wallet-linkUrl').value  = item.linkUrl || '';
+            const prev = document.getElementById('wallet-img-preview');
+            if (item.img) { tempWalletImg = item.img; prev.src = item.img; prev.classList.remove('hidden'); document.getElementById('wallet-img-icon').classList.add('hidden'); }
+            else           { prev.src = ''; prev.classList.add('hidden'); document.getElementById('wallet-img-icon').classList.remove('hidden'); }
+        }
+    } else {
+        document.getElementById('wallet-modal-title').innerText = '新增會員或支付';
+        deleteBtn.classList.add('hidden');
+        document.getElementById('wallet-type').value     = 'barcode';
+        document.getElementById('wallet-title').value    = '';
+        document.getElementById('wallet-subtitle').value = '';
+        document.getElementById('wallet-linkUrl').value  = '';
+        document.getElementById('wallet-img-preview').src = '';
+        document.getElementById('wallet-img-preview').classList.add('hidden');
+        document.getElementById('wallet-img-icon').classList.remove('hidden');
+    }
+    toggleWalletFields();
+}
+function closeWalletModal() { document.getElementById('walletModal').classList.add('hidden'); }
+function toggleWalletFields() {
+    const type = document.getElementById('wallet-type').value;
+    document.getElementById('wallet-barcode-fields').classList.toggle('hidden', type === 'link');
+    document.getElementById('wallet-link-fields').classList.toggle('hidden',    type !== 'link');
+}
+function previewWalletImg(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        // ★ 條碼圖片寬保留高解析度但壓縮質量
+        compressImage(e.target.result, 600, 300, 0.8, (compressed) => {
+            tempWalletImg = compressed;
+            document.getElementById('wallet-img-preview').src = compressed;
+            document.getElementById('wallet-img-preview').classList.remove('hidden');
+            document.getElementById('wallet-img-icon').classList.add('hidden');
+        });
+    };
+    reader.readAsDataURL(file); input.value = '';
+}
+function saveWalletItem() {
+    const type     = document.getElementById('wallet-type').value;
+    const title    = document.getElementById('wallet-title').value;
+    const subtitle = document.getElementById('wallet-subtitle').value;
+    const linkUrl  = document.getElementById('wallet-linkUrl').value;
+    let items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]');
+    if (editingWalletId) {
+        const item = items.find(x => x.id === editingWalletId);
+        if (item) { item.type = type; item.title = title; item.subtitle = subtitle; item.linkUrl = type === 'link' ? linkUrl : ''; item.img = type === 'barcode' ? tempWalletImg : null; }
+    } else {
+        items.push({ id:'w_'+Date.now(), type, title, subtitle, linkUrl: type === 'link' ? linkUrl : '', img: type === 'barcode' ? tempWalletImg : null, bgColor:'#8DAAB9', icon:'fa-solid fa-link' });
+    }
+    localStorage.setItem(WALLET_KEY, JSON.stringify(items)); syncToCloud(); closeWalletModal(); renderWallet();
+}
+function deleteWalletItem() {
+    if (editingWalletId && confirm('確定要刪除此項目嗎？')) {
+        let items = JSON.parse(localStorage.getItem(WALLET_KEY) || '[]').filter(x => x.id !== editingWalletId);
+        localStorage.setItem(WALLET_KEY, JSON.stringify(items)); syncToCloud(); renderWallet();
+    }
+    closeWalletModal();
+}
+
+// ── FINANCE ───────────────────────────────────────────────────
+function prevBudgetMonth() { currentBudgetMonth--; if (currentBudgetMonth < 0) { currentBudgetMonth = 11; currentBudgetYear--; } renderTransactions(); }
+function nextBudgetMonth() { currentBudgetMonth++; if (currentBudgetMonth > 11) { currentBudgetMonth = 0; currentBudgetYear++; } renderTransactions(); }
+
+function saveTutorRate(val) {
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    settings.tutorRate = parseFloat(val) || 0;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); syncToCloud(); renderTransactions();
+}
+
+function renderTutorIncome() {
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const rate = settings.tutorRate || 0;
+    const rateInput = document.getElementById('tutor-rate-input');
+    if (rateInput && document.activeElement !== rateInput) rateInput.value = rate || '';
+    const events = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let totalHours = 0;
+    events.forEach(ev => {
+        if (ev.extendedProps && ev.extendedProps.category === 'Tutor' && ev.start) {
+            const d = new Date(ev.start);
+            if (d.getMonth() === currentBudgetMonth && d.getFullYear() === currentBudgetYear)
+                totalHours += parseFloat(ev.extendedProps.workHours) || 0;
+        }
+    });
+    const autoIncome = totalHours * rate;
+    document.getElementById('tutor-auto-income').innerText  = '+$' + autoIncome.toLocaleString();
+    document.getElementById('tutor-hours-display').innerText = `${totalHours} hrs`;
+    return autoIncome;
+}
+
+function renderTransactions() {
+    const tutorIncome = renderTutorIncome();
+    const trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]')
+        .filter(t => { if (!t.date) return false; const d = new Date(t.date); return d.getMonth() === currentBudgetMonth && d.getFullYear() === currentBudgetYear; })
+        .sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    const incList = document.getElementById('income-list');
+    const expList = document.getElementById('expenditure-list');
+    incList.innerHTML = ''; expList.innerHTML = '';
+    let manualIncome = 0, totalExpense = 0, hasInc = false, hasExp = false;
+
+    trxs.forEach(trx => {
+        const el = document.createElement('div');
+        el.className = "flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-b border-gray-50 last:border-0 transition-colors";
+        el.onclick = () => openTrxModal(trx.id);
+        el.innerHTML = `
+            <div class="flex flex-col">
+                <span class="text-sm font-bold text-gray-700">${trx.desc}</span>
+                <span class="text-[10px] text-gray-400 font-mono">${trx.date}</span>
+            </div>
+            <span class="font-mono font-bold ${trx.type === 'income' ? 'text-green-600' : 'text-red-400'}">${trx.type === 'income' ? '+' : '-'}$${parseFloat(trx.amount).toLocaleString()}</span>`;
+        if (trx.type === 'income') { incList.appendChild(el); hasInc = true; manualIncome += parseFloat(trx.amount) || 0; }
+        else                       { expList.appendChild(el); hasExp = true; totalExpense += parseFloat(trx.amount) || 0; }
+    });
+    if (!hasInc) incList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No income records</div>';
+    if (!hasExp) expList.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">No expenditure records</div>';
+
+    const totalIncome = manualIncome + tutorIncome;
+    const balance     = totalIncome - totalExpense;
+    const expPercent  = totalIncome > 0 ? Math.min(100, Math.round((totalExpense / (totalIncome + totalExpense)) * 100)) : (totalExpense > 0 ? 100 : 0);
+    const pieChart    = document.getElementById('budget-pie-chart');
+    if (totalIncome === 0 && totalExpense === 0)       pieChart.style.background = '#E5E5E5';
+    else if (totalIncome === 0 && totalExpense > 0)    pieChart.style.background = '#E8D1D1';
+    else                                               pieChart.style.background = `conic-gradient(#E8D1D1 0% ${expPercent}%, #8DAAB9 ${expPercent}% 100%)`;
+
+    document.getElementById('summary-income').innerText  = '$' + totalIncome.toLocaleString();
+    document.getElementById('summary-expense').innerText = '$' + totalExpense.toLocaleString();
+    document.getElementById('summary-balance').innerText = '$' + balance.toLocaleString();
+
+    const monthNamesEn = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const dispEl = document.getElementById('budget-month-display');
+    if (dispEl) dispEl.innerText = `- ${monthNamesEn[currentBudgetMonth]} ${currentBudgetYear}`;
+}
+
+function openTrxModal(id = null) {
+    editingTrxId = id;
+    document.getElementById('trxModal').classList.remove('hidden');
+    const delBtn = document.getElementById('trx-delete-btn');
+    if (id) {
+        const trx = JSON.parse(localStorage.getItem(TRX_KEY) || '[]').find(t => t.id === id);
+        if (trx) { document.getElementById('trx-type').value = trx.type; document.getElementById('trx-date').value = trx.date; document.getElementById('trx-desc').value = trx.desc; document.getElementById('trx-amount').value = trx.amount; delBtn.classList.remove('hidden'); }
+    } else {
+        document.getElementById('trx-type').value   = 'expense';
+        document.getElementById('trx-date').value   = today();
+        document.getElementById('trx-desc').value   = '';
+        document.getElementById('trx-amount').value = '';
+        delBtn.classList.add('hidden');
+    }
+}
+function closeTrxModal() { document.getElementById('trxModal').classList.add('hidden'); editingTrxId = null; }
+function saveTrx() {
+    const type = document.getElementById('trx-type').value;
+    const date = document.getElementById('trx-date').value || today();
+    const desc = document.getElementById('trx-desc').value || '未命名';
+    const amount = document.getElementById('trx-amount').value || 0;
+    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]');
+    if (editingTrxId) {
+        const idx = trxs.findIndex(t => t.id === editingTrxId);
+        if (idx > -1) trxs[idx] = { id:editingTrxId, type, date, desc, amount };
+    } else {
+        trxs.push({ id:'trx_'+Date.now(), type, date, desc, amount });
+    }
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs)); syncToCloud(); closeTrxModal(); renderTransactions();
+}
+function deleteTrx() {
+    if (!editingTrxId || !confirm("確定要刪除這筆紀錄嗎？")) return;
+    let trxs = JSON.parse(localStorage.getItem(TRX_KEY) || '[]').filter(t => t.id !== editingTrxId);
+    localStorage.setItem(TRX_KEY, JSON.stringify(trxs)); syncToCloud(); closeTrxModal(); renderTransactions();
+}
+
+// ── UNIFIED MODAL ─────────────────────────────────────────────
+function closeUnifiedModal() { document.getElementById('unifiedModal').classList.add('hidden'); editingId = null; }
+
+function openUnifiedModal(ev = null, clickedDateStr = null) {
+    document.getElementById('unifiedModal').classList.remove('hidden');
+    const deleteBtn = document.getElementById('deleteBtn');
+    if (ev && ev.id) {
+        editingId = String(ev.id); deleteBtn.classList.remove('hidden');
+        if (ev.extendedProps.isReading) {
+            let currentBooks = loadBooks();
+            let actBook = currentBooks.find(b => String(b.id) === String(ev.extendedProps.bookId));
+            if (!actBook) {
+                const titleMatch = ev.title.match(/^(.*?)\s*\(p\.\d+\/\d+\)$/);
+                const rawTitle = titleMatch ? titleMatch[1].trim() : ev.title.trim();
+                actBook = currentBooks.find(b => b.title === rawTitle);
+            }
+            if (actBook) {
+                actBook.logDate = ev.startStr.split('T')[0];
+                lastEditedBookId = actBook.id;
+                localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
+                switchType('reading', actBook.id);
+            } else {
+                switchType('reading', ev.extendedProps.bookId);
+            }
+        } else {
+            switchType('schedule');
+            document.getElementById('inputMain').value  = ev.extendedProps.originalTitle || ev.title;
+            document.getElementById('inputDate').value  = ev.startStr.split('T')[0];
+            document.getElementById('inputNotes').value = ev.extendedProps.notes || '';
+            if (!ev.allDay && ev.startStr.includes('T')) {
+                const time = ev.startStr.split('T')[1].split(':');
+                document.getElementById('selectHour').value   = time[0];
+                document.getElementById('selectMinute').value = time[1];
+            }
+            const cat = ev.extendedProps.category || 'Personal';
+            setCategory(cat);
+            if (cat === 'Travel' && ev.end) {
+                let d = new Date(ev.end); d.setDate(d.getDate() - 1);
+                document.getElementById('inputEndDate').value = d.toISOString().split('T')[0];
+            }
+            if (cat === 'Tutor') document.getElementById('workHours').value = ev.extendedProps.workHours || '';
+        }
+    } else {
+        editingId = null; deleteBtn.classList.add('hidden');
+        document.getElementById('inputMain').value  = '';
+        document.getElementById('inputNotes').value = '';
+        let targetDate = clickedDateStr || today();
+        document.getElementById('inputDate').value    = targetDate;
+        document.getElementById('inputEndDate').value = targetDate;
+        let currentBooks = loadBooks();
+        currentBooks.forEach(b => { if (!b.done && !b.isToRead) b.logDate = targetDate; });
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(currentBooks));
+        lastEditedBookId = null;
+        setCategory('Personal'); switchType('schedule');
+    }
+}
+
+function switchType(type, forceBookId = null) {
+    currentType = type;
+    const s = document.getElementById('schedule-fields-static'), r = document.getElementById('read-fields'), btn = document.getElementById('saveBtn');
+    document.getElementById('tab-schedule').classList.toggle('active', type === 'schedule');
+    document.getElementById('tab-reading').classList.toggle('active',  type === 'reading');
+    if (type === 'schedule') { s.style.display = 'block'; r.style.display = 'none'; btn.style.backgroundColor = '#8DAAB9'; setCategory(currentCategory); }
+    else                     { s.style.display = 'none';  r.style.display = 'block'; btn.style.backgroundColor = '#7F9F9F'; renderBooks(forceBookId); }
+}
+
+function setCategory(cat) {
+    currentCategory = cat;
+    ['Tutor','Work','Exercise','Travel','Personal'].forEach(c => {
+        const b = document.getElementById(`cat-${c}`); if (b) b.classList.toggle('selected', c === cat);
+    });
+    const startTimeBox       = document.getElementById('startTimeBox');
+    const travelEndContainer = document.getElementById('travel-end-container');
+    const workHoursContainer = document.getElementById('work-hours-container');
+    if (cat === 'Travel') {
+        if (startTimeBox) startTimeBox.style.display = 'none';
+        travelEndContainer.style.display = 'flex'; workHoursContainer.style.display = 'none';
+        document.getElementById('dateLabel').innerText = 'Start Date';
+    } else {
+        if (startTimeBox) startTimeBox.style.display = 'flex';
+        travelEndContainer.style.display = 'none';
+        workHoursContainer.style.display = (cat === 'Tutor') ? 'flex' : 'none';
+        document.getElementById('dateLabel').innerText = 'Date & Time';
+    }
+}
+
 function handleDelete() {
     if (!editingId) return;
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').filter(e => String(e.id) !== String(editingId));
@@ -1955,30 +2284,6 @@ function handleSave() {
     closeUnifiedModal();
     if (isReading) renderStatsTable();
     else if (currentCategory === 'Tutor') renderTutorIncome();
-}
-    // 補充遺失的函式宣告，避免程式執行時拋出 ReferenceError 中斷初始化
-function initWallet() {
-    // 原始邏輯遺失，目前以空函式替代防錯
-}
-
-function renderTransactions() {
-    // 原始邏輯遺失
-}
-
-function renderWallet() {
-    // 原始邏輯遺失
-}
-
-function renderLitGrid() {
-    // 原始邏輯遺失
-}
-
-function renderPubTable() {
-    // 原始邏輯遺失
-}
-
-function renderTutorIncome() {
-    // 原始邏輯遺失
 }
 </script>
 </body>
