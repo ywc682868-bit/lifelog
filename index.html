@@ -7,18 +7,16 @@
     <link rel="apple-touch-icon" href="1.png">
     <link rel="icon" type="image/png" href="1.png">
     <link rel="apple-touch-icon" href="09a65827-d330-4c95-819c-178050fef0e5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Ashley's">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ashley's">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -33,8 +31,7 @@
         firebaseConfig.databaseURL = "https://optimization-30a4f-default-rtdb.firebaseio.com";
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-let currentUser = null;
+        const db = firebase.database();
 
         tailwind.config = {
             theme: {
@@ -1305,78 +1302,70 @@ const SOLAR_TERMS = [
 let TAIWAN_SPECIAL_DAYS = SOLAR_TERMS.map(s => ({ ...s, type: 'solar' }));
 
 // 從政府開放資料平台抓取台灣國定假日
-// 從政府開放資料平台抓取台灣國定假日
 async function fetchTaiwanHolidays(year) {
-    const cacheKey = `tw_holidays_${year}`;
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-        try {
-            const data = JSON.parse(cached);
-            return data;
-        } catch(e) {}
-    }
-    try {
-        // 使用政府開放資料平台的行政院人事行政總處行事曆
-        const targetUrl = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
-        // 加入 CORS Proxy 解決跨網域阻擋問題
-        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
-        const res = await fetch(proxyUrl);
-        const wrapper = await res.json();
-        // allorigins 會把原始 JSON 變成字串放在 contents 裡面，需要多解析一次
-        const raw = JSON.parse(wrapper.contents);
-
-        // 過濾出指定年份的假日
-        const holidays = raw
-            .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
-            .map(d => ({
-                date: `${d.date.slice(0,4)}-${d.date.slice(4,6)}-${d.date.slice(6,8)}`,
-                title: d.description || '假日',
-                type: 'holiday'
-            }));
-        if (holidays.length > 0) {
-            localStorage.setItem(cacheKey, JSON.stringify(holidays));
-            return holidays;
-        }
-    } catch(e) {
-        console.error('假日 API 抓取失敗:', e);
+    const cacheKey = `tw_holidays_${year}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            return data;
+        } catch(e) {}
     }
+    try {
+        // 使用政府開放資料平台的行政院人事行政總處行事曆
+        const url = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
+        const res = await fetch(url);
+        const raw = await res.json();
+        // 過濾出指定年份的假日
+        const holidays = raw
+            .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
+            .map(d => ({
+                date: `${d.date.slice(0,4)}-${d.date.slice(4,6)}-${d.date.slice(6,8)}`,
+                title: d.description || '假日',
+                type: 'holiday'
+            }));
+        if (holidays.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(holidays));
+            return holidays;
+        }
+    } catch(e) {}
 
-    // 備用：若 API 失敗則用內建資料
-    const fallback = {
-        2025: [
-            { date:'2025-01-01', title:'元旦' }, { date:'2025-01-27', title:'除夕' },
-            { date:'2025-01-28', title:'初一' }, { date:'2025-01-29', title:'初二' },
-            { date:'2025-01-30', title:'初三' }, { date:'2025-02-28', title:'和平紀念日' },
-            { date:'2025-04-03', title:'兒童節補假' }, { date:'2025-04-04', title:'兒童節清明' },
-            { date:'2025-05-01', title:'勞動節' }, { date:'2025-05-31', title:'端午節' },
-            { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
-        ],
-        2026: [
-            { date:'2026-01-01', title:'元旦' },
-            { date:'2026-02-15', title:'小年夜' }, { date:'2026-02-16', title:'除夕' },
-            { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
-            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'小年夜補假' },
-            { date:'2026-02-27', title:'和平紀念日補假' }, { date:'2026-02-28', title:'和平紀念日' },
-            { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
-            { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' },
-            { date:'2026-05-01', title:'勞動節' },
-            { date:'2026-06-19', title:'端午節' },
-            { date:'2026-09-25', title:'中秋節' },
-            { date:'2026-09-28', title:'孔子誕辰/教師節' },
-            { date:'2026-10-09', title:'國慶日補假' }, { date:'2026-10-10', title:'國慶日' },
-            { date:'2026-10-25', title:'台灣光復節' }, { date:'2026-10-26', title:'台灣光復節補假' },
-            { date:'2026-12-25', title:'行憲紀念日' },
-        ],
-        2027: [
-            { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
-            { date:'2027-02-06', title:'初一' }, { date:'2027-02-07', title:'初二' },
-            { date:'2027-02-08', title:'初三' }, { date:'2027-02-28', title:'和平紀念日' },
-            { date:'2027-04-04', title:'兒童節清明' }, { date:'2027-05-01', title:'勞動節' },
-            { date:'2027-06-09', title:'端午節' }, { date:'2027-09-15', title:'中秋節' },
-            { date:'2027-10-10', title:'國慶日' },
-        ]
-    };
-    return (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
+    // 備用：若 API 失敗則用內建資料
+    const fallback = {
+        2025: [
+            { date:'2025-01-01', title:'元旦' }, { date:'2025-01-27', title:'除夕' },
+            { date:'2025-01-28', title:'初一' }, { date:'2025-01-29', title:'初二' },
+            { date:'2025-01-30', title:'初三' }, { date:'2025-02-28', title:'和平紀念日' },
+            { date:'2025-04-03', title:'兒童節補假' }, { date:'2025-04-04', title:'兒童節清明' },
+            { date:'2025-05-01', title:'勞動節' }, { date:'2025-05-31', title:'端午節' },
+            { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
+        ],
+        2026: [
+            { date:'2026-01-01', title:'元旦' },
+            { date:'2026-02-15', title:'小年夜' }, { date:'2026-02-16', title:'除夕' },
+            { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
+            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'小年夜補假' },
+            { date:'2026-02-27', title:'和平紀念日補假' }, { date:'2026-02-28', title:'和平紀念日' },
+            { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
+            { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' },
+            { date:'2026-05-01', title:'勞動節' },
+            { date:'2026-06-19', title:'端午節' },
+            { date:'2026-09-25', title:'中秋節' },
+            { date:'2026-09-28', title:'孔子誕辰/教師節' },
+            { date:'2026-10-09', title:'國慶日補假' }, { date:'2026-10-10', title:'國慶日' },
+            { date:'2026-10-25', title:'台灣光復節' }, { date:'2026-10-26', title:'台灣光復節補假' },
+            { date:'2026-12-25', title:'行憲紀念日' },
+        ],
+        2027: [
+            { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
+            { date:'2027-02-06', title:'初一' }, { date:'2027-02-07', title:'初二' },
+            { date:'2027-02-08', title:'初三' }, { date:'2027-02-28', title:'和平紀念日' },
+            { date:'2027-04-04', title:'兒童節清明' }, { date:'2027-05-01', title:'勞動節' },
+            { date:'2027-06-09', title:'端午節' }, { date:'2027-09-15', title:'中秋節' },
+            { date:'2027-10-10', title:'國慶日' },
+        ]
+    };
+    return (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
 }
 
 async function loadAllHolidays() {
