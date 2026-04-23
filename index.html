@@ -261,7 +261,8 @@ const APP_PASSWORD = '686868';
 const SESSION_KEY  = 'ashley_unlocked';
 
 function checkPassword() {
-    const email = "ywc682868@gmail.com"; // ★ 請先到 Firebase Console 手動建立此帳號
+    // 🚩 這裡填入您在 Firebase Console 建立的那個 Email
+    const email = "ywc682868@gmail.com"; 
     const password = document.getElementById('lock-password').value;
 
     auth.signInWithEmailAndPassword(email, password)
@@ -269,10 +270,11 @@ function checkPassword() {
             currentUser = userCredential.user;
             sessionStorage.setItem(SESSION_KEY, '1');
             document.getElementById('lock-screen').style.display = 'none';
-            listenToCloud(); // 登入成功後啟動雲端監聽
+            listenToCloud(); // 登入成功後手動啟動監聽
         })
         .catch((error) => {
-            document.getElementById('lock-error').innerText = "驗證失敗：" + error.message;
+            // 如果報錯，代表密碼錯了或者是該 Email 還沒在 Firebase 註冊
+            document.getElementById('lock-error').innerText = "驗證失敗：請檢查密碼或網路";
             document.getElementById('lock-error').classList.remove('hidden');
             document.getElementById('lock-password').value = '';
             document.getElementById('lock-password').focus();
