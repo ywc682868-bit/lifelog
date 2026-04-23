@@ -932,7 +932,7 @@ function initUI() {
 
 function listenToCloud() {
     if (!currentUser) return;
-    const nodePath = `users/${currentUser.uid}/ashley_data_2026`;
+    const nodePath =(`users/${currentUser.uid}/ashley_data_2026`);
     
     // 原有的 fallbackTimer 邏輯保持不變...
     const fallbackTimer = setTimeout(() => {
