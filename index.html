@@ -285,8 +285,12 @@ function checkPassword() {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
+        // 如果已經登入成功，自動隱藏鎖定畫面並開啟雲端同步
         document.getElementById('lock-screen').style.display = 'none';
         listenToCloud();
+    } else {
+        // 未登入狀態，顯示鎖定畫面
+        document.getElementById('lock-screen').style.display = 'flex';
     }
 });
 
