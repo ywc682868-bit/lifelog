@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" href="1.png">
     <link rel="icon" type="image/png" href="1.png">
     <link rel="apple-touch-icon" href="09a65827-d330-4c95-819c-178050fef0e5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Ashley's">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
@@ -260,7 +260,6 @@ const APP_PASSWORD = '686868';
 const SESSION_KEY  = 'ashley_unlocked';
 
 function checkPassword() {
-    // 🚩 這裡填入您在 Firebase Console 建立的那個 Email
     const email = "ywc682868@gmail.com"; 
     const password = document.getElementById('lock-password').value;
 
@@ -272,7 +271,6 @@ function checkPassword() {
             listenToCloud(); // 登入成功後手動啟動監聽
         })
         .catch((error) => {
-            // 如果報錯，代表密碼錯了或者是該 Email 還沒在 Firebase 註冊
             document.getElementById('lock-error').innerText = "驗證失敗：請檢查密碼或網路";
             document.getElementById('lock-error').classList.remove('hidden');
             document.getElementById('lock-password').value = '';
@@ -284,11 +282,9 @@ function checkPassword() {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
-        // 如果已經登入成功，自動隱藏鎖定畫面並開啟雲端同步
         document.getElementById('lock-screen').style.display = 'none';
         listenToCloud();
     } else {
-        // 未登入狀態，顯示鎖定畫面
         document.getElementById('lock-screen').style.display = 'flex';
     }
 });
