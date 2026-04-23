@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
@@ -238,7 +239,6 @@
 </head>
 <body class="bg-morandi-white text-gray-700 antialiased">
 
-<!-- 密碼保護畫面 -->
 <div id="lock-screen" class="fixed inset-0 z-[99999] flex items-center justify-center" style="background: linear-gradient(135deg, #E2EBF0 0%, #E2E8E8 100%);">
     <div class="bg-white rounded-[32px] shadow-2xl p-10 w-full max-w-[340px] flex flex-col items-center gap-6">
         <div>
@@ -254,25 +254,36 @@
 </div>
 
 <script>
-const APP_PASSWORD = '686868';
-const SESSION_KEY  = 'ashley_unlocked';
+const LOGIN_EMAIL = 'ywc682868@gmail.com';
 
 function checkPassword() {
-    const input = document.getElementById('lock-password').value;
-    if (input === APP_PASSWORD) {
-        sessionStorage.setItem(SESSION_KEY, '1');
-        document.getElementById('lock-screen').style.display = 'none';
-    } else {
-        document.getElementById('lock-error').classList.remove('hidden');
-        document.getElementById('lock-password').value = '';
-        document.getElementById('lock-password').focus();
-    }
+    const passwordInput = document.getElementById('lock-password').value;
+    
+    // 使用 Firebase Authentication 進行信箱與密碼驗證
+    firebase.auth().signInWithEmailAndPassword(LOGIN_EMAIL, passwordInput)
+        .then((userCredential) => {
+            // 登入成功由 onAuthStateChanged 處理 UI 隱藏與資料載入
+        })
+        .catch((error) => {
+            document.getElementById('lock-error').innerText = '登入失敗：密碼錯誤或無權限';
+            document.getElementById('lock-error').classList.remove('hidden');
+            document.getElementById('lock-password').value = '';
+            document.getElementById('lock-password').focus();
+        });
 }
 
-// 若本次 session 已解鎖，直接跳過
-if (sessionStorage.getItem(SESSION_KEY) === '1') {
-    document.getElementById('lock-screen').style.display = 'none';
-}
+// 監聽 Firebase 驗證狀態
+firebase.auth().onAuthStateChanged((user) => {
+    if (user && user.email === LOGIN_EMAIL) {
+        document.getElementById('lock-screen').style.display = 'none';
+        // 驗證成功後才開始監聽與拉取資料，避免權限錯誤
+        if (!isDataLoaded) {
+            listenToCloud();
+        }
+    } else {
+        document.getElementById('lock-screen').style.display = 'flex';
+    }
+});
 </script>
 
 <button onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-40 bg-white/80 backdrop-blur p-2 rounded-lg shadow-sm text-morandi-dark-gray border border-gray-100">
@@ -465,7 +476,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                 </div>
 
                 <div id="fin-tab-invest" class="fin-tab-content hidden flex-1 overflow-y-auto min-h-0 bg-white p-6 rounded-[20px] shadow-sm">
-                    <!-- Savings Goals -->
                     <div class="mb-8">
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                             <h4 class="font-bold text-gray-700 text-sm">Savings Goals</h4>
@@ -473,7 +483,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                         </div>
                         <div id="savings-list" class="space-y-4"></div>
                     </div>
-                    <!-- Investments -->
                     <div>
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                             <h4 class="font-bold text-gray-700 text-sm">Investment <span id="invest-last-update" class="text-[10px] text-gray-400 font-normal ml-2"></span></h4>
@@ -508,7 +517,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     <button onclick="openUnifiedModal()" class="fab-main"><i class="fa-solid fa-plus text-xl"></i></button>
 </div>
 
-<!-- Investment Modal -->
 <div id="investModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -541,7 +549,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
-<!-- Savings Modal -->
 <div id="savingsModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[360px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -566,7 +573,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
-<!-- Transaction Modal -->
 <div id="trxModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[320px] rounded-[28px] shadow-2xl relative pt-10">
         <div class="space-y-3">
@@ -598,7 +604,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
-<!-- Unified Modal -->
 <div id="unifiedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div style="position:relative; width:100%; max-width:460px; height:680px;">
         <button onclick="closeUnifiedModal()" style="position:absolute; top:20px; right:20px; background:none; border:none; cursor:pointer; color:#BBBBBB; font-size:20px; z-index:10001; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%;" onmouseover="this.style.color='#888'" onmouseout="this.style.color='#BBBBBB'"><i class="fa-solid fa-times"></i></button>
@@ -665,12 +670,7 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
                 <button onclick="handleSave()" id="saveBtn" class="flex-1 py-2 text-white rounded-full font-cursive text-sm shadow-sm active:scale-95 transition-all" style="background-color:#8DAAB9;">Keep it</button>
             </div>
         </div>
-        </div><!-- end modal-fixed-card -->
-    </div><!-- end wrapper -->
-</div><!-- end unifiedModal -->
-
-<!-- ToRead Modal -->
-<div id="toreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
+        </div></div></div><div id="toreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <div class="flex gap-5 items-center">
             <div class="cover-preview-box shrink-0 w-[110px] h-[110px] rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 relative hover:bg-gray-100 transition" onclick="document.getElementById('tr-cover-input').click()">
@@ -706,7 +706,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
-<!-- Lit Modal -->
 <div id="litModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-md rounded-[28px] shadow-2xl">
         <h4 class="font-bold mb-4 font-zh text-morandi-dark-gray">Add Research Paper</h4>
@@ -741,7 +740,6 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
     </div>
 </div>
 
-<!-- Wallet Modal -->
 <div id="walletModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-[10000] p-4">
     <div class="bg-white p-6 w-full max-w-[380px] rounded-[28px] shadow-2xl relative">
         <div class="space-y-3">
@@ -824,6 +822,8 @@ function compressImage(dataUrl, maxW, maxH, quality, cb) {
 
 // ── 雲端同步（修復：改用 update() 防止多裝置覆蓋）───────────────
 function syncToCloud() {
+    if (!firebase.auth().currentUser) return; // 確保有權限才寫入
+
     const data = {
         events:   localStorage.getItem(STORAGE_KEY)   || '[]',
         books:    localStorage.getItem(BOOKS_KEY)      || '[]',
@@ -928,6 +928,8 @@ function refreshAllUI() {
 }
 
 function forceSyncPull(silent = false, retryCount = 0) {
+    if (!firebase.auth().currentUser) return; // 確保有權限才讀取
+
     if (!silent) setCloudStatus('pulling');
     db.ref(DB_NODE).once('value').then((snapshot) => {
         const data = snapshot.val();
@@ -953,14 +955,16 @@ function forceSyncPull(silent = false, retryCount = 0) {
 
 // ── 切回頁面靜默拉取，不顯示錯誤；網路恢復才顯示
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') forceSyncPull(true);
+    if (document.visibilityState === 'visible' && firebase.auth().currentUser) forceSyncPull(true);
 });
-window.addEventListener('online', () => forceSyncPull(false));
+window.addEventListener('online', () => { 
+    if (firebase.auth().currentUser) forceSyncPull(false);
+});
 
 // ── 初始化 ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initTimeDropdowns();
-    listenToCloud();
+    // listenToCloud() 已移至 onAuthStateChanged 內執行，避免被 Firebase Rule 阻擋
 });
 
 function toggleSidebar() {
@@ -1620,7 +1624,7 @@ function openToReadModal(bookId = null) {
             tempTrCover = book.cover || null;
             const prev = document.getElementById('tr-cover-preview');
             if (tempTrCover) { prev.src = tempTrCover; prev.classList.remove('hidden'); document.getElementById('tr-cover-icon').classList.add('hidden'); }
-            else              { prev.src = ''; prev.classList.add('hidden'); document.getElementById('tr-cover-icon').classList.remove('hidden'); }
+            else             { prev.src = ''; prev.classList.add('hidden'); document.getElementById('tr-cover-icon').classList.remove('hidden'); }
         }
     } else {
         document.getElementById('tr-title').value    = '';
