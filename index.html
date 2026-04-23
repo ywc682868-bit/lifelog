@@ -872,7 +872,7 @@ function syncToCloud() {
     
     setCloudStatus('saving');
     // ★ 使用 update() 而非 set()：各欄位獨立更新，不會覆蓋其他裝置的並行修改
-   db.ref(`users/${currentUser.uid}/ashley_data_2026`).update(data)
+   db.ref('users/' + currentUser.uid + '/ashley_data_2026').update(data)
         .then(() => {
             setCloudStatus('synced');
             setTimeout(() => setCloudStatus('ready'), 2000);
@@ -932,7 +932,7 @@ function initUI() {
 
 function listenToCloud() {
     if (!currentUser) return;
-    const nodePath = `users/${currentUser.uid}/ashley_data_2026`;
+    const nodePath = 'users/' + currentUser.uid + '/ashley_data_2026';
     
     const fallbackTimer = setTimeout(() => {
         if (!isDataLoaded) {
@@ -977,7 +977,7 @@ function forceSyncPull(silent = false, retryCount = 0) {
     if (!currentUser) return; // 確保已登入
 
     // 🚩 將 DB_NODE 改為你的專屬帳號路徑
-    const nodePath = `users/${currentUser.uid}/ashley_data_2026`;
+    const nodePath = 'users/' + currentUser.uid + '/ashley_data_2026';
     
     db.ref(nodePath).once('value').then((snapshot) => {
         const data = snapshot.val();
@@ -1002,8 +1002,8 @@ function forceSyncPull(silent = false, retryCount = 0) {
 }
 
 // ── 切回頁面靜默拉取，不顯示錯誤；網路恢復才顯示
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') forceSyncPull(true);
+document.addEventListener('DOMContentLoaded', () => {
+    initTimeDropdowns();
 });
 window.addEventListener('online', () => forceSyncPull(false));
 
@@ -1353,15 +1353,15 @@ let TAIWAN_SPECIAL_DAYS = SOLAR_TERMS.map(s => ({ ...s, type: 'solar' }));
 
 // 從政府開放資料平台抓取台灣國定假日
 async function fetchTaiwanHolidays(year) {
-    const cacheKey = `tw_holidays_${year}`;
+    const cacheKey = 'tw_holidays_' + year;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
         try { return JSON.parse(cached); } catch(e) {}
     }
 
     try {
-        const targetUrl = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=1000&page=0`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        const targetUrl = 'https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=1000&page=0';
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
         
         const res = await fetch(proxyUrl);
         const wrapper = await res.json();
@@ -1369,57 +1369,40 @@ async function fetchTaiwanHolidays(year) {
         
         if (!Array.isArray(raw)) return [];
 
-        // 1. 定義該年份必顯示的「國定核心節慶」 (確保正日子不消失)
         const coreHolidays = {
             2026: [
-                { date: `${year}-01-01`, title: '元旦' },
-                { date: `${year}-02-16`, title: '除夕' },
-                { date: `${year}-02-17', title: '初一' },
-                { date: `${year}-02-18', title: '初二' },
-                { date: `${year}-02-19', title: '初三' },
-                { date: `${year}-02-28', title: '和平紀念日' },
-                { date: `${year}-04-04`, title: '兒童節' },
-                { date: `${year}-04-05`, title: '清明節' },
-                { date: `${year}-05-01`, title: '勞動節' },
-                { date: `${year}-06-19`, title: '端午節' },
-                { date: `${year}-09-25`, title: '中秋節' },
-                { date: `${year}-10-10`, title: '國慶日' }
+                { date: year + '-01-01', title: '元旦' }, { date: year + '-02-16', title: '除夕' },
+                { date: year + '-02-17', title: '初一' }, { date: year + '-02-18', title: '初二' },
+                { date: year + '-02-19', title: '初三' }, { date: year + '-02-28', title: '和平紀念日' },
+                { date: year + '-04-04', title: '兒童節' }, { date: year + '-04-05', title: '清明節' },
+                { date: year + '-05-01', title: '勞動節' }, { date: year + '-06-19', title: '端午節' },
+                { date: year + '-09-25', title: '中秋節' }, { date: year + '-10-10', title: '國慶日' }
             ]
         };
 
         const holidayMap = {};
-        
-        // 先放入核心節慶
         if (coreHolidays[year]) {
-            coreHolidays[year].forEach(h => {
-                holidayMap[h.date] = { ...h, type: 'holiday' };
-            });
+            coreHolidays[year].forEach(function(h) { holidayMap[h.date] = { date: h.date, title: h.title, type: 'holiday' }; });
         }
 
-        // 2. 處理 API 資料 (抓取補假、調休、節氣以外的假期)
-        raw.forEach(d => {
+        raw.forEach(function(d) {
             if (!d.date) return;
-            const cleanDate = d.date.replaceAll('/', '');
+            var cleanDate = d.date.replaceAll('/', '');
             if (!cleanDate.startsWith(String(year))) return;
-            
-            const formattedDate = `${cleanDate.slice(0,4)}-${cleanDate.slice(4,6)}-${cleanDate.slice(6,8)}`;
-            const desc = d.description || '';
+            var formattedDate = cleanDate.slice(0,4) + '-' + cleanDate.slice(4,6) + '-' + cleanDate.slice(6,8);
+            var desc = d.description || '';
 
-            // 如果這一天是假日 (isHoliday='是')
             if (d.isHoliday === '是') {
-                // 排除純粹的星期稱呼，只抓有意義的描述 (例如：補假、開工)
                 if (desc && !['星期一','星期二','星期三','星期四','星期五','星期六','星期日'].includes(desc)) {
                     if (holidayMap[formattedDate]) {
-                        // 如果該日期已有核心節慶，且描述是補假，則合併顯示
                         if (desc.includes('補假') && !holidayMap[formattedDate].title.includes('補假')) {
-                            holidayMap[formattedDate].title += `(${desc})`;
+                            holidayMap[formattedDate].title += '(' + desc + ')';
                         }
                     } else {
                         holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'holiday' };
                     }
                 }
             } else if (desc && (desc.includes('補班') || desc.includes('補行'))) {
-                // 處理補班日 (標記為灰色 solar 類型)
                 holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'solar' };
             }
         });
@@ -1429,9 +1412,10 @@ async function fetchTaiwanHolidays(year) {
             localStorage.setItem(cacheKey, JSON.stringify(finalHolidays));
             return finalHolidays;
         }
-    } catch(e) {
-        console.error(`${year} 假日抓取失敗:`, e);
-    }
+    } catch(e) { console.error(year + ' 假日抓取失敗:', e); }
+
+    return [];
+}
 
     // --- 備用靜態資料 (Fallback) ---
     const fallback = {
