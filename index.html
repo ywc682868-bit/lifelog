@@ -1346,74 +1346,63 @@ async function fetchTaiwanHolidays(year) {
     const cacheKey = `tw_holidays_${year}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-        try {
-            const data = JSON.parse(cached);
-            return data;
-        } catch(e) {}
+        try { return JSON.parse(cached); } catch(e) {}
     }
+
     try {
-        // 使用政府開放資料平台的行政院人事行政總處行事曆 (加入 CORS Proxy)
-        const targetUrl = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
+        // 使用 Proxy 繞過 CORS
+        const targetUrl = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=1000&page=0`;
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
         
         const res = await fetch(proxyUrl);
         const wrapper = await res.json();
-        
-        // 代理伺服器會將原始資料包在 contents 欄位中，需要解析兩次
         const raw = JSON.parse(wrapper.contents);
         
-        // 過濾出指定年份的假日
+        if (!Array.isArray(raw)) return [];
+
         const holidays = raw
-            .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
-            .map(d => ({
-                date: `${d.date.slice(0,4)}-${d.date.slice(4,6)}-${d.date.slice(6,8)}`,
-                title: d.description || '假日',
-                type: 'holiday'
-            }));
+            .filter(d => {
+                // 檢查日期是否存在且屬於該年份
+                if (!d.date) return false;
+                const cleanDate = d.date.replaceAll('/', ''); // 移除斜線，統一成 20260101 格式
+                return cleanDate.startsWith(String(year));
+            })
+            .map(d => {
+                const cleanDate = d.date.replaceAll('/', '');
+                // 重新組合成 YYYY-MM-DD
+                const formattedDate = `${cleanDate.slice(0,4)}-${cleanDate.slice(4,6)}-${cleanDate.slice(6,8)}`;
+                
+                // 判斷類型：如果是假日則標記為 holiday，如果是補班日(isHoliday='否')則標記為 solar 或其他
+                // 這樣補班日也能顯示在日曆上
+                return {
+                    date: formattedDate,
+                    title: d.description || '節日',
+                    type: (d.isHoliday === '是') ? 'holiday' : 'solar' 
+                };
+            });
+
         if (holidays.length > 0) {
             localStorage.setItem(cacheKey, JSON.stringify(holidays));
             return holidays;
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error(`${year} 假日抓取失敗:`, e);
+    }
 
-    // 備用：若 API 失敗則用內建資料
+    // --- 以下為備用資料 (Fallback) ---
     const fallback = {
-        2025: [
-            { date:'2025-01-01', title:'元旦' }, { date:'2025-01-27', title:'除夕' },
-            { date:'2025-01-28', title:'初一' }, { date:'2025-01-29', title:'初二' },
-            { date:'2025-01-30', title:'初三' }, { date:'2025-02-28', title:'和平紀念日' },
-            { date:'2025-04-03', title:'兒童節補假' }, { date:'2025-04-04', title:'兒童節清明' },
-            { date:'2025-05-01', title:'勞動節' }, { date:'2025-05-31', title:'端午節' },
-            { date:'2025-10-06', title:'中秋節' }, { date:'2025-10-10', title:'國慶日' },
-        ],
         2026: [
             { date:'2026-01-01', title:'元旦' },
             { date:'2026-02-15', title:'小年夜' }, { date:'2026-02-16', title:'除夕' },
             { date:'2026-02-17', title:'初一' }, { date:'2026-02-18', title:'初二' },
-            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'小年夜補假' },
-            { date:'2026-02-27', title:'和平紀念日補假' }, { date:'2026-02-28', title:'和平紀念日' },
-            { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
-            { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' },
-            { date:'2026-05-01', title:'勞動節' },
-            { date:'2026-06-19', title:'端午節' },
-            { date:'2026-09-25', title:'中秋節' },
-            { date:'2026-09-28', title:'孔子誕辰/教師節' },
-            { date:'2026-10-09', title:'國慶日補假' }, { date:'2026-10-10', title:'國慶日' },
-            { date:'2026-10-25', title:'台灣光復節' }, { date:'2026-10-26', title:'台灣光復節補假' },
-            { date:'2026-12-25', title:'行憲紀念日' },
-        ],
-        2027: [
-            { date:'2027-01-01', title:'元旦' }, { date:'2027-02-05', title:'除夕' },
-            { date:'2027-02-06', title:'初一' }, { date:'2027-02-07', title:'初二' },
-            { date:'2027-02-08', title:'初三' }, { date:'2027-02-28', title:'和平紀念日' },
-            { date:'2027-04-04', title:'兒童節清明' }, { date:'2027-05-01', title:'勞動節' },
-            { date:'2027-06-09', title:'端午節' }, { date:'2027-09-15', title:'中秋節' },
-            { date:'2027-10-10', title:'國慶日' },
+            { date:'2026-02-19', title:'初三' }, { date:'2026-02-20', title:'補假' },
+            { date:'2026-02-28', title:'和平紀念日' }, { date:'2026-04-03', title:'兒童節補假' },
+            { date:'2026-04-06', title:'清明補假' }, { date:'2026-06-19', title:'端午節' },
+            { date:'2026-09-25', title:'中秋節' }, { date:'2026-10-10', title:'國慶日' }
         ]
     };
     return (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
 }
-
 async function loadAllHolidays() {
     const year = new Date().getFullYear();
     // 清除舊快取，確保使用最新內建資料
