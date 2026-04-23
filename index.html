@@ -1002,15 +1002,12 @@ function forceSyncPull(silent = false, retryCount = 0) {
 }
 
 // ── 切回頁面靜默拉取，不顯示錯誤；網路恢復才顯示
-document.addEventListener('DOMContentLoaded', () => {
-    initTimeDropdowns();
-});
 window.addEventListener('online', () => forceSyncPull(false));
 
 // ── 初始化 ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initTimeDropdowns();
-    listenToCloud();
+    // 🚩 這裡不需要呼叫 listenToCloud()，因為 auth.onAuthStateChanged 會自動執行它
 });
 
 function toggleSidebar() {
@@ -1359,6 +1356,8 @@ async function fetchTaiwanHolidays(year) {
         try { return JSON.parse(cached); } catch(e) {}
     }
 
+    let holidays = [];
+
     try {
         const targetUrl = 'https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=1000&page=0';
         const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
@@ -1367,54 +1366,66 @@ async function fetchTaiwanHolidays(year) {
         const wrapper = await res.json();
         const raw = JSON.parse(wrapper.contents);
         
-        if (!Array.isArray(raw)) return [];
+        if (Array.isArray(raw)) {
+            const coreHolidays = {
+                2026: [
+                    { date: year + '-01-01', title: '元旦' }, { date: year + '-02-16', title: '除夕' },
+                    { date: year + '-02-17', title: '初一' }, { date: year + '-02-18', title: '初二' },
+                    { date: year + '-02-19', title: '初三' }, { date: year + '-02-28', title: '和平紀念日' },
+                    { date: year + '-04-04', title: '兒童節' }, { date: year + '-04-05', title: '清明節' },
+                    { date: year + '-05-01', title: '勞動節' }, { date: year + '-06-19', title: '端午節' },
+                    { date: year + '-09-25', title: '中秋節' }, { date: year + '-10-10', title: '國慶日' }
+                ]
+            };
 
-        const coreHolidays = {
+            const holidayMap = {};
+            if (coreHolidays[year]) {
+                coreHolidays[year].forEach(function(h) { holidayMap[h.date] = { date: h.date, title: h.title, type: 'holiday' }; });
+            }
+
+            raw.forEach(function(d) {
+                if (!d.date) return;
+                var cleanDate = d.date.replaceAll('/', '');
+                if (!cleanDate.startsWith(String(year))) return;
+                var formattedDate = cleanDate.slice(0,4) + '-' + cleanDate.slice(4,6) + '-' + cleanDate.slice(6,8);
+                var desc = d.description || '';
+
+                if (d.isHoliday === '是') {
+                    if (desc && !['星期一','星期二','星期三','星期四','星期五','星期六','星期日'].includes(desc)) {
+                        if (holidayMap[formattedDate]) {
+                            if (desc.includes('補假') && !holidayMap[formattedDate].title.includes('補假')) {
+                                holidayMap[formattedDate].title += '(' + desc + ')';
+                            }
+                        } else {
+                            holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'holiday' };
+                        }
+                    }
+                } else if (desc && (desc.includes('補班') || desc.includes('補行'))) {
+                    holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'solar' };
+                }
+            });
+            holidays = Object.values(holidayMap);
+        }
+    } catch(e) { 
+        console.error(year + ' 假日抓取失敗:', e); 
+    }
+
+    // 如果 API 抓不到，使用備用清單
+    if (holidays.length === 0) {
+        const fallback = {
             2026: [
-                { date: year + '-01-01', title: '元旦' }, { date: year + '-02-16', title: '除夕' },
-                { date: year + '-02-17', title: '初一' }, { date: year + '-02-18', title: '初二' },
-                { date: year + '-02-19', title: '初三' }, { date: year + '-02-28', title: '和平紀念日' },
-                { date: year + '-04-04', title: '兒童節' }, { date: year + '-04-05', title: '清明節' },
-                { date: year + '-05-01', title: '勞動節' }, { date: year + '-06-19', title: '端午節' },
-                { date: year + '-09-25', title: '中秋節' }, { date: year + '-10-10', title: '國慶日' }
+                { date:'2026-01-01', title:'元旦' }, { date:'2026-02-16', title:'除夕' },
+                { date:'2026-04-03', title:'兒童節補假' }, { date:'2026-04-04', title:'兒童節' },
+                { date:'2026-04-05', title:'清明節' }, { date:'2026-04-06', title:'清明補假' }
             ]
         };
+        holidays = (fallback[year] || []).map(d => ({ ...d, type: 'holiday' }));
+    }
 
-        const holidayMap = {};
-        if (coreHolidays[year]) {
-            coreHolidays[year].forEach(function(h) { holidayMap[h.date] = { date: h.date, title: h.title, type: 'holiday' }; });
-        }
-
-        raw.forEach(function(d) {
-            if (!d.date) return;
-            var cleanDate = d.date.replaceAll('/', '');
-            if (!cleanDate.startsWith(String(year))) return;
-            var formattedDate = cleanDate.slice(0,4) + '-' + cleanDate.slice(4,6) + '-' + cleanDate.slice(6,8);
-            var desc = d.description || '';
-
-            if (d.isHoliday === '是') {
-                if (desc && !['星期一','星期二','星期三','星期四','星期五','星期六','星期日'].includes(desc)) {
-                    if (holidayMap[formattedDate]) {
-                        if (desc.includes('補假') && !holidayMap[formattedDate].title.includes('補假')) {
-                            holidayMap[formattedDate].title += '(' + desc + ')';
-                        }
-                    } else {
-                        holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'holiday' };
-                    }
-                }
-            } else if (desc && (desc.includes('補班') || desc.includes('補行'))) {
-                holidayMap[formattedDate] = { date: formattedDate, title: desc, type: 'solar' };
-            }
-        });
-
-        const finalHolidays = Object.values(holidayMap);
-        if (finalHolidays.length > 0) {
-            localStorage.setItem(cacheKey, JSON.stringify(finalHolidays));
-            return finalHolidays;
-        }
-    } catch(e) { console.error(year + ' 假日抓取失敗:', e); }
-
-    return [];
+    if (holidays.length > 0) {
+        localStorage.setItem(cacheKey, JSON.stringify(holidays));
+    }
+    return holidays;
 }
 
     // --- 備用靜態資料 (Fallback) ---
