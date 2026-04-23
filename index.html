@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" href="1.png">
     <link rel="icon" type="image/png" href="1.png">
     <link rel="apple-touch-icon" href="09a65827-d330-4c95-819c-178050fef0e5">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Ashley's">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
@@ -1617,6 +1617,7 @@ function setCategory(cat) {
     }
 }
 
+// ★ 修正：刪除包含 Tutor 時，要觸發重算所有 Transaction
 function handleDelete() {
     if (!editingId) return;
     let storage = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').filter(e => String(e.id) !== String(editingId));
@@ -1627,6 +1628,7 @@ function handleDelete() {
     closeUnifiedModal(); renderStatsTable(); renderTransactions();
 }
 
+// ★ 修正：儲存包含 Tutor 時，要觸發重算所有 Transaction 圓餅圖與預算
 function handleSave() {
     const date = document.getElementById('inputDate').value; if (!date) return;
     const hour = document.getElementById('selectHour').value;
