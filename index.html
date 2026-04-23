@@ -1352,10 +1352,16 @@ async function fetchTaiwanHolidays(year) {
         } catch(e) {}
     }
     try {
-        // 使用政府開放資料平台的行政院人事行政總處行事曆
-        const url = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
-        const res = await fetch(url);
-        const raw = await res.json();
+        // 使用政府開放資料平台的行政院人事行政總處行事曆 (加入 CORS Proxy)
+        const targetUrl = `https://data.ntpc.gov.tw/api/datasets/308dcd75-6434-45bc-a95f-584da4fed251/json?size=500&page=0`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        
+        const res = await fetch(proxyUrl);
+        const wrapper = await res.json();
+        
+        // 代理伺服器會將原始資料包在 contents 欄位中，需要解析兩次
+        const raw = JSON.parse(wrapper.contents);
+        
         // 過濾出指定年份的假日
         const holidays = raw
             .filter(d => d.date && d.date.startsWith(String(year)) && d.isHoliday === '是')
